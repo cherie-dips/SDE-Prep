@@ -355,8 +355,7 @@ function switchView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   document.getElementById('v-'+v).classList.add('on');
   if(v==='road')renderRoad();
-  if(v==='cal'){renderCal();renderDP()}
-  if(v==='dash')renderDash();
+  if(v==='cal'){renderCal();renderDP();renderDash()}
   updTop();
 }
 document.querySelectorAll('#mainNav a').forEach(a=>a.addEventListener('click',()=>switchView(a.dataset.v)));
@@ -563,12 +562,8 @@ function calToday(){const t=new Date();calM=t.getMonth();calY=t.getFullYear();se
 // ====== DASHBOARD ======
 function renderDash(){
   let rh='';
-  ROADMAP.forEach(cat=>{const p=catProg(cat);const fc=p.p===100?'complete':p.p>0?'partial':'';rh+=`<div class="prog-row"><span class="label">${cat.t}</span><div class="bar"><div class="fill ${fc}" style="width:${p.p}%"></div></div><span class="val">${p.d}/${p.t}</span></div>`});
+  ROADMAP.forEach(cat=>{const p=catProg(cat);const fc=p.p===100?'complete':p.p>0?'partial':'';rh+=`<div class="prog-card"><div class="pc-name">${cat.t}</div><div class="pc-bar"><div class="fill ${fc}" style="width:${p.p}%"></div></div><div class="pc-val">${p.d}/${p.t} &middot; ${p.p}%</div></div>`});
   document.getElementById('roadProg').innerHTML=rh||'<div style="color:#666;font-size:13px">No content loaded</div>';
-  let ch='';const weeks={};let wIdx=0;
-  SP.forEach(dy=>{const d=new Date(dy.date+'T12:00:00');const wStart=new Date(d);wStart.setDate(d.getDate()-d.getDay());const wk=ds(wStart.getFullYear(),wStart.getMonth(),wStart.getDate());if(!weeks[wk]){weeks[wk]={d:0,t:0,label:'',idx:wIdx++}}const pr=dayProg(dy.date);weeks[wk].d+=pr.dn;weeks[wk].t+=pr.tot;if(!weeks[wk].label)weeks[wk].label=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})});
-  Object.values(weeks).sort((a,b)=>a.idx-b.idx).forEach(({d,t,label})=>{const p=t?Math.round(d/t*100):0;const fc=p===100?'complete':p>0?'partial':'';ch+=`<div class="prog-row"><span class="label">Week of ${label}</span><div class="bar"><div class="fill ${fc}" style="width:${p}%"></div></div><span class="val">${p}%</span></div>`});
-  document.getElementById('calProg').innerHTML=ch;
 }
 
 // ====== UTILS ======

@@ -2301,7 +2301,7 @@ int main() {
       ]
     },
     {
-      id: 'll', t: 'Linked Lists',
+      id: 'll', t: 'LL',
       topics: [
         {
           t: 'Singly Linked List',
@@ -4132,7 +4132,7 @@ int main() {
       ]
     },
     {
-      id: 'dp', t: 'Dynamic Programming',
+      id: 'dp', t: 'DP',
       topics: [
         {
           t: '1D DP (Climbing Stairs, House Robber)',
