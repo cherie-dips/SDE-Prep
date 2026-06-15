@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DE Shaw Tech Dev Intern Prep</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">DE Shaw Prep</div>
+  <nav id="mainNav">
+    <a class="on" data-v="road">Roadmap</a>
+    <a data-v="cal">Calendar</a>
+    <a data-v="dash">Dashboard</a>
+  </nav>
+  <div class="hstats">
+    <span>Progress <strong id="hProg">0%</strong></span>
+    <span>Topics <strong id="hTop">0/0</strong></span>
+  </div>
+</header>
+
+<div class="view on" id="v-road">
+  <div class="road-side" id="roadSide"></div>
+  <div class="road-main">
+    <div class="road-head" id="roadHead"><h2>DE Shaw Prep Roadmap</h2><div class="rh-sub">Select a category to begin</div></div>
+    <div class="road-tabs" id="roadTabs"></div>
+    <div class="road-topics" id="roadTopics"><div class="empty-msg">Loading content...</div></div>
+  </div>
+</div>
+
+<div class="view" id="v-cal">
+  <div class="cal-left">
+    <div class="cal-head"><h2 id="calTitle"></h2><div class="cal-nav"><button onclick="calNav(-1)">&larr;</button><button onclick="calToday()">Today</button><button onclick="calNav(1)">&rarr;</button></div></div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+  <div class="day-panel" id="dayPanel"><div class="empty-msg">Select a day</div></div>
+</div>
+
+<div class="view" id="v-dash">
+  <div class="dash-section"><h3>Roadmap Progress</h3><div id="roadProg"></div></div>
+  <div class="dash-section"><h3>Weekly Completion</h3><div id="calProg"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/content-cpp-dsa.js"></script>
+<script src="js/content-cs.js"></script>
+<script src="js/content-dev.js"></script>
+<script src="js/content-sysdes.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
