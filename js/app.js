@@ -1,6 +1,6 @@
 // ====== STATE ======
 let st=JSON.parse(localStorage.getItem('dsprep_v4')||'{}');
-if(!st.road)st.road={};if(!st.cal)st.cal={};if(!st.mcq)st.mcq={};
+if(!st.road)st.road={};if(!st.cal)st.cal={};if(!st.mcq)st.mcq={};if(!st.prob)st.prob={};
 function sv(){localStorage.setItem('dsprep_v4',JSON.stringify(st))}
 
 // ====== ROADMAP DATA ======
@@ -426,8 +426,11 @@ function renderRoadTopics(){
       }
       // Problems pane
       if(hasProb){
-        card+=`<div class="inner-pane ${innerTab==='problems'?'on':''}"><ul class="tc-problems">`;
-        tp.problems.forEach(pr=>{const[name,url,diff]=pr;card+=`<li><a href="${url}" target="_blank">${name}</a><span class="diff diff-${diff}">${diff}</span></li>`});
+        const solvedCount=tp.problems.filter((_,pi)=>st.prob[key+':'+pi]).length;
+        card+=`<div class="inner-pane ${innerTab==='problems'?'on':''}">`;
+        card+=`<div class="prob-prog">${solvedCount}/${tp.problems.length} solved</div>`;
+        card+=`<ul class="tc-problems">`;
+        tp.problems.forEach((pr,pi)=>{const[name,url,diff]=pr;const pkey=key+':'+pi;const solved=!!st.prob[pkey];card+=`<li class="${solved?'solved':''}"><input type="checkbox" ${solved?'checked':''} onchange="tgProb('${pkey}')"/><a href="${url}" target="_blank">${name}</a><span class="diff diff-${diff}">${diff}</span></li>`});
         card+=`</ul></div>`;
       }
       // MCQ pane
@@ -491,8 +494,14 @@ function selCat(ci){roadCat=ci;roadTab=0;openTopic=-1;renderRoadSide();renderRoa
 function selTab(ti){roadTab=ti;openTopic=-1;renderRoadTabs()}
 function toggleOpen(ti){openTopic=openTopic===ti?-1:ti;innerTab='learn';renderRoadTopics();if(openTopic>=0){setTimeout(()=>{const el=document.querySelector('.topic-body.open');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})},50)}}
 function swInner(tab){innerTab=tab;renderRoadTopics()}
-function tgDone(key){st.road[key]=!st.road[key];if(!st.road[key])delete st.road[key];sv();renderRoadSide();renderRoadTabs();updTop()}
+function tgDone(key){
+  st.road[key]=!st.road[key];if(!st.road[key])delete st.road[key];
+  const done=!!st.road[key];
+  SP.forEach(dy=>{dy.tasks.forEach((t,i)=>{if(t.road===key){if(done)st.cal[dy.date+'_'+i]=true;else delete st.cal[dy.date+'_'+i]}})});
+  sv();renderRoadSide();renderRoadTabs();updTop();
+}
 function pickMCQ(mkey,picked,correct){st.mcq[mkey]=picked;sv();renderRoadTopics()}
+function tgProb(pkey){st.prob[pkey]=!st.prob[pkey];if(!st.prob[pkey])delete st.prob[pkey];sv();renderRoadTopics()}
 function renderRoad(){renderRoadSide();renderRoadTabs()}
 
 function goToRoad(roadKey){

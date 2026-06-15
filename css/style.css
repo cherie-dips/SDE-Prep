@@ -47,9 +47,13 @@ header .hstats strong{color:#eee;font-weight:600}
 .tc-text{font-size:13px;color:#e0e0e0;line-height:1.7}
 .tc-code{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:3px;padding:12px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;line-height:1.6;color:#d4d4d4;overflow-x:auto;white-space:pre;max-height:500px;overflow-y:auto}
 .hl-kw{color:#569cd6}.hl-flow{color:#c586c0}.hl-ty{color:#4ec9b0}.hl-fn{color:#dcdcaa}.hl-str{color:#ce9178}.hl-num{color:#b5cea8}.hl-com{color:#6a9955;font-style:italic}.hl-pre{color:#c586c0}.hl-id{color:#9cdcfe}
-.tc-problems{list-style:none}.tc-problems li{padding:4px 0;font-size:13px}
+.prob-prog{font-size:12px;color:#bbb;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #1a1a1a}
+.tc-problems{list-style:none}.tc-problems li{padding:6px 0;font-size:13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #111}
+.tc-problems li:last-child{border:none}
+.tc-problems li input[type="checkbox"]{width:15px;height:15px;accent-color:#3a8f55;cursor:pointer;flex-shrink:0}
+.tc-problems li.solved a{text-decoration:line-through;color:#4a9f65}
 .tc-problems a{color:#8bb8e0;text-decoration:none}.tc-problems a:hover{color:#fff;text-decoration:underline}
-.diff{font-size:10px;padding:1px 6px;border-radius:2px;margin-left:6px;font-weight:600}
+.diff{font-size:10px;padding:1px 6px;border-radius:2px;margin-left:auto;font-weight:600;flex-shrink:0}
 .diff-Easy{background:#0f2518;color:#3a8f55}.diff-Medium{background:#2a2510;color:#b89a30}.diff-Hard{background:#2a1010;color:#c04040}
 .mcq-card{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:3px;padding:12px;margin-top:6px}
 .mcq-q{font-size:13px;color:#eee;margin-bottom:8px;line-height:1.5}
