@@ -996,6 +996,97 @@ int main() {
             {q: 'In the first Readers-Writers problem, which entity may suffer from starvation?', o: ['Readers', 'Writers', 'Both readers and writers', 'Neither'], a: 1},
           ],
         },
+        {
+          t: 'Read-Write Locks, Condition Variables & Barriers',
+          learn: '<div class="learn-section"><div class="learn-h">Read-Write Locks (rwlock)</div><p class="learn-p">A <b>read-write lock</b> (also called shared-exclusive lock) implements the Readers-Writers pattern as a reusable primitive. Multiple readers can hold the lock concurrently, but a writer needs exclusive access.</p><div class="learn-code">// POSIX Read-Write Lock\npthread_rwlock_t rwlock;\npthread_rwlock_init(&amp;rwlock, NULL);\n\n// Reader:\npthread_rwlock_rdlock(&amp;rwlock);  // shared lock\n// ... read shared data ...\npthread_rwlock_unlock(&amp;rwlock);\n\n// Writer:\npthread_rwlock_wrlock(&amp;rwlock);  // exclusive lock\n// ... modify shared data ...\npthread_rwlock_unlock(&amp;rwlock);\n\n// C++ equivalent (C++17):\n#include &lt;shared_mutex&gt;\nstd::shared_mutex rw;\nrw.lock_shared();    // reader\nrw.unlock_shared();\nrw.lock();           // writer\nrw.unlock();</div><p class="learn-p"><b>Fairness policies:</b></p><ul class="learn-list"><li><b>Reader-preference:</b> New readers can acquire the lock even if a writer is waiting. Writers may starve.</li><li><b>Writer-preference:</b> Once a writer is waiting, no new readers are admitted. Readers may starve.</li><li><b>Fair (FIFO):</b> Requests served in order. No starvation but lower throughput.</li></ul></div><div class="learn-section"><div class="learn-h">Condition Variables</div><p class="learn-p">A <b>condition variable</b> allows threads to block until a specific condition becomes true. Always used with a mutex. The key insight: instead of busy-waiting (spinning) on a condition, a thread sleeps and is woken up only when the condition changes.</p><div class="learn-code">pthread_mutex_t mutex;\npthread_cond_t cond;\nint buffer_count = 0;\n\n// Producer:\npthread_mutex_lock(&amp;mutex);\n// ... add item to buffer ...\nbuffer_count++;\npthread_cond_signal(&amp;cond);  // wake one waiting consumer\npthread_mutex_unlock(&amp;mutex);\n\n// Consumer:\npthread_mutex_lock(&amp;mutex);\nwhile (buffer_count == 0)              // MUST use while, not if\n    pthread_cond_wait(&amp;cond, &amp;mutex);  // atomically unlocks mutex &amp; sleeps\n// ... remove item from buffer ...\nbuffer_count--;\npthread_mutex_unlock(&amp;mutex);</div><div class="learn-warn"><b>Critical:</b> Always use <code>while</code> (not <code>if</code>) around <code>cond_wait</code>. Spurious wakeups can occur — the thread may be woken without the condition being true. The while loop re-checks the condition after wakeup.</div><p class="learn-p"><b>signal vs broadcast:</b></p><ul class="learn-list"><li><code>pthread_cond_signal</code> — wakes <b>one</b> waiting thread</li><li><code>pthread_cond_broadcast</code> — wakes <b>all</b> waiting threads (use when multiple threads may be able to proceed, e.g., buffer went from full to empty)</li></ul></div><div class="learn-section"><div class="learn-h">Barriers</div><p class="learn-p">A <b>barrier</b> is a synchronization point where threads must all arrive before any can proceed. Used in parallel algorithms where a computation phase must complete before the next begins.</p><div class="learn-code">pthread_barrier_t barrier;\npthread_barrier_init(&amp;barrier, NULL, NUM_THREADS);\n\n// Each thread:\nvoid* worker(void* arg) {\n    // Phase 1: compute local portion\n    compute_phase1();\n\n    pthread_barrier_wait(&amp;barrier);  // all threads wait here\n    // ↑ No thread passes until ALL have arrived\n\n    // Phase 2: can safely read other threads\' phase 1 results\n    compute_phase2();\n    return NULL;\n}</div></div><div class="learn-section"><div class="learn-h">Spinlocks vs Mutexes</div><table class="learn-table"><tr><th>Feature</th><th>Spinlock</th><th>Mutex</th></tr><tr><td>Waiting behavior</td><td>Busy-wait (loops checking the lock)</td><td>Sleep (OS puts thread to sleep)</td></tr><tr><td>CPU usage while waiting</td><td>100% on one core</td><td>~0% (sleeping)</td></tr><tr><td>Context switch</td><td>None (stays on CPU)</td><td>Two (sleep + wake)</td></tr><tr><td>Best for</td><td>Very short critical sections (< few μs)</td><td>Longer critical sections, I/O</td></tr><tr><td>Used in</td><td>Kernel code, lock-free data structures</td><td>Application code, general purpose</td></tr></table><div class="learn-tip"><b>Interview tip:</b> "When would you use a spinlock over a mutex?" — When the critical section is extremely short (nanoseconds) and context switch overhead would exceed the wait time. Linux kernel uses spinlocks extensively for this reason.</div></div><div class="learn-section"><div class="learn-h">Lock-Free and Wait-Free Data Structures</div><p class="learn-p"><b>Lock-free</b>: At least one thread makes progress at any time (no global blocking). Uses atomic operations (CAS — Compare-And-Swap).</p><p class="learn-p"><b>Wait-free</b>: Every thread makes progress in bounded steps (strongest guarantee). Very hard to implement.</p><div class="learn-code">// Compare-And-Swap (CAS) — the building block\n// Atomically: if *addr == expected, set *addr = desired, return true\nbool cas(int* addr, int expected, int desired);\n\n// Lock-free stack push using CAS:\nvoid push(Node* node) {\n    do {\n        node-&gt;next = top;        // read current top\n    } while (!cas(&amp;top, node-&gt;next, node));  // retry if top changed\n}</div><div class="learn-warn"><b>ABA problem:</b> Thread reads A, another thread changes A→B→A, first thread\'s CAS succeeds but the state changed. Fix: use tagged pointers (add a version counter) or hazard pointers.</div></div>',
+          code: `// Read-Write Locks, Condition Variables, and Barriers in C++
+#include <iostream>
+#include <thread>
+#include <shared_mutex>
+#include <mutex>
+#include <condition_variable>
+#include <vector>
+#include <chrono>
+using namespace std;
+
+// Shared data protected by read-write lock
+shared_mutex rw_mutex;
+int shared_data = 0;
+
+void reader(int id) {
+    shared_lock<shared_mutex> lock(rw_mutex);
+    cout << "Reader " << id << " reads: " << shared_data << endl;
+}
+
+void writer(int id, int value) {
+    unique_lock<shared_mutex> lock(rw_mutex);
+    shared_data = value;
+    cout << "Writer " << id << " wrote: " << value << endl;
+}
+
+// Producer-Consumer with condition variable
+mutex mtx;
+condition_variable cv;
+vector<int> buffer;
+const int MAX_BUF = 5;
+bool done = false;
+
+void producer() {
+    for (int i = 0; i < 10; i++) {
+        unique_lock<mutex> lock(mtx);
+        cv.wait(lock, [] { return buffer.size() < MAX_BUF; });
+        buffer.push_back(i);
+        cout << "Produced: " << i << endl;
+        cv.notify_all();
+    }
+    unique_lock<mutex> lock(mtx);
+    done = true;
+    cv.notify_all();
+}
+
+void consumer() {
+    while (true) {
+        unique_lock<mutex> lock(mtx);
+        cv.wait(lock, [] { return !buffer.empty() || done; });
+        if (buffer.empty() && done) break;
+        int val = buffer.back();
+        buffer.pop_back();
+        cout << "Consumed: " << val << endl;
+        cv.notify_all();
+    }
+}
+
+int main() {
+    // Read-Write Lock demo
+    cout << "=== Read-Write Lock ===" << endl;
+    vector<thread> threads;
+    threads.emplace_back(writer, 1, 42);
+    for (int i = 0; i < 3; i++)
+        threads.emplace_back(reader, i);
+    threads.emplace_back(writer, 2, 99);
+    for (auto& t : threads) t.join();
+    threads.clear();
+
+    // Producer-Consumer with condition variable
+    cout << "\\n=== Condition Variable (Producer-Consumer) ===" << endl;
+    thread prod(producer);
+    thread cons(consumer);
+    prod.join();
+    cons.join();
+
+    return 0;
+}`,
+          problems: [
+            ['Print in Order (LeetCode 1114)', 'https://leetcode.com/problems/print-in-order/', 'Easy'],
+            ['Building H2O (LeetCode 1117)', 'https://leetcode.com/problems/building-h2o/', 'Medium'],
+            ['The Dining Philosophers (LeetCode 1226)', 'https://leetcode.com/problems/the-dining-philosophers/', 'Medium'],
+          ],
+          mcqs: [
+            {q: 'Why must you use while (not if) with condition variables?', o: ['For better performance', 'Because spurious wakeups can occur', 'Because the mutex might not be locked', 'To prevent deadlocks'], a: 1},
+            {q: 'When is a spinlock preferred over a mutex?', o: ['Always in user-space code', 'When the critical section is very short and context-switch overhead exceeds wait time', 'When threads need to sleep', 'When there are many competing threads'], a: 1},
+            {q: 'CAS (Compare-And-Swap) is the basis for:', o: ['Mutex implementation', 'Lock-free data structures', 'Semaphores only', 'Thread creation'], a: 1},
+          ],
+        },
       ],
     },
 
@@ -1580,6 +1671,66 @@ int main() {
             {q: 'Which algorithm gives the minimum number of page faults?', o: ['LRU', 'FIFO', 'Clock', 'Optimal (OPT)'], a: 3},
             {q: 'In the Clock (Second Chance) algorithm, what happens when the clock hand encounters a page with reference bit = 1?', o: ['The page is replaced immediately', 'The reference bit is set to 0 and the hand moves on', 'The page is moved to the end of the queue', 'A page fault is generated'], a: 1},
           ],
+        },
+        {
+          t: 'Segmentation & Segmented Paging',
+          learn: '<div class="learn-section"><div class="learn-h">What is Segmentation?</div><p class="learn-p"><b>Segmentation</b> divides a process\'s address space into <b>logical segments</b> — variable-sized units that reflect the programmer\'s view: code segment, data segment, stack, heap, etc. Each segment has a name (or number) and a length.</p><p class="learn-p">Unlike paging (which divides memory into fixed-size pages regardless of logical structure), segmentation preserves the logical grouping of related data.</p></div><div class="learn-section"><div class="learn-h">Segment Table</div><p class="learn-p">Each process has a <b>segment table</b> where each entry contains:</p><table class="learn-table"><tr><th>Field</th><th>Purpose</th></tr><tr><td>Base</td><td>Starting physical address of the segment</td></tr><tr><td>Limit</td><td>Length of the segment</td></tr></table><p class="learn-p"><b>Address translation:</b> A logical address is a pair <code>(segment_number, offset)</code>. If <code>offset &lt; limit</code>, the physical address = <code>base + offset</code>. If <code>offset ≥ limit</code>, a <b>segmentation fault</b> (trap) occurs.</p><div class="learn-code">Logical address: (segment 2, offset 400)\nSegment table entry 2: base=4300, limit=1000\nSince 400 &lt; 1000 → Physical address = 4300 + 400 = 4700\n\nLogical address: (segment 2, offset 1200)\nSince 1200 ≥ 1000 → SEGMENTATION FAULT</div></div><div class="learn-section"><div class="learn-h">Paging vs Segmentation</div><table class="learn-table"><tr><th>Feature</th><th>Paging</th><th>Segmentation</th></tr><tr><td>Division size</td><td>Fixed (page size)</td><td>Variable (segment length)</td></tr><tr><td>User view</td><td>Transparent to user</td><td>Reflects logical structure</td></tr><tr><td>Fragmentation</td><td>Internal (last page may not be full)</td><td>External (gaps between segments)</td></tr><tr><td>Address</td><td>(page_number, offset)</td><td>(segment_number, offset)</td></tr><tr><td>Sharing</td><td>Harder (page boundaries)</td><td>Natural (share code segment)</td></tr></table></div><div class="learn-section"><div class="learn-h">Segmented Paging</div><p class="learn-p"><b>Segmented paging</b> combines both: each segment is divided into pages. Address translation is two-level: segment number → segment\'s page table → page frame.</p><div class="learn-code">Logical address: (segment, page, offset)\n1. Segment table[segment] → page table base\n2. Page table[page] → frame number\n3. Physical address = frame * page_size + offset</div><p class="learn-p">This gives the logical organization of segmentation with the fixed-size allocation benefits of paging (no external fragmentation).</p><div class="learn-tip"><b>Tip:</b> Intel x86 (32-bit) used segmented paging. Modern 64-bit systems mostly use flat paging — segmentation is effectively disabled but still exists in the architecture.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+struct SegmentEntry {
+    int base;
+    int limit;
+};
+
+int translateAddress(vector<SegmentEntry>& segTable, int segNum, int offset) {
+    if (segNum < 0 || segNum >= (int)segTable.size()) {
+        cout << "Invalid segment number: " << segNum << endl;
+        return -1;
+    }
+    if (offset < 0 || offset >= segTable[segNum].limit) {
+        cout << "SEGMENTATION FAULT: offset " << offset
+             << " exceeds limit " << segTable[segNum].limit << endl;
+        return -1;
+    }
+    return segTable[segNum].base + offset;
+}
+
+int main() {
+    // Segment table: {base, limit}
+    vector<SegmentEntry> segTable = {
+        {1400, 1000},  // Seg 0: Code segment
+        {6300, 400},   // Seg 1: Data segment
+        {4300, 1000},  // Seg 2: Stack segment
+        {3200, 1100},  // Seg 3: Heap segment
+    };
+
+    cout << "Segment Table:\\n";
+    cout << "Seg\\tBase\\tLimit\\n";
+    for (int i = 0; i < (int)segTable.size(); i++)
+        cout << i << "\\t" << segTable[i].base << "\\t" << segTable[i].limit << "\\n";
+
+    // Valid translations
+    cout << "\\n(Seg 2, Offset 400) -> " << translateAddress(segTable, 2, 400) << "\\n";
+    cout << "(Seg 0, Offset 500) -> " << translateAddress(segTable, 0, 500) << "\\n";
+
+    // Segmentation fault
+    cout << "(Seg 1, Offset 500) -> ";
+    translateAddress(segTable, 1, 500);
+
+    return 0;
+}`,
+          problems: [
+            ['Memory Segmentation - GFG', 'https://www.geeksforgeeks.org/segmentation-in-operating-system/', 'Medium'],
+            ['Paging vs Segmentation - GFG', 'https://www.geeksforgeeks.org/difference-between-paging-and-segmentation/', 'Easy'],
+            ['Memory Management MCQs - GFG', 'https://www.geeksforgeeks.org/operating-systems-gq/memory-management-gq/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'What type of fragmentation does segmentation suffer from?', o: ['Internal fragmentation', 'External fragmentation', 'Both', 'Neither'], a: 1},
+            {q: 'A logical address in segmentation consists of:', o: ['Page number + offset', 'Segment number + offset', 'Frame number + offset', 'Base address + limit'], a: 1},
+            {q: 'What causes a segmentation fault?', o: ['Page not in memory', 'Offset exceeds segment limit', 'TLB miss', 'Cache miss'], a: 1}
+          ]
         },
       ],
     },
@@ -3384,6 +3535,91 @@ int main() {
             {q: 'Which problem is specific to Distance Vector routing protocols?', o: ['LSA flooding', 'Area partitioning', 'Count to infinity', 'Designated router election'], a: 2},
           ],
         },
+        {
+          t: 'IPv6 & ICMP',
+          learn: '<div class="learn-section"><div class="learn-h">Why IPv6?</div><p class="learn-p">IPv4 uses 32-bit addresses (~4.3 billion), which are <b>exhausted</b>. IPv6 uses <b>128-bit addresses</b> (~3.4 × 10³⁸), solving the address shortage. IPv6 also improves routing efficiency, security (mandatory IPsec support), and eliminates the need for NAT.</p></div><div class="learn-section"><div class="learn-h">IPv6 Address Format</div><div class="learn-code">Full:       2001:0db8:0000:0000:0000:0000:0000:0001\nShortened:  2001:db8::1  (:: replaces consecutive groups of zeros)\n\nNotation: 8 groups of 4 hex digits, separated by colons\nPrefix:   2001:db8::/32 (similar to CIDR notation)\n\nSpecial addresses:\n::1          — Loopback (like 127.0.0.1 in IPv4)\n::           — Unspecified (like 0.0.0.0)\nfe80::/10    — Link-local (auto-configured, non-routable)\nff00::/8     — Multicast\n2000::/3     — Global unicast (publicly routable)</div></div><div class="learn-section"><div class="learn-h">IPv6 Header (Simplified)</div><p class="learn-p">IPv6 has a <b>fixed 40-byte header</b> (vs IPv4\'s variable 20-60 bytes). This simplifies router processing.</p><div class="learn-code">IPv6 Header Fields:\n| Version (4 bits) = 6                    |\n| Traffic Class (8 bits) — QoS priority   |\n| Flow Label (20 bits) — identifies flows  |\n| Payload Length (16 bits)                |\n| Next Header (8 bits) — protocol (TCP=6) |\n| Hop Limit (8 bits) — like TTL in IPv4   |\n| Source Address (128 bits)               |\n| Destination Address (128 bits)          |</div><p class="learn-p"><b>Key differences from IPv4:</b></p><table class="learn-table"><tr><th>Feature</th><th>IPv4</th><th>IPv6</th></tr><tr><td>Address size</td><td>32 bits</td><td>128 bits</td></tr><tr><td>Header size</td><td>Variable (20-60 bytes)</td><td>Fixed (40 bytes)</td></tr><tr><td>Header checksum</td><td>Yes</td><td>No (handled by upper layers)</td></tr><tr><td>Fragmentation</td><td>Routers can fragment</td><td>Only source host fragments</td></tr><tr><td>Broadcast</td><td>Yes</td><td>No (replaced by multicast/anycast)</td></tr><tr><td>NAT</td><td>Common</td><td>Not needed (enough addresses)</td></tr><tr><td>IPsec</td><td>Optional</td><td>Mandatory support</td></tr><tr><td>Configuration</td><td>DHCP or manual</td><td>SLAAC (Stateless Address Auto-Configuration) or DHCPv6</td></tr></table></div><div class="learn-section"><div class="learn-h">IPv4 to IPv6 Transition</div><p class="learn-p">Since both protocols coexist, three main transition mechanisms are used:</p><ul class="learn-list"><li><b>Dual Stack:</b> Nodes run both IPv4 and IPv6 simultaneously. Preferred method.</li><li><b>Tunneling (6in4, 6to4):</b> IPv6 packets encapsulated inside IPv4 packets to traverse IPv4 networks.</li><li><b>NAT64/DNS64:</b> Translates between IPv4 and IPv6. Allows IPv6-only hosts to communicate with IPv4 servers.</li></ul></div><div class="learn-section"><div class="learn-h">ICMP (Internet Control Message Protocol)</div><p class="learn-p"><b>ICMP</b> is a <b>network-layer protocol</b> used for error reporting and diagnostics. It rides on top of IP (protocol number 1 for ICMPv4, 58 for ICMPv6).</p><p class="learn-p"><b>Common ICMP message types:</b></p><table class="learn-table"><tr><th>Type</th><th>Name</th><th>Purpose</th></tr><tr><td>0</td><td>Echo Reply</td><td>Response to ping</td></tr><tr><td>3</td><td>Destination Unreachable</td><td>Host/network/port unreachable</td></tr><tr><td>5</td><td>Redirect</td><td>Inform host of better route</td></tr><tr><td>8</td><td>Echo Request</td><td>Ping request</td></tr><tr><td>11</td><td>Time Exceeded</td><td>TTL expired (used by traceroute)</td></tr></table></div><div class="learn-section"><div class="learn-h">ping &amp; traceroute</div><p class="learn-p"><b>ping</b> sends ICMP Echo Request (type 8) and waits for Echo Reply (type 0). Measures round-trip time and packet loss.</p><p class="learn-p"><b>traceroute</b> sends packets with incrementing TTL values (1, 2, 3...). Each router that decrements TTL to 0 sends back an ICMP Time Exceeded message, revealing its IP address. This maps the network path.</p><div class="learn-code">$ traceroute google.com\n1  192.168.1.1      1.2 ms    (home router, TTL=1 expired here)\n2  10.0.0.1         5.3 ms    (ISP gateway, TTL=2 expired here)\n3  72.14.233.128    12.1 ms   (Google edge)\n4  142.250.80.46    11.8 ms   (destination)</div><div class="learn-tip"><b>Interview tip:</b> "How does traceroute work?" is a common networking interview question. Answer: sends UDP (Linux) or ICMP (Windows) packets with incrementing TTL; each hop returns ICMP Time Exceeded; destination returns ICMP Port Unreachable (UDP) or Echo Reply (ICMP).</div></div>',
+          code: `// === IPv6 and ICMP Concepts Simulation ===
+#include <iostream>
+#include <string>
+#include <vector>
+#include <sstream>
+using namespace std;
+
+// Validate if a string is a valid simplified IPv6 address
+bool isValidIPv6(const string& addr) {
+    int colonCount = 0;
+    bool hasDoubleColon = false;
+    for (size_t i = 0; i < addr.size(); i++) {
+        if (addr[i] == ':') {
+            colonCount++;
+            if (i + 1 < addr.size() && addr[i+1] == ':') {
+                if (hasDoubleColon) return false;
+                hasDoubleColon = true;
+            }
+        }
+    }
+    if (!hasDoubleColon && colonCount != 7) return false;
+    if (hasDoubleColon && colonCount > 7) return false;
+    return true;
+}
+
+// Simulate traceroute
+void simulateTraceroute(const string& dest, const vector<string>& hops) {
+    cout << "traceroute to " << dest << endl;
+    for (int i = 0; i < (int)hops.size(); i++) {
+        cout << "  " << (i + 1) << "  " << hops[i];
+        if (i == (int)hops.size() - 1)
+            cout << "  <-- destination reached" << endl;
+        else
+            cout << "  (TTL=" << (i+1) << " expired, ICMP Time Exceeded)" << endl;
+    }
+}
+
+// ICMP message types
+void explainICMP() {
+    cout << "\\n=== Common ICMP Message Types ===" << endl;
+    cout << "Type 0:  Echo Reply (ping response)" << endl;
+    cout << "Type 3:  Destination Unreachable" << endl;
+    cout << "  Code 0: Network unreachable" << endl;
+    cout << "  Code 1: Host unreachable" << endl;
+    cout << "  Code 3: Port unreachable (used by traceroute)" << endl;
+    cout << "Type 5:  Redirect (better route exists)" << endl;
+    cout << "Type 8:  Echo Request (ping)" << endl;
+    cout << "Type 11: Time Exceeded (TTL=0, used by traceroute)" << endl;
+}
+
+int main() {
+    // IPv6 validation
+    cout << "=== IPv6 Address Validation ===" << endl;
+    vector<string> addrs = {"2001:db8::1", "::1", "fe80::1%eth0", "2001:db8:85a3::8a2e:370:7334"};
+    for (auto& a : addrs)
+        cout << "  " << a << " -> " << (isValidIPv6(a) ? "valid" : "check format") << endl;
+
+    // IPv4 vs IPv6 comparison
+    cout << "\\n=== IPv4 vs IPv6 ===" << endl;
+    cout << "IPv4: 32-bit, ~4.3 billion addresses" << endl;
+    cout << "IPv6: 128-bit, ~3.4 x 10^38 addresses" << endl;
+    cout << "IPv6 removes: header checksum, fragmentation by routers, broadcast" << endl;
+    cout << "IPv6 adds: flow labels, mandatory IPsec, SLAAC" << endl;
+
+    // Traceroute simulation
+    cout << "\\n=== Traceroute Simulation ===" << endl;
+    simulateTraceroute("google.com", {"192.168.1.1", "10.0.0.1", "72.14.233.128", "142.250.80.46"});
+
+    explainICMP();
+    return 0;
+}`,
+          problems: [
+            ['IPv6 Concepts', 'https://www.geeksforgeeks.org/internet-protocol-version-6-ipv6/', 'Easy'],
+            ['ICMP Protocol', 'https://www.geeksforgeeks.org/internet-control-message-protocol-icmp/', 'Easy'],
+            ['Traceroute Explained', 'https://www.geeksforgeeks.org/traceroute-command-in-linux-with-examples/', 'Medium'],
+          ],
+          mcqs: [
+            {q: 'IPv6 addresses are how many bits?', o: ['32', '64', '128', '256'], a: 2},
+            {q: 'Which ICMP message type is used by traceroute when TTL expires?', o: ['Echo Reply (type 0)', 'Destination Unreachable (type 3)', 'Redirect (type 5)', 'Time Exceeded (type 11)'], a: 3},
+            {q: 'IPv6 eliminates which IPv4 feature?', o: ['TCP support', 'Broadcast', 'Routing', 'Port numbers'], a: 1},
+          ],
+        },
       ]
     },
 
@@ -4211,6 +4447,92 @@ int main() {
             {q: 'The DHCP DORA process stands for:', o: ['Discover, Offer, Request, Acknowledge', 'Download, Open, Read, Accept', 'Detect, Organize, Route, Assign', 'Discover, Open, Receive, Assign'], a: 0},
             {q: 'FTP uses two connections. The control connection is on port:', o: ['20', '21', '22', '25'], a: 1},
             {q: 'WebSocket connections are initiated via:', o: ['A special WebSocket SYN packet', 'An HTTP Upgrade request', 'A UDP handshake', 'A direct TCP connection to port 8080'], a: 1},
+          ],
+        },
+        {
+          t: 'Cookies, Sessions, CORS & Authentication',
+          learn: '<div class="learn-section"><div class="learn-h">HTTP Cookies</div><p class="learn-p"><b>Cookies</b> are small pieces of data (key-value pairs, max ~4KB) that the server sends to the browser via the <code>Set-Cookie</code> header. The browser stores them and sends them back with every subsequent request to the same domain.</p><div class="learn-code">// Server sets a cookie:\nHTTP/1.1 200 OK\nSet-Cookie: session_id=abc123; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600\n\n// Browser sends cookie on subsequent requests:\nGET /dashboard HTTP/1.1\nCookie: session_id=abc123</div><p class="learn-p"><b>Cookie attributes:</b></p><table class="learn-table"><tr><th>Attribute</th><th>Purpose</th></tr><tr><td><code>HttpOnly</code></td><td>Cookie inaccessible to JavaScript (prevents XSS theft)</td></tr><tr><td><code>Secure</code></td><td>Only sent over HTTPS</td></tr><tr><td><code>SameSite=Strict|Lax|None</code></td><td>Controls cross-site sending (CSRF protection)</td></tr><tr><td><code>Max-Age</code> / <code>Expires</code></td><td>Cookie lifetime. No max-age = session cookie (deleted on browser close)</td></tr><tr><td><code>Domain</code></td><td>Which domains receive the cookie</td></tr><tr><td><code>Path</code></td><td>URL path scope for the cookie</td></tr></table></div><div class="learn-section"><div class="learn-h">Sessions</div><p class="learn-p">HTTP is <b>stateless</b> — each request is independent. <b>Sessions</b> maintain state across requests. The server stores session data (user info, cart, etc.) and gives the client a <b>session ID</b> (via cookie or URL).</p><div class="learn-code">Session flow:\n1. Client logs in: POST /login {user, password}\n2. Server creates session: sessions["abc123"] = {userId: 42, role: "admin"}\n3. Server sends: Set-Cookie: session_id=abc123\n4. Client sends cookie with every request\n5. Server looks up sessions["abc123"] to identify the user\n6. On logout: server deletes session, client clears cookie</div><p class="learn-p"><b>Session storage options:</b></p><table class="learn-table"><tr><th>Storage</th><th>Pros</th><th>Cons</th></tr><tr><td>In-memory (server)</td><td>Fast</td><td>Lost on restart, not scalable</td></tr><tr><td>Database</td><td>Persistent, shareable</td><td>Slower, DB load</td></tr><tr><td>Redis/Memcached</td><td>Fast + shareable + TTL</td><td>Extra infrastructure</td></tr></table></div><div class="learn-section"><div class="learn-h">JWT (JSON Web Tokens)</div><p class="learn-p"><b>JWT</b> is a <b>stateless</b> alternative to sessions. The server signs a token containing user claims and sends it to the client. No server-side session storage needed.</p><div class="learn-code">JWT Structure: header.payload.signature\n\nHeader:  {"alg": "HS256", "typ": "JWT"}\nPayload: {"sub": "42", "name": "Alice", "role": "admin", "exp": 1700000000}\nSignature: HMACSHA256(base64(header) + "." + base64(payload), secret)\n\n// Sent as: Authorization: Bearer eyJhbGci...token...</div><table class="learn-table"><tr><th></th><th>Sessions</th><th>JWT</th></tr><tr><td>State</td><td>Server-side (stateful)</td><td>Client-side (stateless)</td></tr><tr><td>Scalability</td><td>Need shared session store</td><td>Any server can verify</td></tr><tr><td>Revocation</td><td>Easy (delete session)</td><td>Hard (token valid until expiry)</td></tr><tr><td>Size</td><td>Small cookie (session ID)</td><td>Larger token (~1KB+)</td></tr></table></div><div class="learn-section"><div class="learn-h">CORS (Cross-Origin Resource Sharing)</div><p class="learn-p"><b>Same-Origin Policy (SOP)</b>: Browsers block JavaScript from making requests to a different origin (protocol + domain + port). <b>CORS</b> is the mechanism that relaxes this restriction.</p><div class="learn-code">// Origin = protocol + domain + port\nhttps://example.com:443  ← origin\n\n// Same origin:  https://example.com/page2\n// Different:    http://example.com (different protocol)\n// Different:    https://api.example.com (different subdomain)\n// Different:    https://example.com:8080 (different port)</div><p class="learn-p"><b>Preflight request:</b> For "non-simple" requests (PUT, DELETE, custom headers, JSON body), the browser first sends an <code>OPTIONS</code> request to check if the server allows it:</p><div class="learn-code">// Preflight request (browser sends automatically):\nOPTIONS /api/data HTTP/1.1\nOrigin: https://frontend.com\nAccess-Control-Request-Method: POST\nAccess-Control-Request-Headers: Content-Type, Authorization\n\n// Server response:\nHTTP/1.1 204 No Content\nAccess-Control-Allow-Origin: https://frontend.com\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE\nAccess-Control-Allow-Headers: Content-Type, Authorization\nAccess-Control-Max-Age: 86400  // cache preflight for 24h\nAccess-Control-Allow-Credentials: true</div><div class="learn-warn"><b>Security warning:</b> Never use <code>Access-Control-Allow-Origin: *</code> with <code>Access-Control-Allow-Credentials: true</code>. This is forbidden by the spec and would allow any website to make authenticated requests to your API.</div></div><div class="learn-section"><div class="learn-h">OAuth 2.0 (Overview)</div><p class="learn-p"><b>OAuth 2.0</b> is an authorization framework that allows third-party apps to access a user\'s resources without knowing their password (e.g., "Login with Google").</p><div class="learn-code">Authorization Code Flow (most secure):\n1. User clicks "Login with Google"\n2. App redirects to Google: /authorize?client_id=X&amp;redirect_uri=Y&amp;scope=email\n3. User authenticates with Google and consents\n4. Google redirects back: Y?code=AUTH_CODE\n5. App exchanges code for tokens (server-to-server):\n   POST /token {code, client_id, client_secret}\n6. Google returns: {access_token, refresh_token, id_token}\n7. App uses access_token to call Google APIs on user\'s behalf</div><div class="learn-tip"><b>Tip:</b> OAuth 2.0 is for <b>authorization</b> (what can you access), not authentication (who are you). <b>OpenID Connect (OIDC)</b> adds an authentication layer on top of OAuth 2.0 by introducing the <code>id_token</code> (a JWT containing user identity).</div></div>',
+          code: `// === Cookies, Sessions, and CORS Concepts ===
+#include <iostream>
+#include <string>
+#include <map>
+#include <vector>
+#include <sstream>
+using namespace std;
+
+// Simulate cookie parsing
+map<string, string> parseCookies(const string& cookieHeader) {
+    map<string, string> cookies;
+    stringstream ss(cookieHeader);
+    string pair;
+    while (getline(ss, pair, ';')) {
+        size_t eq = pair.find('=');
+        if (eq != string::npos) {
+            string key = pair.substr(0, eq);
+            string val = pair.substr(eq + 1);
+            while (!key.empty() && key[0] == ' ') key = key.substr(1);
+            cookies[key] = val;
+        }
+    }
+    return cookies;
+}
+
+// Simulate session store
+map<string, map<string, string>> sessionStore;
+
+string createSession(const string& userId) {
+    string sessionId = "sess_" + to_string(hash<string>{}(userId));
+    sessionStore[sessionId]["userId"] = userId;
+    sessionStore[sessionId]["created"] = "now";
+    return sessionId;
+}
+
+map<string, string> getSession(const string& sessionId) {
+    if (sessionStore.count(sessionId))
+        return sessionStore[sessionId];
+    return {};
+}
+
+// Simulate CORS check
+bool checkCORS(const string& origin, const vector<string>& allowedOrigins) {
+    for (const auto& allowed : allowedOrigins) {
+        if (allowed == origin || allowed == "*") return true;
+    }
+    return false;
+}
+
+int main() {
+    // Parse cookies
+    string cookieHeader = "session_id=abc123; theme=dark; lang=en";
+    auto cookies = parseCookies(cookieHeader);
+    cout << "=== Cookie Parsing ===" << endl;
+    for (auto& [k, v] : cookies)
+        cout << "  " << k << " = " << v << endl;
+
+    // Session management
+    cout << "\\n=== Session Management ===" << endl;
+    string sid = createSession("user42");
+    cout << "Created session: " << sid << endl;
+    auto session = getSession(sid);
+    cout << "User ID: " << session["userId"] << endl;
+
+    // CORS check
+    cout << "\\n=== CORS Check ===" << endl;
+    vector<string> allowed = {"https://frontend.com", "https://admin.com"};
+    cout << "https://frontend.com: " << (checkCORS("https://frontend.com", allowed) ? "Allowed" : "Blocked") << endl;
+    cout << "https://evil.com: " << (checkCORS("https://evil.com", allowed) ? "Allowed" : "Blocked") << endl;
+
+    return 0;
+}`,
+          problems: [
+            ['CORS Explained', 'https://www.geeksforgeeks.org/cross-origin-resource-sharing-cors/', 'Easy'],
+            ['Session vs JWT', 'https://www.geeksforgeeks.org/session-vs-token-based-authentication/', 'Medium'],
+            ['OAuth 2.0 Concepts', 'https://www.geeksforgeeks.org/workflow-of-oauth-2-0/', 'Medium'],
+          ],
+          mcqs: [
+            {q: 'Which cookie attribute prevents JavaScript from accessing the cookie?', o: ['Secure', 'SameSite', 'HttpOnly', 'Path'], a: 2},
+            {q: 'A CORS preflight request uses which HTTP method?', o: ['GET', 'POST', 'HEAD', 'OPTIONS'], a: 3},
+            {q: 'JWT tokens are stateless because:', o: ['They are encrypted', 'The server stores no session data — all claims are in the token', 'They use cookies', 'They expire automatically'], a: 1},
           ],
         },
       ]
@@ -5450,6 +5772,71 @@ DELIMITER ;`,
             {q: 'For a composite index on (A, B, C), which WHERE clause can use the index efficiently?', o: ['WHERE B = 5', 'WHERE C = 10', 'WHERE A = 1 AND B = 2', 'WHERE B = 2 AND C = 3'], a: 2},
             {q: 'Which keyword in a trigger refers to the row values BEFORE the update?', o: ['NEW', 'OLD', 'BEFORE', 'PREVIOUS'], a: 1}
           ]
+        },
+        {
+          t: 'CTEs, Set Operations & CASE',
+          learn: '<div class="learn-section"><div class="learn-h">Common Table Expressions (WITH Clause)</div><p class="learn-p">A <b>CTE</b> is a named temporary result set that exists only during query execution. It makes complex queries more readable than nested subqueries.</p><div class="learn-code">WITH high_earners AS (\n    SELECT department_id, name, salary\n    FROM employees\n    WHERE salary &gt; 100000\n)\nSELECT department_id, COUNT(*) AS count\nFROM high_earners\nGROUP BY department_id;</div><p class="learn-p">CTEs can reference each other and be used multiple times in the main query — unlike subqueries which are re-evaluated each time.</p></div><div class="learn-section"><div class="learn-h">Recursive CTEs</div><p class="learn-p"><b>Recursive CTEs</b> have a base case and a recursive step joined by <code>UNION ALL</code>. Essential for hierarchical data (org charts, tree structures, bill of materials).</p><div class="learn-code">-- Employee hierarchy: who reports to whom\nWITH RECURSIVE org_chart AS (\n    -- Base: CEO (no manager)\n    SELECT id, name, manager_id, 1 AS level\n    FROM employees WHERE manager_id IS NULL\n    UNION ALL\n    -- Recursive: employees under each manager\n    SELECT e.id, e.name, e.manager_id, o.level + 1\n    FROM employees e\n    JOIN org_chart o ON e.manager_id = o.id\n)\nSELECT * FROM org_chart ORDER BY level, name;</div><div class="learn-warn"><b>Warning:</b> Recursive CTEs can infinite-loop without a proper termination condition. Always ensure the recursive step eventually returns no rows. Add <code>LIMIT</code> or a depth check as a safety net.</div></div><div class="learn-section"><div class="learn-h">Set Operations</div><table class="learn-table"><tr><th>Operation</th><th>Behavior</th><th>Duplicates</th></tr><tr><td>UNION</td><td>Combines results from two queries</td><td>Removed</td></tr><tr><td>UNION ALL</td><td>Combines results from two queries</td><td>Kept (faster)</td></tr><tr><td>INTERSECT</td><td>Only rows in both queries</td><td>Removed</td></tr><tr><td>EXCEPT / MINUS</td><td>Rows in first but not second</td><td>Removed</td></tr></table><p class="learn-p">All set operations require the same number of columns with compatible data types. <code>UNION ALL</code> is faster than <code>UNION</code> because it skips the deduplication step.</p><div class="learn-code">-- Cities where we have customers OR suppliers\nSELECT city FROM customers\nUNION\nSELECT city FROM suppliers;\n\n-- Orders that were NOT refunded\nSELECT order_id FROM orders\nEXCEPT\nSELECT order_id FROM refunds;</div></div><div class="learn-section"><div class="learn-h">CASE Expression</div><p class="learn-p">CASE provides if/else logic inside SQL queries. Two forms:</p><div class="learn-code">-- Simple CASE (compare one value)\nSELECT name,\n    CASE grade\n        WHEN \'A\' THEN \'Excellent\'\n        WHEN \'B\' THEN \'Good\'\n        ELSE \'Needs Improvement\'\n    END AS performance\nFROM students;\n\n-- Searched CASE (arbitrary conditions)\nSELECT name, salary,\n    CASE\n        WHEN salary &gt; 100000 THEN \'High\'\n        WHEN salary &gt; 50000 THEN \'Mid\'\n        ELSE \'Entry\'\n    END AS band\nFROM employees;</div><p class="learn-p"><b>Conditional aggregation</b> — one of the most powerful patterns:</p><div class="learn-code">-- Pivot: count by department and gender in one query\nSELECT department,\n    SUM(CASE WHEN gender = \'M\' THEN 1 ELSE 0 END) AS male_count,\n    SUM(CASE WHEN gender = \'F\' THEN 1 ELSE 0 END) AS female_count\nFROM employees\nGROUP BY department;</div></div><div class="learn-section"><div class="learn-h">COALESCE &amp; NULLIF</div><p class="learn-p"><code>COALESCE(a, b, c)</code> returns the first non-NULL argument. Useful for defaults:</p><div class="learn-code">SELECT name, COALESCE(phone, email, \'No contact\') AS contact\nFROM users;\n-- NULLIF(a, b) returns NULL if a = b, otherwise a\n-- Useful to avoid division by zero:\nSELECT revenue / NULLIF(costs, 0) AS margin FROM sales;</div><div class="learn-tip"><b>Interview tip:</b> CTEs + CASE + window functions is the power combo for SQL interviews. Practice converting nested subqueries to CTEs for readability, and use conditional aggregation for pivot-style queries.</div></div>',
+          code: `-- CTEs, Set Operations & CASE Examples
+
+-- Recursive CTE: Generate numbers 1 to 10
+WITH RECURSIVE nums AS (
+    SELECT 1 AS n
+    UNION ALL
+    SELECT n + 1 FROM nums WHERE n < 10
+)
+SELECT * FROM nums;
+
+-- Recursive CTE: Employee hierarchy with path
+WITH RECURSIVE org AS (
+    SELECT id, name, manager_id,
+           CAST(name AS CHAR(200)) AS path, 1 AS depth
+    FROM employees WHERE manager_id IS NULL
+    UNION ALL
+    SELECT e.id, e.name, e.manager_id,
+           CONCAT(o.path, ' > ', e.name), o.depth + 1
+    FROM employees e JOIN org o ON e.manager_id = o.id
+)
+SELECT * FROM org ORDER BY depth;
+
+-- Conditional aggregation (pivot without PIVOT keyword)
+SELECT
+    YEAR(order_date) AS year,
+    SUM(CASE WHEN MONTH(order_date) = 1 THEN amount ELSE 0 END) AS Jan,
+    SUM(CASE WHEN MONTH(order_date) = 2 THEN amount ELSE 0 END) AS Feb,
+    SUM(CASE WHEN MONTH(order_date) = 3 THEN amount ELSE 0 END) AS Mar
+FROM orders
+GROUP BY YEAR(order_date);
+
+-- Running total using CTE
+WITH ordered_sales AS (
+    SELECT *, ROW_NUMBER() OVER (ORDER BY sale_date) AS rn
+    FROM sales
+)
+SELECT sale_date, amount,
+    SUM(amount) OVER (ORDER BY sale_date) AS running_total
+FROM ordered_sales;
+
+-- EXCEPT: Find customers who never ordered
+SELECT customer_id FROM customers
+EXCEPT
+SELECT DISTINCT customer_id FROM orders;
+
+-- COALESCE with multiple fallbacks
+SELECT
+    product_name,
+    COALESCE(discount_price, regular_price, 0) AS final_price
+FROM products;`,
+          problems: [
+            ['Department Top Three Salaries', 'https://leetcode.com/problems/department-top-three-salaries/', 'Hard'],
+            ['Consecutive Numbers', 'https://leetcode.com/problems/consecutive-numbers/', 'Medium'],
+            ['Tree Node', 'https://leetcode.com/problems/tree-node/', 'Medium'],
+            ['Nth Highest Salary', 'https://leetcode.com/problems/nth-highest-salary/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'What is the difference between UNION and UNION ALL?', o: ['UNION sorts, UNION ALL does not', 'UNION removes duplicates, UNION ALL keeps all rows', 'UNION ALL is slower because it checks for duplicates', 'There is no difference'], a: 1},
+            {q: 'Which keyword makes a CTE recursive?', o: ['LOOP', 'RECURSIVE (after WITH)', 'ITERATE', 'REPEAT'], a: 1},
+            {q: 'What does COALESCE(NULL, NULL, 5, 3) return?', o: ['NULL', '3', '5', 'Error'], a: 2}
+          ]
         }
       ]
     },
@@ -5458,7 +5845,7 @@ DELIMITER ;`,
       topics: [
         {
           t: 'Normalization (1NF, 2NF, 3NF, BCNF)',
-          learn: '<div class="learn-section"><div class="learn-h">What is Normalization?</div><p class="learn-p"><b>Normalization</b> is the process of organizing a relational database to reduce <b>data redundancy</b> and prevent <b>update anomalies</b> (insertion, deletion, modification anomalies). It involves decomposing a table into smaller tables while preserving data integrity through functional dependencies.</p><p class="learn-p"><b>Why normalize?</b></p><ul class="learn-list"><li><b>Insertion anomaly</b> — Cannot insert data without other unrelated data (e.g., can\'t add a new department unless it has employees)</li><li><b>Deletion anomaly</b> — Deleting data causes unintended loss of other data (e.g., deleting the last employee in a dept loses the dept info)</li><li><b>Update anomaly</b> — Changing data requires updating multiple rows (e.g., if dept name is stored with each employee, renaming a dept requires updating all employee rows)</li></ul></div><div class="learn-section"><div class="learn-h">First Normal Form (1NF)</div><p class="learn-p">A relation is in <b>1NF</b> if:</p><ol class="learn-list"><li>All attributes contain only <b>atomic (indivisible) values</b> — no multi-valued or composite attributes</li><li>Each column has a <b>unique name</b></li><li>The <b>order of rows and columns</b> does not matter</li><li>Each row is <b>unique</b> (has a primary key)</li></ol><div class="learn-code">-- NOT in 1NF (multi-valued attribute)\n| emp_id | name  | phone_numbers       |\n|--------|-------|--------------------|\n| 1      | Alice | 9876, 1234, 5678   |\n\n-- In 1NF (separate rows or separate table)\n| emp_id | name  | phone_number |\n|--------|-------|-------------|\n| 1      | Alice | 9876        |\n| 1      | Alice | 1234        |\n| 1      | Alice | 5678        |</div></div><div class="learn-section"><div class="learn-h">Second Normal Form (2NF)</div><p class="learn-p">A relation is in <b>2NF</b> if:</p><ol class="learn-list"><li>It is in 1NF</li><li>Every <b>non-prime attribute</b> is <b>fully functionally dependent</b> on the <b>entire</b> candidate key (no partial dependency)</li></ol><p class="learn-p"><b>Partial dependency</b> occurs when a non-prime attribute depends on only <b>part</b> of a composite candidate key. This only applies when the candidate key is composite.</p><div class="learn-code">-- NOT in 2NF\nEnrollment(student_id, course_id, student_name, grade)\nFDs: {student_id, course_id} -> grade   (full dependency)\n     student_id -> student_name          (partial dependency!)\n\n-- Fix: Decompose\nStudent(student_id, student_name)\nEnrollment(student_id, course_id, grade)</div><div class="learn-tip"><b>Tip:</b> If a relation has a single-attribute candidate key (not composite), it is automatically in 2NF if it is in 1NF (partial dependency is impossible).</div></div><div class="learn-section"><div class="learn-h">Third Normal Form (3NF)</div><p class="learn-p">A relation is in <b>3NF</b> if:</p><ol class="learn-list"><li>It is in 2NF</li><li>No <b>non-prime attribute</b> is <b>transitively dependent</b> on the candidate key</li></ol><p class="learn-p"><b>Formal definition</b>: For every FD X → Y, at least one of the following holds:</p><ul class="learn-list"><li>X → Y is trivial (Y ⊆ X)</li><li>X is a superkey</li><li>Y is a prime attribute (part of some candidate key)</li></ul><div class="learn-code">-- NOT in 3NF\nEmployee(emp_id, dept_id, dept_name)\nFDs: emp_id -> dept_id      (OK)\n     dept_id -> dept_name    (transitive: emp_id -> dept_id -> dept_name)\n\n-- Fix: Decompose\nEmployee(emp_id, dept_id)\nDepartment(dept_id, dept_name)</div><div class="learn-warn"><b>Warning:</b> A common mistake is thinking 3NF means "no transitive dependency." The precise condition is that Y must be a prime attribute OR X must be a superkey. If Y is part of a candidate key, the transitive dependency is allowed in 3NF.</div></div><div class="learn-section"><div class="learn-h">Boyce-Codd Normal Form (BCNF)</div><p class="learn-p"><b>BCNF</b> is a stricter version of 3NF. For every FD X → Y:</p><ul class="learn-list"><li>X → Y is trivial, OR</li><li>X is a <b>superkey</b></li></ul><p class="learn-p">The difference from 3NF: BCNF does <b>not</b> have the exception "Y is a prime attribute." So if a prime attribute is determined by a non-superkey, it violates BCNF but may satisfy 3NF.</p><div class="learn-code">-- In 3NF but NOT in BCNF\nTeaching(student, subject, teacher)\nFDs: {student, subject} -> teacher\n     teacher -> subject\n\nCandidate keys: {student, subject}, {student, teacher}\nCheck teacher -> subject: teacher is NOT a superkey, but subject\nis a prime attribute. So 3NF is satisfied.\nBut BCNF is violated because teacher is not a superkey.\n\n-- Fix: Decompose\nTeacherSubject(teacher, subject)\nStudentTeacher(student, teacher)</div><table class="learn-table"><tr><th>Normal Form</th><th>Requirement</th><th>Eliminates</th></tr><tr><td>1NF</td><td>Atomic values, unique rows</td><td>Repeating groups</td></tr><tr><td>2NF</td><td>1NF + no partial dependencies</td><td>Partial dependencies</td></tr><tr><td>3NF</td><td>2NF + no transitive dependencies (with prime attr exception)</td><td>Transitive dependencies</td></tr><tr><td>BCNF</td><td>For every X→Y, X is a superkey</td><td>All redundancy from FDs</td></tr></table></div><div class="learn-section"><div class="learn-h">Decomposition Properties</div><p class="learn-p">When decomposing a relation, two properties must be preserved:</p><ol class="learn-list"><li><b>Lossless-join decomposition</b> — The original table can be reconstructed by joining the decomposed tables (no spurious tuples). Guaranteed if the common attributes form a superkey of at least one decomposed table.</li><li><b>Dependency preservation</b> — All original FDs can be checked using the decomposed tables alone, without performing a join.</li></ol><p class="learn-p">3NF decomposition can always achieve <b>both</b> lossless-join and dependency-preserving decomposition. BCNF decomposition is always lossless-join but may <b>not</b> preserve all dependencies.</p><div class="learn-tip"><b>Tip:</b> In interviews, always mention both properties when discussing decomposition. "BCNF gives lossless-join but may sacrifice dependency preservation; 3NF guarantees both."</div></div>',
+          learn: '<div class="learn-section"><div class="learn-h">What is Normalization?</div><p class="learn-p"><b>Normalization</b> is the process of organizing a relational database to reduce <b>data redundancy</b> and prevent <b>update anomalies</b> (insertion, deletion, modification anomalies). It involves decomposing a table into smaller tables while preserving data integrity through functional dependencies.</p><p class="learn-p"><b>Why normalize?</b></p><ul class="learn-list"><li><b>Insertion anomaly</b> — Cannot insert data without other unrelated data (e.g., can\'t add a new department unless it has employees)</li><li><b>Deletion anomaly</b> — Deleting data causes unintended loss of other data (e.g., deleting the last employee in a dept loses the dept info)</li><li><b>Update anomaly</b> — Changing data requires updating multiple rows (e.g., if dept name is stored with each employee, renaming a dept requires updating all employee rows)</li></ul></div><div class="learn-section"><div class="learn-h">First Normal Form (1NF)</div><p class="learn-p">A relation is in <b>1NF</b> if:</p><ol class="learn-list"><li>All attributes contain only <b>atomic (indivisible) values</b> — no multi-valued or composite attributes</li><li>Each column has a <b>unique name</b></li><li>The <b>order of rows and columns</b> does not matter</li><li>Each row is <b>unique</b> (has a primary key)</li></ol><div class="learn-code">-- NOT in 1NF (multi-valued attribute)\n| emp_id | name  | phone_numbers       |\n|--------|-------|--------------------|\n| 1      | Alice | 9876, 1234, 5678   |\n\n-- In 1NF (separate rows or separate table)\n| emp_id | name  | phone_number |\n|--------|-------|-------------|\n| 1      | Alice | 9876        |\n| 1      | Alice | 1234        |\n| 1      | Alice | 5678        |</div></div><div class="learn-section"><div class="learn-h">Second Normal Form (2NF)</div><p class="learn-p">A relation is in <b>2NF</b> if:</p><ol class="learn-list"><li>It is in 1NF</li><li>Every <b>non-prime attribute</b> is <b>fully functionally dependent</b> on the <b>entire</b> candidate key (no partial dependency)</li></ol><p class="learn-p"><b>Partial dependency</b> occurs when a non-prime attribute depends on only <b>part</b> of a composite candidate key. This only applies when the candidate key is composite.</p><div class="learn-code">-- NOT in 2NF\nEnrollment(student_id, course_id, student_name, grade)\nFDs: {student_id, course_id} -> grade   (full dependency)\n     student_id -> student_name          (partial dependency!)\n\n-- Fix: Decompose\nStudent(student_id, student_name)\nEnrollment(student_id, course_id, grade)</div><div class="learn-tip"><b>Tip:</b> If a relation has a single-attribute candidate key (not composite), it is automatically in 2NF if it is in 1NF (partial dependency is impossible).</div></div><div class="learn-section"><div class="learn-h">Third Normal Form (3NF)</div><p class="learn-p">A relation is in <b>3NF</b> if:</p><ol class="learn-list"><li>It is in 2NF</li><li>No <b>non-prime attribute</b> is <b>transitively dependent</b> on the candidate key</li></ol><p class="learn-p"><b>Formal definition</b>: For every FD X → Y, at least one of the following holds:</p><ul class="learn-list"><li>X → Y is trivial (Y ⊆ X)</li><li>X is a superkey</li><li>Y is a prime attribute (part of some candidate key)</li></ul><div class="learn-code">-- NOT in 3NF\nEmployee(emp_id, dept_id, dept_name)\nFDs: emp_id -> dept_id      (OK)\n     dept_id -> dept_name    (transitive: emp_id -> dept_id -> dept_name)\n\n-- Fix: Decompose\nEmployee(emp_id, dept_id)\nDepartment(dept_id, dept_name)</div><div class="learn-warn"><b>Warning:</b> A common mistake is thinking 3NF means "no transitive dependency." The precise condition is that Y must be a prime attribute OR X must be a superkey. If Y is part of a candidate key, the transitive dependency is allowed in 3NF.</div></div><div class="learn-section"><div class="learn-h">Boyce-Codd Normal Form (BCNF)</div><p class="learn-p"><b>BCNF</b> is a stricter version of 3NF. For every FD X → Y:</p><ul class="learn-list"><li>X → Y is trivial, OR</li><li>X is a <b>superkey</b></li></ul><p class="learn-p">The difference from 3NF: BCNF does <b>not</b> have the exception "Y is a prime attribute." So if a prime attribute is determined by a non-superkey, it violates BCNF but may satisfy 3NF.</p><div class="learn-code">-- In 3NF but NOT in BCNF\nTeaching(student, subject, teacher)\nFDs: {student, subject} -> teacher\n     teacher -> subject\n\nCandidate keys: {student, subject}, {student, teacher}\nCheck teacher -> subject: teacher is NOT a superkey, but subject\nis a prime attribute. So 3NF is satisfied.\nBut BCNF is violated because teacher is not a superkey.\n\n-- Fix: Decompose\nTeacherSubject(teacher, subject)\nStudentTeacher(student, teacher)</div><table class="learn-table"><tr><th>Normal Form</th><th>Requirement</th><th>Eliminates</th></tr><tr><td>1NF</td><td>Atomic values, unique rows</td><td>Repeating groups</td></tr><tr><td>2NF</td><td>1NF + no partial dependencies</td><td>Partial dependencies</td></tr><tr><td>3NF</td><td>2NF + no transitive dependencies (with prime attr exception)</td><td>Transitive dependencies</td></tr><tr><td>BCNF</td><td>For every X→Y, X is a superkey</td><td>All redundancy from FDs</td></tr></table></div><div class="learn-section"><div class="learn-h">Decomposition Properties</div><p class="learn-p">When decomposing a relation, two properties must be preserved:</p><ol class="learn-list"><li><b>Lossless-join decomposition</b> — The original table can be reconstructed by joining the decomposed tables (no spurious tuples). Guaranteed if the common attributes form a superkey of at least one decomposed table.</li><li><b>Dependency preservation</b> — All original FDs can be checked using the decomposed tables alone, without performing a join.</li></ol><p class="learn-p">3NF decomposition can always achieve <b>both</b> lossless-join and dependency-preserving decomposition. BCNF decomposition is always lossless-join but may <b>not</b> preserve all dependencies.</p><div class="learn-tip"><b>Tip:</b> In interviews, always mention both properties when discussing decomposition. "BCNF gives lossless-join but may sacrifice dependency preservation; 3NF guarantees both."</div></div><div class="learn-section"><div class="learn-h">Fourth Normal Form (4NF)</div><p class="learn-p"><b>4NF</b> deals with <b>multivalued dependencies (MVDs)</b>. A relation is in 4NF if for every non-trivial MVD X →→ Y, X is a superkey.</p><p class="learn-p"><b>Multivalued dependency</b> X →→ Y means: for a given X value, the set of Y values is independent of the other attributes. Unlike FDs, MVDs produce <b>sets</b> of values.</p><div class="learn-code">-- NOT in 4NF:\nEmpSkillLang(emp_id, skill, language)\n\n| emp_id | skill  | language |\n|--------|--------|----------|\n| 1      | Java   | English  |\n| 1      | Java   | French   |\n| 1      | Python | English  |\n| 1      | Python | French   |\n\nMVDs: emp_id →→ skill and emp_id →→ language\n(skills and languages are independent of each other)\n\n-- Fix: Decompose into:\nEmpSkill(emp_id, skill)\nEmpLang(emp_id, language)</div><div class="learn-warn"><b>Warning:</b> If MVDs exist in a BCNF relation, it causes data redundancy — you must list every combination of independent attributes. 4NF eliminates this by decomposing based on MVDs.</div></div><div class="learn-section"><div class="learn-h">Minimal Cover (Canonical Cover)</div><p class="learn-p">A <b>minimal cover</b> (Fc) of a set of FDs F is a reduced set that is equivalent to F (same closure) but has:</p><ol class="learn-list"><li>Every FD has a <b>single attribute</b> on the right side</li><li>No <b>extraneous attributes</b> on the left side (can\'t remove any left attribute without changing the closure)</li><li>No <b>redundant FDs</b> (can\'t remove any FD without changing the closure)</li></ol><div class="learn-code">Algorithm to find Minimal Cover:\n1. Split RHS: A → BC becomes A → B, A → C\n2. Remove extraneous LHS attributes:\n   For AB → C, check if A⁺ (under remaining FDs) contains C\n   If yes, AB → C can be reduced to A → C\n3. Remove redundant FDs:\n   For each FD X → Y, remove it temporarily\n   If X⁺ (under remaining FDs) still contains Y, it\'s redundant\n\nExample: F = {A → BC, B → C, AB → D}\nStep 1: {A → B, A → C, B → C, AB → D}\nStep 2: AB → D: A⁺ = {A,B,C,D} (via A→B, B→C, and we check A→D)\n        Since A⁺ includes D, reduce to A → D\nStep 3: A → C: Remove it. A⁺ = {A,B,D} (via A→B, A→D). C not in A⁺.\n        But B⁺ = {B,C}. So A⁺ with B→C = {A,B,C,D}. A→C is redundant!\nFc = {A → B, B → C, A → D}</div><div class="learn-tip"><b>Interview tip:</b> Minimal cover is used in the 3NF decomposition algorithm (synthesis algorithm). For each FD X → Y in Fc, create a relation {X, Y}. Then ensure at least one relation contains a candidate key.</div></div>',
           code: `-- =============================================
 -- Normalization: Step-by-Step Examples
 -- =============================================
@@ -5693,7 +6080,7 @@ CREATE TABLE EmployeeFull (
       topics: [
         {
           t: 'ACID Properties & Isolation Levels',
-          learn: '<div class="learn-section"><div class="learn-h">What is a Transaction?</div><p class="learn-p">A <b>transaction</b> is a logical unit of work that consists of one or more SQL operations. It either completes entirely (<b>commit</b>) or has no effect at all (<b>rollback</b>). Transactions are essential for maintaining data integrity in multi-user database environments.</p><div class="learn-code">START TRANSACTION;\n    UPDATE Accounts SET balance = balance - 500 WHERE acc_id = 1;\n    UPDATE Accounts SET balance = balance + 500 WHERE acc_id = 2;\nCOMMIT;  -- Both succeed, or neither (on error: ROLLBACK)</div></div><div class="learn-section"><div class="learn-h">ACID Properties</div><p class="learn-p">Every transaction must satisfy four properties, known as <b>ACID</b>:</p><table class="learn-table"><tr><th>Property</th><th>Meaning</th><th>Ensured By</th></tr><tr><td><b>Atomicity</b></td><td>All operations succeed or none do — "all or nothing"</td><td>Transaction manager, undo log</td></tr><tr><td><b>Consistency</b></td><td>Transaction brings DB from one valid state to another; all constraints satisfied</td><td>Application logic + DB constraints</td></tr><tr><td><b>Isolation</b></td><td>Concurrent transactions don\'t interfere with each other</td><td>Concurrency control (locks, MVCC)</td></tr><tr><td><b>Durability</b></td><td>Once committed, changes survive crashes</td><td>Write-Ahead Log (WAL), redo log</td></tr></table><div class="learn-tip"><b>Tip:</b> In interviews, explain ACID with the classic bank transfer example: transferring $500 from Account A to Account B. Atomicity = both debits and credits happen or neither. Consistency = total balance is preserved. Isolation = concurrent transfers don\'t see partial states. Durability = committed transfer survives a power failure.</div></div><div class="learn-section"><div class="learn-h">Transaction States</div><p class="learn-p">A transaction goes through these states:</p><ol class="learn-list"><li><b>Active</b> — Transaction is executing operations</li><li><b>Partially Committed</b> — Final operation executed, waiting for commit</li><li><b>Committed</b> — Changes made permanent</li><li><b>Failed</b> — An error occurred, cannot proceed</li><li><b>Aborted</b> — Rolled back, database restored to pre-transaction state</li></ol><p class="learn-p">After abort, the transaction can be <b>restarted</b> (if the failure was transient) or <b>killed</b> (if the failure is permanent, like a constraint violation).</p></div><div class="learn-section"><div class="learn-h">Problems in Concurrent Transactions</div><p class="learn-p">Without proper isolation, concurrent transactions can cause these <b>anomalies</b>:</p><table class="learn-table"><tr><th>Anomaly</th><th>Description</th><th>Example</th></tr><tr><td><b>Dirty Read</b></td><td>T2 reads uncommitted data written by T1; T1 later rolls back</td><td>T1 updates salary to 100K (not committed). T2 reads 100K. T1 rolls back.</td></tr><tr><td><b>Non-repeatable Read</b></td><td>T1 reads a value, T2 modifies it and commits, T1 re-reads and gets a different value</td><td>T1 reads salary=80K. T2 updates to 90K and commits. T1 re-reads: salary=90K.</td></tr><tr><td><b>Phantom Read</b></td><td>T1 reads a set of rows, T2 inserts/deletes rows that match T1\'s condition, T1 re-reads and gets different rows</td><td>T1: SELECT * WHERE dept=\'Eng\' (3 rows). T2 inserts a new Eng employee. T1 re-reads: 4 rows.</td></tr><tr><td><b>Lost Update</b></td><td>Two transactions read the same value and update it; one update is lost</td><td>Both T1 and T2 read balance=1000. T1 sets 1100, T2 sets 1200. Final: 1200 (T1\'s update lost).</td></tr></table></div><div class="learn-section"><div class="learn-h">SQL Isolation Levels</div><p class="learn-p">SQL standard defines four isolation levels, trading off correctness for performance:</p><table class="learn-table"><tr><th>Isolation Level</th><th>Dirty Read</th><th>Non-repeatable Read</th><th>Phantom Read</th></tr><tr><td>READ UNCOMMITTED</td><td>Possible</td><td>Possible</td><td>Possible</td></tr><tr><td>READ COMMITTED</td><td>Prevented</td><td>Possible</td><td>Possible</td></tr><tr><td>REPEATABLE READ</td><td>Prevented</td><td>Prevented</td><td>Possible</td></tr><tr><td>SERIALIZABLE</td><td>Prevented</td><td>Prevented</td><td>Prevented</td></tr></table><div class="learn-code">-- Set isolation level\nSET TRANSACTION ISOLATION LEVEL REPEATABLE READ;\n\n-- Or for the session\nSET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;</div><p class="learn-p"><b>Default isolation levels</b>:</p><ul class="learn-list"><li><b>MySQL (InnoDB)</b>: REPEATABLE READ (but uses next-key locking to also prevent phantoms in practice)</li><li><b>PostgreSQL</b>: READ COMMITTED</li><li><b>SQL Server</b>: READ COMMITTED</li><li><b>Oracle</b>: READ COMMITTED</li></ul><div class="learn-warn"><b>Warning:</b> SERIALIZABLE provides the strongest guarantees but severely limits concurrency. In practice, most systems use READ COMMITTED or REPEATABLE READ with application-level optimistic concurrency control.</div></div><div class="learn-section"><div class="learn-h">Serializability</div><p class="learn-p">A schedule (sequence of operations from concurrent transactions) is <b>serializable</b> if its result is equivalent to some serial execution of the transactions.</p><ul class="learn-list"><li><b>Conflict Serializability</b>: Two operations conflict if they are from different transactions, access the same data, and at least one is a write. A schedule is conflict-serializable if it can be transformed into a serial schedule by swapping non-conflicting operations. Tested using a <b>precedence graph</b> — if acyclic, the schedule is conflict-serializable.</li><li><b>View Serializability</b>: Weaker condition based on reads-from and final-write relationships. Every conflict-serializable schedule is view-serializable, but not vice versa.</li></ul><div class="learn-code">-- Precedence graph example\n-- T1: R(A), W(A)     T2: R(A), W(A)\n-- Schedule: R1(A) R2(A) W1(A) W2(A)\n-- Conflicts: R1-W2(A): T1->T2, R2-W1(A): T2->T1\n-- Cycle exists! NOT conflict-serializable.</div><div class="learn-tip"><b>Tip:</b> To check conflict serializability: (1) identify all conflicting pairs, (2) draw directed edges in the precedence graph, (3) check for cycles. No cycle = conflict serializable.</div></div>',
+          learn: '<div class="learn-section"><div class="learn-h">What is a Transaction?</div><p class="learn-p">A <b>transaction</b> is a logical unit of work that consists of one or more SQL operations. It either completes entirely (<b>commit</b>) or has no effect at all (<b>rollback</b>). Transactions are essential for maintaining data integrity in multi-user database environments.</p><div class="learn-code">START TRANSACTION;\n    UPDATE Accounts SET balance = balance - 500 WHERE acc_id = 1;\n    UPDATE Accounts SET balance = balance + 500 WHERE acc_id = 2;\nCOMMIT;  -- Both succeed, or neither (on error: ROLLBACK)</div></div><div class="learn-section"><div class="learn-h">ACID Properties</div><p class="learn-p">Every transaction must satisfy four properties, known as <b>ACID</b>:</p><table class="learn-table"><tr><th>Property</th><th>Meaning</th><th>Ensured By</th></tr><tr><td><b>Atomicity</b></td><td>All operations succeed or none do — "all or nothing"</td><td>Transaction manager, undo log</td></tr><tr><td><b>Consistency</b></td><td>Transaction brings DB from one valid state to another; all constraints satisfied</td><td>Application logic + DB constraints</td></tr><tr><td><b>Isolation</b></td><td>Concurrent transactions don\'t interfere with each other</td><td>Concurrency control (locks, MVCC)</td></tr><tr><td><b>Durability</b></td><td>Once committed, changes survive crashes</td><td>Write-Ahead Log (WAL), redo log</td></tr></table><div class="learn-tip"><b>Tip:</b> In interviews, explain ACID with the classic bank transfer example: transferring $500 from Account A to Account B. Atomicity = both debits and credits happen or neither. Consistency = total balance is preserved. Isolation = concurrent transfers don\'t see partial states. Durability = committed transfer survives a power failure.</div></div><div class="learn-section"><div class="learn-h">Transaction States</div><p class="learn-p">A transaction goes through these states:</p><ol class="learn-list"><li><b>Active</b> — Transaction is executing operations</li><li><b>Partially Committed</b> — Final operation executed, waiting for commit</li><li><b>Committed</b> — Changes made permanent</li><li><b>Failed</b> — An error occurred, cannot proceed</li><li><b>Aborted</b> — Rolled back, database restored to pre-transaction state</li></ol><p class="learn-p">After abort, the transaction can be <b>restarted</b> (if the failure was transient) or <b>killed</b> (if the failure is permanent, like a constraint violation).</p></div><div class="learn-section"><div class="learn-h">Problems in Concurrent Transactions</div><p class="learn-p">Without proper isolation, concurrent transactions can cause these <b>anomalies</b>:</p><table class="learn-table"><tr><th>Anomaly</th><th>Description</th><th>Example</th></tr><tr><td><b>Dirty Read</b></td><td>T2 reads uncommitted data written by T1; T1 later rolls back</td><td>T1 updates salary to 100K (not committed). T2 reads 100K. T1 rolls back.</td></tr><tr><td><b>Non-repeatable Read</b></td><td>T1 reads a value, T2 modifies it and commits, T1 re-reads and gets a different value</td><td>T1 reads salary=80K. T2 updates to 90K and commits. T1 re-reads: salary=90K.</td></tr><tr><td><b>Phantom Read</b></td><td>T1 reads a set of rows, T2 inserts/deletes rows that match T1\'s condition, T1 re-reads and gets different rows</td><td>T1: SELECT * WHERE dept=\'Eng\' (3 rows). T2 inserts a new Eng employee. T1 re-reads: 4 rows.</td></tr><tr><td><b>Lost Update</b></td><td>Two transactions read the same value and update it; one update is lost</td><td>Both T1 and T2 read balance=1000. T1 sets 1100, T2 sets 1200. Final: 1200 (T1\'s update lost).</td></tr></table></div><div class="learn-section"><div class="learn-h">SQL Isolation Levels</div><p class="learn-p">SQL standard defines four isolation levels, trading off correctness for performance:</p><table class="learn-table"><tr><th>Isolation Level</th><th>Dirty Read</th><th>Non-repeatable Read</th><th>Phantom Read</th></tr><tr><td>READ UNCOMMITTED</td><td>Possible</td><td>Possible</td><td>Possible</td></tr><tr><td>READ COMMITTED</td><td>Prevented</td><td>Possible</td><td>Possible</td></tr><tr><td>REPEATABLE READ</td><td>Prevented</td><td>Prevented</td><td>Possible</td></tr><tr><td>SERIALIZABLE</td><td>Prevented</td><td>Prevented</td><td>Prevented</td></tr></table><div class="learn-code">-- Set isolation level\nSET TRANSACTION ISOLATION LEVEL REPEATABLE READ;\n\n-- Or for the session\nSET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;</div><p class="learn-p"><b>Default isolation levels</b>:</p><ul class="learn-list"><li><b>MySQL (InnoDB)</b>: REPEATABLE READ (but uses next-key locking to also prevent phantoms in practice)</li><li><b>PostgreSQL</b>: READ COMMITTED</li><li><b>SQL Server</b>: READ COMMITTED</li><li><b>Oracle</b>: READ COMMITTED</li></ul><div class="learn-warn"><b>Warning:</b> SERIALIZABLE provides the strongest guarantees but severely limits concurrency. In practice, most systems use READ COMMITTED or REPEATABLE READ with application-level optimistic concurrency control.</div></div><div class="learn-section"><div class="learn-h">Serializability</div><p class="learn-p">A schedule (sequence of operations from concurrent transactions) is <b>serializable</b> if its result is equivalent to some serial execution of the transactions.</p><ul class="learn-list"><li><b>Conflict Serializability</b>: Two operations conflict if they are from different transactions, access the same data, and at least one is a write. A schedule is conflict-serializable if it can be transformed into a serial schedule by swapping non-conflicting operations. Tested using a <b>precedence graph</b> — if acyclic, the schedule is conflict-serializable.</li><li><b>View Serializability</b>: Weaker condition based on reads-from and final-write relationships. Every conflict-serializable schedule is view-serializable, but not vice versa.</li></ul><div class="learn-code">-- Precedence graph example\n-- T1: R(A), W(A)     T2: R(A), W(A)\n-- Schedule: R1(A) R2(A) W1(A) W2(A)\n-- Conflicts: R1-W2(A): T1->T2, R2-W1(A): T2->T1\n-- Cycle exists! NOT conflict-serializable.</div><div class="learn-tip"><b>Tip:</b> To check conflict serializability: (1) identify all conflicting pairs, (2) draw directed edges in the precedence graph, (3) check for cycles. No cycle = conflict serializable.</div></div><div class="learn-section"><div class="learn-h">Distributed Transactions: Two-Phase Commit (2PC)</div><p class="learn-p">When a transaction spans <b>multiple databases or services</b>, a single COMMIT is not enough. <b>2PC</b> is a protocol that ensures all participants either commit or abort together.</p><div class="learn-code">2PC Protocol:\n\nCoordinator                  Participants (DB1, DB2, ...)\n    |                              |\n    |--- Phase 1: PREPARE --------&gt;|\n    |    "Can you commit?"          |  Each participant:\n    |                               |  - Writes redo/undo logs\n    |&lt;-- VOTE (YES or NO) ---------|  - Acquires locks\n    |                               |  - Replies YES (ready) or NO\n    |\n    | If ALL vote YES:\n    |--- Phase 2: COMMIT ----------&gt;|  Participants commit &amp; release locks\n    |&lt;-- ACK -----------------------|\n    |\n    | If ANY votes NO:\n    |--- Phase 2: ABORT -----------&gt;|  Participants rollback &amp; release locks\n    |&lt;-- ACK -----------------------|</div><p class="learn-p"><b>2PC guarantees atomicity</b> across distributed systems but has a critical flaw: if the coordinator crashes after sending PREPARE but before sending COMMIT/ABORT, participants are <b>blocked</b> — they hold locks indefinitely, waiting for a decision they\'ll never receive.</p></div><div class="learn-section"><div class="learn-h">Three-Phase Commit (3PC)</div><p class="learn-p"><b>3PC</b> adds a <b>PRE-COMMIT</b> phase between PREPARE and COMMIT to reduce blocking:</p><div class="learn-code">3PC Protocol:\nPhase 1: PREPARE    → Participants vote YES/NO (same as 2PC)\nPhase 2: PRE-COMMIT → Coordinator tells all "we WILL commit"\n                      (participants can now safely commit on timeout)\nPhase 3: COMMIT     → Actual commit\n\nKey difference: If coordinator crashes after PRE-COMMIT,\nparticipants can safely commit on timeout (they know everyone\nvoted YES). In 2PC, they\'d be stuck.</div><table class="learn-table"><tr><th>Feature</th><th>2PC</th><th>3PC</th></tr><tr><td>Blocking on coordinator failure</td><td>Yes (major flaw)</td><td>No (participants can decide)</td></tr><tr><td>Message complexity</td><td>Lower (2 rounds)</td><td>Higher (3 rounds)</td></tr><tr><td>Network partition tolerance</td><td>No</td><td>No (can cause inconsistency)</td></tr><tr><td>Used in practice</td><td>Yes (XA transactions, databases)</td><td>Rarely (Saga pattern preferred)</td></tr></table><div class="learn-tip"><b>Interview tip:</b> In modern microservice architectures, 2PC/3PC are largely replaced by the <b>Saga pattern</b> — a sequence of local transactions with compensating actions for rollback. Each service commits locally and publishes an event; if a step fails, compensating transactions undo previous steps.</div></div>',
           code: `-- =============================================
 -- ACID Properties & Isolation Levels
 -- =============================================
@@ -5912,7 +6299,7 @@ SELECT * FROM Accounts WHERE acc_id = 1 FOR UPDATE;
       topics: [
         {
           t: 'B-Tree, B+ Tree & Hash Indexing',
-          learn: '<div class="learn-section"><div class="learn-h">Why Indexing?</div><p class="learn-p">Without indexes, the DBMS must perform a <b>full table scan</b> to find matching rows — examining every row in the table. For a table with millions of rows, this is extremely slow. An <b>index</b> is a data structure that allows the DBMS to find rows efficiently, similar to a book\'s index.</p><p class="learn-p">Indexes are stored separately from the data and maintain pointers (row IDs or page addresses) to the actual data.</p></div><div class="learn-section"><div class="learn-h">B-Tree Index</div><p class="learn-p">A <b>B-Tree</b> (Balanced Tree) of order m has these properties:</p><ul class="learn-list"><li>Every node has at most <b>m</b> children</li><li>Every non-leaf node (except root) has at least <b>⌈m/2⌉</b> children</li><li>The root has at least 2 children (unless it\'s a leaf)</li><li>All leaves are at the <b>same level</b> (balanced)</li><li>A node with k children has k-1 keys</li><li><b>Both internal nodes and leaf nodes</b> store data pointers</li></ul><p class="learn-p">B-Trees keep the tree balanced, ensuring <span class="learn-complexity">O(log n)</span> search, insert, and delete operations.</p></div><div class="learn-section"><div class="learn-h">B+ Tree Index</div><p class="learn-p">The <b>B+ Tree</b> is the most widely used index structure in databases (MySQL InnoDB, PostgreSQL, Oracle, SQL Server). It differs from B-Tree in key ways:</p><table class="learn-table"><tr><th>Feature</th><th>B-Tree</th><th>B+ Tree</th></tr><tr><td>Data pointers</td><td>In both internal and leaf nodes</td><td>Only in leaf nodes</td></tr><tr><td>Leaf nodes linked?</td><td>No</td><td>Yes (doubly linked list)</td></tr><tr><td>Keys in internal nodes</td><td>Unique</td><td>Copies (also appear in leaves)</td></tr><tr><td>Range queries</td><td>Requires tree traversal</td><td>Sequential scan via leaf links</td></tr><tr><td>Fan-out</td><td>Lower (data pointers in internal nodes take space)</td><td>Higher (internal nodes only have keys)</td></tr></table><p class="learn-p"><b>Why B+ Tree is preferred over B-Tree in databases:</b></p><ol class="learn-list"><li><b>Higher fan-out</b> — Internal nodes store only keys (no data), so more keys fit per node, making the tree shorter and requiring fewer disk I/Os.</li><li><b>Efficient range queries</b> — Leaf nodes are linked, so scanning a range is a sequential traversal.</li><li><b>Predictable performance</b> — Every search goes to a leaf node, so the number of I/Os is always the height of the tree.</li></ol><div class="learn-code">-- B+ Tree index on salary (conceptual structure)\n-- Internal nodes: [50000 | 80000 | 110000]\n--                /      |       |        \\\n-- Leaves: [30K,40K,50K]->[60K,70K,80K]->[90K,100K,110K]->[120K]\n--         (linked list for range scans)</div><div class="learn-tip"><b>Tip:</b> For a B+ Tree of order p with n keys, the height is approximately <span class="learn-complexity">O(log_p n)</span>. With p=100 and n=1,000,000, the height is about 3 — meaning any record can be found in 3 disk reads!</div></div><div class="learn-section"><div class="learn-h">Clustered vs Non-Clustered Indexes</div><table class="learn-table"><tr><th>Aspect</th><th>Clustered Index</th><th>Non-Clustered Index</th></tr><tr><td>Data order</td><td>Data rows are physically sorted by the index key</td><td>Separate structure pointing to data</td></tr><tr><td>Number per table</td><td>Only 1 (data can only be sorted one way)</td><td>Multiple</td></tr><tr><td>Leaf nodes contain</td><td>Actual data rows</td><td>Pointers (row IDs) to data</td></tr><tr><td>Speed for range queries</td><td>Very fast (sequential disk reads)</td><td>Slower (may require random I/O)</td></tr><tr><td>Default in InnoDB</td><td>Primary key</td><td>All other indexes</td></tr></table><p class="learn-p">In InnoDB, the <b>primary key IS the clustered index</b>. The data is stored in the leaf nodes of the primary key B+ Tree. Secondary (non-clustered) indexes store the primary key value in their leaves, requiring a <b>secondary lookup</b> to fetch the actual row.</p></div><div class="learn-section"><div class="learn-h">Hash Indexing</div><p class="learn-p">A <b>hash index</b> uses a hash function to map search keys directly to bucket addresses. It provides <span class="learn-complexity">O(1)</span> average-case lookup for equality queries.</p><p class="learn-p"><b>Advantages</b>:</p><ul class="learn-list"><li>Very fast for <b>exact-match queries</b> (WHERE id = 42)</li><li>Simple implementation</li></ul><p class="learn-p"><b>Disadvantages</b>:</p><ul class="learn-list"><li><b>No range queries</b> — Hash does not maintain order, so WHERE salary &gt; 50000 cannot use a hash index</li><li><b>No ORDER BY</b> support</li><li><b>No prefix matching</b> — Cannot use for LIKE \'abc%\'</li><li><b>Hash collisions</b> — Can degrade performance</li><li><b>Resizing</b> — When the table grows, the hash table may need to be rebuilt</li></ul><div class="learn-code">-- MySQL: MEMORY engine supports hash indexes\nCREATE TABLE Cache (\n    key_col VARCHAR(100),\n    value   TEXT,\n    INDEX USING HASH (key_col)\n) ENGINE = MEMORY;\n\n-- PostgreSQL: hash index\nCREATE INDEX idx_hash ON table_name USING HASH (column_name);</div><div class="learn-warn"><b>Warning:</b> In MySQL InnoDB, you cannot explicitly create a hash index on disk tables. InnoDB\'s Adaptive Hash Index is an internal optimization that automatically creates in-memory hash indexes for frequently accessed B+ Tree pages.</div></div><div class="learn-section"><div class="learn-h">Dense vs Sparse Indexes</div><p class="learn-p"><b>Dense index</b>: An index entry for <b>every</b> record in the data file. Allows direct lookup of any record.</p><p class="learn-p"><b>Sparse index</b>: An index entry for only <b>some</b> records (e.g., one per disk block). Requires the data to be sorted on the search key. Uses fewer index entries but requires sequential search within a block.</p><p class="learn-p">A <b>clustered index can be sparse</b> (data is sorted). A <b>non-clustered index must be dense</b> (data is not sorted by the index key).</p></div><div class="learn-section"><div class="learn-h">Multi-Level Indexing</div><p class="learn-p">When an index itself is too large to fit in memory, we can create an <b>index on the index</b> — a multi-level index. The B+ Tree is inherently a multi-level index structure. The internal nodes form upper-level indexes, and the leaf nodes form the lowest-level index pointing to data.</p></div>',
+          learn: '<div class="learn-section"><div class="learn-h">Why Indexing?</div><p class="learn-p">Without indexes, the DBMS must perform a <b>full table scan</b> to find matching rows — examining every row in the table. For a table with millions of rows, this is extremely slow. An <b>index</b> is a data structure that allows the DBMS to find rows efficiently, similar to a book\'s index.</p><p class="learn-p">Indexes are stored separately from the data and maintain pointers (row IDs or page addresses) to the actual data.</p></div><div class="learn-section"><div class="learn-h">B-Tree Index</div><p class="learn-p">A <b>B-Tree</b> (Balanced Tree) of order m has these properties:</p><ul class="learn-list"><li>Every node has at most <b>m</b> children</li><li>Every non-leaf node (except root) has at least <b>⌈m/2⌉</b> children</li><li>The root has at least 2 children (unless it\'s a leaf)</li><li>All leaves are at the <b>same level</b> (balanced)</li><li>A node with k children has k-1 keys</li><li><b>Both internal nodes and leaf nodes</b> store data pointers</li></ul><p class="learn-p">B-Trees keep the tree balanced, ensuring <span class="learn-complexity">O(log n)</span> search, insert, and delete operations.</p></div><div class="learn-section"><div class="learn-h">B+ Tree Index</div><p class="learn-p">The <b>B+ Tree</b> is the most widely used index structure in databases (MySQL InnoDB, PostgreSQL, Oracle, SQL Server). It differs from B-Tree in key ways:</p><table class="learn-table"><tr><th>Feature</th><th>B-Tree</th><th>B+ Tree</th></tr><tr><td>Data pointers</td><td>In both internal and leaf nodes</td><td>Only in leaf nodes</td></tr><tr><td>Leaf nodes linked?</td><td>No</td><td>Yes (doubly linked list)</td></tr><tr><td>Keys in internal nodes</td><td>Unique</td><td>Copies (also appear in leaves)</td></tr><tr><td>Range queries</td><td>Requires tree traversal</td><td>Sequential scan via leaf links</td></tr><tr><td>Fan-out</td><td>Lower (data pointers in internal nodes take space)</td><td>Higher (internal nodes only have keys)</td></tr></table><p class="learn-p"><b>Why B+ Tree is preferred over B-Tree in databases:</b></p><ol class="learn-list"><li><b>Higher fan-out</b> — Internal nodes store only keys (no data), so more keys fit per node, making the tree shorter and requiring fewer disk I/Os.</li><li><b>Efficient range queries</b> — Leaf nodes are linked, so scanning a range is a sequential traversal.</li><li><b>Predictable performance</b> — Every search goes to a leaf node, so the number of I/Os is always the height of the tree.</li></ol><div class="learn-code">-- B+ Tree index on salary (conceptual structure)\n-- Internal nodes: [50000 | 80000 | 110000]\n--                /      |       |        \\\n-- Leaves: [30K,40K,50K]->[60K,70K,80K]->[90K,100K,110K]->[120K]\n--         (linked list for range scans)</div><div class="learn-tip"><b>Tip:</b> For a B+ Tree of order p with n keys, the height is approximately <span class="learn-complexity">O(log_p n)</span>. With p=100 and n=1,000,000, the height is about 3 — meaning any record can be found in 3 disk reads!</div></div><div class="learn-section"><div class="learn-h">Clustered vs Non-Clustered Indexes</div><table class="learn-table"><tr><th>Aspect</th><th>Clustered Index</th><th>Non-Clustered Index</th></tr><tr><td>Data order</td><td>Data rows are physically sorted by the index key</td><td>Separate structure pointing to data</td></tr><tr><td>Number per table</td><td>Only 1 (data can only be sorted one way)</td><td>Multiple</td></tr><tr><td>Leaf nodes contain</td><td>Actual data rows</td><td>Pointers (row IDs) to data</td></tr><tr><td>Speed for range queries</td><td>Very fast (sequential disk reads)</td><td>Slower (may require random I/O)</td></tr><tr><td>Default in InnoDB</td><td>Primary key</td><td>All other indexes</td></tr></table><p class="learn-p">In InnoDB, the <b>primary key IS the clustered index</b>. The data is stored in the leaf nodes of the primary key B+ Tree. Secondary (non-clustered) indexes store the primary key value in their leaves, requiring a <b>secondary lookup</b> to fetch the actual row.</p></div><div class="learn-section"><div class="learn-h">Hash Indexing</div><p class="learn-p">A <b>hash index</b> uses a hash function to map search keys directly to bucket addresses. It provides <span class="learn-complexity">O(1)</span> average-case lookup for equality queries.</p><p class="learn-p"><b>Advantages</b>:</p><ul class="learn-list"><li>Very fast for <b>exact-match queries</b> (WHERE id = 42)</li><li>Simple implementation</li></ul><p class="learn-p"><b>Disadvantages</b>:</p><ul class="learn-list"><li><b>No range queries</b> — Hash does not maintain order, so WHERE salary &gt; 50000 cannot use a hash index</li><li><b>No ORDER BY</b> support</li><li><b>No prefix matching</b> — Cannot use for LIKE \'abc%\'</li><li><b>Hash collisions</b> — Can degrade performance</li><li><b>Resizing</b> — When the table grows, the hash table may need to be rebuilt</li></ul><div class="learn-code">-- MySQL: MEMORY engine supports hash indexes\nCREATE TABLE Cache (\n    key_col VARCHAR(100),\n    value   TEXT,\n    INDEX USING HASH (key_col)\n) ENGINE = MEMORY;\n\n-- PostgreSQL: hash index\nCREATE INDEX idx_hash ON table_name USING HASH (column_name);</div><div class="learn-warn"><b>Warning:</b> In MySQL InnoDB, you cannot explicitly create a hash index on disk tables. InnoDB\'s Adaptive Hash Index is an internal optimization that automatically creates in-memory hash indexes for frequently accessed B+ Tree pages.</div></div><div class="learn-section"><div class="learn-h">Dense vs Sparse Indexes</div><p class="learn-p"><b>Dense index</b>: An index entry for <b>every</b> record in the data file. Allows direct lookup of any record.</p><p class="learn-p"><b>Sparse index</b>: An index entry for only <b>some</b> records (e.g., one per disk block). Requires the data to be sorted on the search key. Uses fewer index entries but requires sequential search within a block.</p><p class="learn-p">A <b>clustered index can be sparse</b> (data is sorted). A <b>non-clustered index must be dense</b> (data is not sorted by the index key).</p></div><div class="learn-section"><div class="learn-h">Multi-Level Indexing</div><p class="learn-p">When an index itself is too large to fit in memory, we can create an <b>index on the index</b> — a multi-level index. The B+ Tree is inherently a multi-level index structure. The internal nodes form upper-level indexes, and the leaf nodes form the lowest-level index pointing to data.</p></div><div class="learn-section"><div class="learn-h">Covering Indexes</div><p class="learn-p">A <b>covering index</b> includes all columns needed by a query in the index itself. The query can be answered entirely from the index without accessing the base table — this is called an <b>index-only scan</b>.</p><div class="learn-code">-- Query: SELECT name, salary FROM employees WHERE dept_id = 5\n\n-- Non-covering index (requires table lookup):\nCREATE INDEX idx_dept ON employees(dept_id);\n-- 1. Find rows with dept_id=5 in index → get row pointers\n-- 2. Go to table to read name, salary (random I/O!)\n\n-- Covering index (no table access needed):\nCREATE INDEX idx_dept_cover ON employees(dept_id, name, salary);\n-- EXPLAIN shows "Using index" — all data in the index leaf nodes</div><p class="learn-p"><b>Why covering indexes are fast:</b></p><ul class="learn-list"><li>Avoids secondary lookup to base table (saves random I/O)</li><li>Index is smaller than the table — more fits in memory</li><li>Especially impactful in InnoDB where secondary indexes need a primary key lookup to get the full row</li></ul><p class="learn-p"><b>INCLUDE columns</b> (PostgreSQL, SQL Server): Add non-key columns to the index leaf pages without affecting the tree structure:</p><div class="learn-code">-- Only dept_id is searchable; name, salary are just stored in leaves\nCREATE INDEX idx_dept_incl ON employees(dept_id) INCLUDE (name, salary);\n-- Smaller index tree, but still covers the query</div><div class="learn-warn"><b>Trade-off:</b> Covering indexes increase write overhead (every INSERT/UPDATE updates the wider index) and use more storage. Use them for frequently run queries on read-heavy tables, not as a default for every query.</div></div><div class="learn-section"><div class="learn-h">Composite Index &amp; Leftmost Prefix Rule</div><p class="learn-p">A <b>composite index</b> on columns (A, B, C) can satisfy queries on:</p><ul class="learn-list"><li>A alone ✓</li><li>A, B ✓</li><li>A, B, C ✓</li><li>B alone ✗ (cannot skip leftmost column)</li><li>A, C ✗ partially (uses A, scans for C)</li></ul><div class="learn-code">CREATE INDEX idx_abc ON orders(customer_id, order_date, amount);\n\n-- Uses index fully:\nWHERE customer_id = 5 AND order_date = \'2024-01-01\'\n\n-- Uses index partially (only customer_id):\nWHERE customer_id = 5 AND amount &gt; 100\n\n-- Cannot use this index:\nWHERE order_date = \'2024-01-01\'  -- leftmost column missing</div><div class="learn-tip"><b>Interview tip:</b> When asked "how would you optimize this query?", always check: (1) Is there an index on the WHERE columns? (2) Does the index cover the SELECT columns? (3) Does the column order follow the leftmost prefix rule? These three checks solve most indexing interview questions.</div></div>',
           code: `-- =============================================
 -- B-Tree, B+ Tree & Hash Indexing
 -- =============================================

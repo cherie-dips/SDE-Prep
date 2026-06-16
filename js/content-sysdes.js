@@ -2308,7 +2308,9 @@ function estimateStorage(itemsPerDay, bytesPerItem, yearsRetention) {
 // n = items inserted, m = hash space size
 // For 7-char base62: m = 62^7 ≈ 3.5 * 10^12
 // With 1B URLs: P ≈ 1 - e^(-10^18 / 7*10^12) ≈ 1 (guaranteed collision!)
-// Need 8+ chars: 62^8 ≈ 2 * 10^14, P ≈ ~0.2% at 1B entries`,
+// Need 8+ chars: 62^8 ≈ 2.18 * 10^14, P ≈ n^2/(2m) ≈ 10^18/(4.36*10^14) >> 1 (still likely!)
+// Need 10+ chars: 62^10 ≈ 8.4 * 10^17, P ≈ 10^18/(1.68*10^18) ≈ 0.6 at 1B entries
+// Use 11+ chars or add collision checking for safety`,
           problems: [
             ["Twitter: estimate read QPS at peak, daily egress bandwidth","#","Medium"],
             ["URL shortener: storage for 5 years at 100M URLs/month","#","Medium"],

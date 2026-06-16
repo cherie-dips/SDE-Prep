@@ -58,14 +58,14 @@ int main() {
     auto z = 'c';      // char
     constexpr int SQ = 10 * 10; // compile-time constant
 
+    // ---- Fast I/O (must be FIRST in main, before any I/O) ----
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
     // ---- Limits ----
     cout << "INT_MAX: " << INT_MAX << endl;
     cout << "INT_MIN: " << INT_MIN << endl;
     cout << "LLONG_MAX: " << LLONG_MAX << endl;
-
-    // ---- Fast I/O for competitive programming ----
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
 
     return 0;
 }`,
@@ -445,7 +445,7 @@ int main() {
       topics: [
         {
           t: 'Vectors & Dynamic Arrays',
-          learn: '<div class="learn-section"><div class="learn-h">Introduction to Vectors</div><p class="learn-p">A <b>vector</b> is the most commonly used container in the C++ Standard Template Library (STL). It is a dynamic array that can grow and shrink at runtime. Vectors store elements in contiguous memory, providing <span class="learn-complexity">O(1)</span> random access and <b>amortized</b> <span class="learn-complexity">O(1)</span> push_back.</p><div class="learn-code">#include &lt;vector&gt;\nvector&lt;int&gt; v;           // empty vector\nvector&lt;int&gt; v(5);        // 5 elements, all 0\nvector&lt;int&gt; v(5, 10);    // 5 elements, all 10\nvector&lt;int&gt; v = {1,2,3}; // initializer list</div></div><div class="learn-section"><div class="learn-h">Common Vector Operations</div><table class="learn-table"><tr><th>Operation</th><th>Syntax</th><th>Time Complexity</th></tr><tr><td>Access element</td><td>v[i] or v.at(i)</td><td><span class="learn-complexity">O(1)</span></td></tr><tr><td>Push back</td><td>v.push_back(x)</td><td>Amortized <span class="learn-complexity">O(1)</span></td></tr><tr><td>Pop back</td><td>v.pop_back()</td><td><span class="learn-complexity">O(1)</span></td></tr><tr><td>Insert</td><td>v.insert(pos, x)</td><td><span class="learn-complexity">O(n)</span></td></tr><tr><td>Erase</td><td>v.erase(pos)</td><td><span class="learn-complexity">O(n)</span></td></tr><tr><td>Size</td><td>v.size()</td><td><span class="learn-complexity">O(1)</span></td></tr><tr><td>Empty check</td><td>v.empty()</td><td><span class="learn-complexity">O(1)</span></td></tr><tr><td>Clear</td><td>v.clear()</td><td><span class="learn-complexity">O(n)</span></td></tr><tr><td>Resize</td><td>v.resize(n)</td><td><span class="learn-complexity">O(n)</span></td></tr></table></div><div class="learn-section"><div class="learn-h">How Vectors Grow</div><p class="learn-p">Vectors manage memory automatically. When the current capacity is exceeded, the vector allocates a new, larger block of memory (typically <b>2x</b> the current capacity), copies all elements, and frees the old block. This is why push_back is <b>amortized</b> O(1) — most calls are O(1), but occasional reallocations cost O(n).</p><div class="learn-code">vector&lt;int&gt; v;\ncout &lt;&lt; v.capacity(); // 0\nv.push_back(1);\ncout &lt;&lt; v.capacity(); // 1\nv.push_back(2);\ncout &lt;&lt; v.capacity(); // 2\nv.push_back(3);\ncout &lt;&lt; v.capacity(); // 4 (doubled!)\nv.reserve(100);       // pre-allocate for 100 elements</div><div class="learn-tip"><b>Tip:</b> If you know the approximate size in advance, use <code>v.reserve(n)</code> to avoid repeated reallocations. This can significantly improve performance.</div></div><div class="learn-section"><div class="learn-h">2D Vectors</div><p class="learn-p">2D vectors are vectors of vectors, commonly used for matrices and grids:</p><div class="learn-code">// Create a 3x4 matrix filled with 0\nvector&lt;vector&lt;int&gt;&gt; mat(3, vector&lt;int&gt;(4, 0));\nmat[1][2] = 5;  // access row 1, col 2\n\n// Iterate\nfor (int i = 0; i &lt; mat.size(); i++)\n    for (int j = 0; j &lt; mat[0].size(); j++)\n        cout &lt;&lt; mat[i][j] &lt;&lt; " ";</div></div><div class="learn-section"><div class="learn-h">Vector Tricks for Competitive Programming</div><ul class="learn-list"><li><code>sort(v.begin(), v.end())</code> — sort in ascending order</li><li><code>sort(v.begin(), v.end(), greater&lt;int&gt;())</code> — descending order</li><li><code>reverse(v.begin(), v.end())</code> — reverse the vector</li><li><code>*max_element(v.begin(), v.end())</code> — find maximum</li><li><code>*min_element(v.begin(), v.end())</code> — find minimum</li><li><code>accumulate(v.begin(), v.end(), 0)</code> — sum of elements</li><li><code>v.erase(unique(v.begin(), v.end()), v.end())</code> — remove consecutive duplicates</li></ul><div class="learn-warn"><b>Warning:</b> Accessing <code>v[i]</code> when <code>i &gt;= v.size()</code> is undefined behavior. Use <code>v.at(i)</code> for bounds-checked access that throws an exception, or always verify the index.</div></div>',
+          learn: '<div class="learn-section"><div class="learn-h">Introduction to Vectors</div><p class="learn-p">A <b>vector</b> is the most commonly used container in the C++ Standard Template Library (STL). It is a dynamic array that can grow and shrink at runtime. Vectors store elements in contiguous memory, providing <span class="learn-complexity">O(1)</span> random access and <b>amortized</b> <span class="learn-complexity">O(1)</span> push_back.</p><div class="learn-code">#include &lt;vector&gt;\nvector&lt;int&gt; v;           // empty vector\nvector&lt;int&gt; v(5);        // 5 elements, all 0\nvector&lt;int&gt; v(5, 10);    // 5 elements, all 10\nvector&lt;int&gt; v = {1,2,3}; // initializer list</div></div><div class="learn-section"><div class="learn-h">Common Vector Operations</div><table class="learn-table"><tr><th>Operation</th><th>Syntax</th><th>Time Complexity</th></tr><tr><td>Access element</td><td>v[i] or v.at(i)</td><td><span class="learn-complexity">O(1)</span></td></tr><tr><td>Push back</td><td>v.push_back(x)</td><td>Amortized <span class="learn-complexity">O(1)</span></td></tr><tr><td>Pop back</td><td>v.pop_back()</td><td><span class="learn-complexity">O(1)</span></td></tr><tr><td>Insert</td><td>v.insert(pos, x)</td><td><span class="learn-complexity">O(n)</span></td></tr><tr><td>Erase</td><td>v.erase(pos)</td><td><span class="learn-complexity">O(n)</span></td></tr><tr><td>Size</td><td>v.size()</td><td><span class="learn-complexity">O(1)</span></td></tr><tr><td>Empty check</td><td>v.empty()</td><td><span class="learn-complexity">O(1)</span></td></tr><tr><td>Clear</td><td>v.clear()</td><td><span class="learn-complexity">O(n)</span></td></tr><tr><td>Resize</td><td>v.resize(n)</td><td><span class="learn-complexity">O(n)</span></td></tr></table></div><div class="learn-section"><div class="learn-h">How Vectors Grow</div><p class="learn-p">Vectors manage memory automatically. When the current capacity is exceeded, the vector allocates a new, larger block of memory (typically <b>2x</b> the current capacity), copies all elements, and frees the old block. This is why push_back is <b>amortized</b> O(1) — most calls are O(1), but occasional reallocations cost O(n).</p><div class="learn-code">vector&lt;int&gt; v;\ncout &lt;&lt; v.capacity(); // 0\nv.push_back(1);\ncout &lt;&lt; v.capacity(); // 1\nv.push_back(2);\ncout &lt;&lt; v.capacity(); // 2\nv.push_back(3);\ncout &lt;&lt; v.capacity(); // 4 (doubled!)\nv.reserve(100);       // pre-allocate for 100 elements</div><div class="learn-tip"><b>Tip:</b> If you know the approximate size in advance, use <code>v.reserve(n)</code> to avoid repeated reallocations. This can significantly improve performance.</div></div><div class="learn-section"><div class="learn-h">2D Vectors</div><p class="learn-p">2D vectors are vectors of vectors, commonly used for matrices and grids:</p><div class="learn-code">// Create a 3x4 matrix filled with 0\nvector&lt;vector&lt;int&gt;&gt; mat(3, vector&lt;int&gt;(4, 0));\nmat[1][2] = 5;  // access row 1, col 2\n\n// Iterate\nfor (int i = 0; i &lt; mat.size(); i++)\n    for (int j = 0; j &lt; mat[0].size(); j++)\n        cout &lt;&lt; mat[i][j] &lt;&lt; " ";</div></div><div class="learn-section"><div class="learn-h">Vector Tricks for Competitive Programming</div><ul class="learn-list"><li><code>sort(v.begin(), v.end())</code> — sort in ascending order</li><li><code>sort(v.begin(), v.end(), greater&lt;int&gt;())</code> — descending order</li><li><code>reverse(v.begin(), v.end())</code> — reverse the vector</li><li><code>*max_element(v.begin(), v.end())</code> — find maximum</li><li><code>*min_element(v.begin(), v.end())</code> — find minimum</li><li><code>accumulate(v.begin(), v.end(), 0)</code> — sum of elements</li><li><code>v.erase(unique(v.begin(), v.end()), v.end())</code> — remove consecutive duplicates</li></ul><div class="learn-warn"><b>Warning:</b> Accessing <code>v[i]</code> when <code>i &gt;= v.size()</code> is undefined behavior. Use <code>v.at(i)</code> for bounds-checked access that throws an exception, or always verify the index.</div></div><div class="learn-section"><div class="learn-h">emplace_back vs push_back</div><p class="learn-p"><code>push_back</code> copies (or moves) an already-constructed object into the vector. <code>emplace_back</code> <b>constructs the object in-place</b> inside the vector\'s memory, forwarding constructor arguments directly — avoiding a temporary.</p><div class="learn-code">struct Point {\n    int x, y;\n    Point(int x, int y) : x(x), y(y) { cout &lt;&lt; "construct" &lt;&lt; endl; }\n    Point(const Point&amp; p) : x(p.x), y(p.y) { cout &lt;&lt; "copy" &lt;&lt; endl; }\n};\n\nvector&lt;Point&gt; v;\nv.push_back(Point(1, 2));  // construct + move (or copy)\nv.emplace_back(1, 2);      // construct only — no temporary</div><table class="learn-table"><tr><th></th><th>push_back</th><th>emplace_back</th></tr><tr><td>Argument</td><td>An object of type T</td><td>Constructor arguments for T</td></tr><tr><td>Temporaries</td><td>Creates a temporary, then moves/copies</td><td>Constructs directly in vector memory</td></tr><tr><td>For primitives</td><td>Identical performance</td><td>Identical performance</td></tr><tr><td>For complex objects</td><td>1 construct + 1 move</td><td>1 construct only</td></tr></table><div class="learn-tip"><b>Tip:</b> For primitives (<code>int</code>, <code>double</code>), there\'s no difference. For objects with expensive constructors, <code>emplace_back</code> saves one move/copy. In practice, modern compilers often optimize both to the same result via copy elision.</div></div><div class="learn-section"><div class="learn-h">Iterator Invalidation Rules</div><p class="learn-p"><b>Iterator invalidation</b> means an iterator becomes dangling (points to freed memory) after a container modification. This is a major source of undefined behavior.</p><table class="learn-table"><tr><th>Operation</th><th>Invalidates</th></tr><tr><td><code>push_back</code> / <code>emplace_back</code></td><td><b>All</b> iterators if reallocation occurs (size exceeds capacity). Otherwise only <code>end()</code>.</td></tr><tr><td><code>insert</code></td><td>All iterators at or after the insertion point. All if reallocation occurs.</td></tr><tr><td><code>erase</code></td><td>All iterators at or after the erased element.</td></tr><tr><td><code>clear</code> / <code>resize(smaller)</code></td><td>All iterators.</td></tr><tr><td><code>reserve</code></td><td>All iterators (if capacity changes).</td></tr></table><div class="learn-code">vector&lt;int&gt; v = {1, 2, 3, 4, 5};\nauto it = v.begin() + 2;  // points to 3\n\nv.push_back(6);           // MAY invalidate it (if reallocation)\ncout &lt;&lt; *it;              // UNDEFINED BEHAVIOR if reallocated!\n\n// Safe pattern: erase while iterating\nfor (auto it = v.begin(); it != v.end(); ) {\n    if (*it % 2 == 0)\n        it = v.erase(it);  // erase returns next valid iterator\n    else\n        ++it;\n}</div><div class="learn-warn"><b>Interview classic:</b> "What happens if you call push_back while iterating over a vector?" — Potential crash due to iterator invalidation. Use index-based loops or <code>reserve()</code> to prevent reallocation.</div></div>',
           code: `#include <iostream>
 #include <vector>
 #include <algorithm>
@@ -522,7 +522,7 @@ int main() {
         },
         {
           t: 'Maps, Sets & Unordered Containers',
-          learn: '<div class="learn-section"><div class="learn-h">std::map — Ordered Map</div><p class="learn-p">A <code>map</code> stores key-value pairs in <b>sorted order</b> by key. It is implemented as a <b>Red-Black Tree</b> (self-balancing BST), giving <span class="learn-complexity">O(log n)</span> for insert, find, and erase.</p><div class="learn-code">#include &lt;map&gt;\nmap&lt;string, int&gt; ages;\nages["Alice"] = 25;\nages["Bob"] = 30;\nages.insert({"Charlie", 35});\n\n// Access\ncout &lt;&lt; ages["Alice"];  // 25\n\n// Check existence\nif (ages.count("Bob")) { /* exists */ }\nif (ages.find("Bob") != ages.end()) { /* exists */ }</div><div class="learn-warn"><b>Warning:</b> Using <code>map[key]</code> to check existence actually <b>inserts</b> the key with a default value if it doesn\'t exist! Use <code>count()</code> or <code>find()</code> to check without inserting.</div></div><div class="learn-section"><div class="learn-h">std::unordered_map — Hash Map</div><p class="learn-p">An <code>unordered_map</code> uses a <b>hash table</b> for <b>average</b> <span class="learn-complexity">O(1)</span> operations. It does not maintain any order. Worst case is <span class="learn-complexity">O(n)</span> due to hash collisions.</p><div class="learn-code">#include &lt;unordered_map&gt;\nunordered_map&lt;string, int&gt; freq;\nfreq["apple"]++;\nfreq["banana"] += 3;\n\nfor (auto&amp; [key, val] : freq) {\n    cout &lt;&lt; key &lt;&lt; ": " &lt;&lt; val &lt;&lt; endl;\n}</div><table class="learn-table"><tr><th>Feature</th><th>map</th><th>unordered_map</th></tr><tr><td>Order</td><td>Sorted by key</td><td>No order</td></tr><tr><td>Implementation</td><td>Red-Black Tree</td><td>Hash Table</td></tr><tr><td>Insert/Find</td><td><span class="learn-complexity">O(log n)</span></td><td>Avg <span class="learn-complexity">O(1)</span>, Worst <span class="learn-complexity">O(n)</span></td></tr><tr><td>Custom key</td><td>Needs operator&lt;</td><td>Needs hash function</td></tr></table></div><div class="learn-section"><div class="learn-h">std::set &amp; std::unordered_set</div><p class="learn-p"><code>set</code> stores <b>unique elements</b> in sorted order (Red-Black Tree). <code>unordered_set</code> stores unique elements with no order (Hash Table).</p><div class="learn-code">set&lt;int&gt; s = {3, 1, 4, 1, 5}; // {1, 3, 4, 5} - sorted, no duplicates\ns.insert(2);    // {1, 2, 3, 4, 5}\ns.erase(3);     // {1, 2, 4, 5}\ns.count(4);     // 1 (exists)\n\nunordered_set&lt;int&gt; us = {3, 1, 4};\nus.insert(2);   // O(1) average</div></div><div class="learn-section"><div class="learn-h">std::multiset &amp; std::multimap</div><p class="learn-p"><code>multiset</code> allows duplicate elements. <code>multimap</code> allows duplicate keys. Both maintain sorted order.</p><div class="learn-code">multiset&lt;int&gt; ms = {3, 1, 4, 1, 5, 1};\ncout &lt;&lt; ms.count(1); // 3\nms.erase(ms.find(1)); // removes ONE occurrence of 1\nms.erase(1);           // removes ALL occurrences of 1</div><div class="learn-warn"><b>Warning:</b> <code>multiset::erase(value)</code> removes ALL occurrences. To remove just one, use <code>erase(find(value))</code>.</div></div><div class="learn-section"><div class="learn-h">Practical Patterns</div><p class="learn-p">Common interview patterns with maps and sets:</p><ul class="learn-list"><li><b>Frequency counting:</b> <code>unordered_map&lt;int, int&gt; freq; for(int x : arr) freq[x]++;</code></li><li><b>Two Sum with map:</b> Store complements while iterating</li><li><b>Sliding window with map:</b> Track character frequencies</li><li><b>Ordered statistics:</b> Use <code>set</code> with <code>lower_bound</code>/<code>upper_bound</code></li></ul><div class="learn-tip"><b>Tip:</b> Use <code>unordered_map</code> by default for speed. Switch to <code>map</code> only when you need sorted order or when hash collisions cause TLE (rare but possible in competitive programming).</div></div>',
+          learn: '<div class="learn-section"><div class="learn-h">std::map — Ordered Map</div><p class="learn-p">A <code>map</code> stores key-value pairs in <b>sorted order</b> by key. It is implemented as a <b>Red-Black Tree</b> (self-balancing BST), giving <span class="learn-complexity">O(log n)</span> for insert, find, and erase.</p><div class="learn-code">#include &lt;map&gt;\nmap&lt;string, int&gt; ages;\nages["Alice"] = 25;\nages["Bob"] = 30;\nages.insert({"Charlie", 35});\n\n// Access\ncout &lt;&lt; ages["Alice"];  // 25\n\n// Check existence\nif (ages.count("Bob")) { /* exists */ }\nif (ages.find("Bob") != ages.end()) { /* exists */ }</div><div class="learn-warn"><b>Warning:</b> Using <code>map[key]</code> to check existence actually <b>inserts</b> the key with a default value if it doesn\'t exist! Use <code>count()</code> or <code>find()</code> to check without inserting.</div></div><div class="learn-section"><div class="learn-h">std::unordered_map — Hash Map</div><p class="learn-p">An <code>unordered_map</code> uses a <b>hash table</b> for <b>average</b> <span class="learn-complexity">O(1)</span> operations. It does not maintain any order. Worst case is <span class="learn-complexity">O(n)</span> due to hash collisions.</p><div class="learn-code">#include &lt;unordered_map&gt;\nunordered_map&lt;string, int&gt; freq;\nfreq["apple"]++;\nfreq["banana"] += 3;\n\nfor (auto&amp; [key, val] : freq) {\n    cout &lt;&lt; key &lt;&lt; ": " &lt;&lt; val &lt;&lt; endl;\n}</div><table class="learn-table"><tr><th>Feature</th><th>map</th><th>unordered_map</th></tr><tr><td>Order</td><td>Sorted by key</td><td>No order</td></tr><tr><td>Implementation</td><td>Red-Black Tree</td><td>Hash Table</td></tr><tr><td>Insert/Find</td><td><span class="learn-complexity">O(log n)</span></td><td>Avg <span class="learn-complexity">O(1)</span>, Worst <span class="learn-complexity">O(n)</span></td></tr><tr><td>Custom key</td><td>Needs operator&lt;</td><td>Needs hash function</td></tr></table></div><div class="learn-section"><div class="learn-h">std::set &amp; std::unordered_set</div><p class="learn-p"><code>set</code> stores <b>unique elements</b> in sorted order (Red-Black Tree). <code>unordered_set</code> stores unique elements with no order (Hash Table).</p><div class="learn-code">set&lt;int&gt; s = {3, 1, 4, 1, 5}; // {1, 3, 4, 5} - sorted, no duplicates\ns.insert(2);    // {1, 2, 3, 4, 5}\ns.erase(3);     // {1, 2, 4, 5}\ns.count(4);     // 1 (exists)\n\nunordered_set&lt;int&gt; us = {3, 1, 4};\nus.insert(2);   // O(1) average</div></div><div class="learn-section"><div class="learn-h">std::multiset &amp; std::multimap</div><p class="learn-p"><code>multiset</code> allows duplicate elements. <code>multimap</code> allows duplicate keys. Both maintain sorted order.</p><div class="learn-code">multiset&lt;int&gt; ms = {3, 1, 4, 1, 5, 1};\ncout &lt;&lt; ms.count(1); // 3\nms.erase(ms.find(1)); // removes ONE occurrence of 1\nms.erase(1);           // removes ALL occurrences of 1</div><div class="learn-warn"><b>Warning:</b> <code>multiset::erase(value)</code> removes ALL occurrences. To remove just one, use <code>erase(find(value))</code>.</div></div><div class="learn-section"><div class="learn-h">Practical Patterns</div><p class="learn-p">Common interview patterns with maps and sets:</p><ul class="learn-list"><li><b>Frequency counting:</b> <code>unordered_map&lt;int, int&gt; freq; for(int x : arr) freq[x]++;</code></li><li><b>Two Sum with map:</b> Store complements while iterating</li><li><b>Sliding window with map:</b> Track character frequencies</li><li><b>Ordered statistics:</b> Use <code>set</code> with <code>lower_bound</code>/<code>upper_bound</code></li></ul><div class="learn-tip"><b>Tip:</b> Use <code>unordered_map</code> by default for speed. Switch to <code>map</code> only when you need sorted order or when hash collisions cause TLE (rare but possible in competitive programming).</div></div><div class="learn-section"><div class="learn-h">Hash Table Internals (unordered_map)</div><p class="learn-p">An <code>unordered_map</code> uses a hash table with <b>separate chaining</b>. Internally it maintains an array of <b>buckets</b>, each containing a linked list of entries that hash to the same index.</p><div class="learn-code">bucket_index = hash(key) % bucket_count\n\n// Key metrics:\nm.bucket_count()      // number of buckets\nm.load_factor()       // size / bucket_count\nm.max_load_factor()   // threshold (default 1.0)\nm.reserve(n)          // pre-allocate for n elements</div><p class="learn-p"><b>Load factor</b> = size / bucket_count. When it exceeds <code>max_load_factor</code> (default 1.0), the table <b>rehashes</b>: doubles the bucket count and re-inserts all elements — an O(n) operation. This is why amortized cost is O(1), but individual inserts can be O(n).</p><p class="learn-p"><b>Worst case O(n):</b> If all keys hash to the same bucket, every operation degenerates to linear search through a linked list. This can happen with adversarial inputs (hash collision attacks).</p></div><div class="learn-section"><div class="learn-h">Collision Resolution Strategies</div><table class="learn-table"><tr><th>Strategy</th><th>How It Works</th><th>Pros</th><th>Cons</th></tr><tr><td><b>Chaining</b> (C++ stdlib)</td><td>Each bucket has a linked list</td><td>Simple, handles high load</td><td>Cache-unfriendly, extra memory for pointers</td></tr><tr><td><b>Open Addressing</b></td><td>On collision, probe for next empty slot</td><td>Cache-friendly, less memory overhead</td><td>Degrades at high load factor, deletion is complex</td></tr></table><p class="learn-p">Open addressing variants: <b>Linear probing</b> (check slot+1, +2, +3...), <b>Quadratic probing</b> (check slot+1², +2², +3²...), <b>Double hashing</b> (use second hash function for step size).</p></div><div class="learn-section"><div class="learn-h">Red-Black Tree Properties (backing std::map)</div><p class="learn-p">A <b>Red-Black Tree</b> is a self-balancing BST with 5 properties:</p><ul class="learn-list"><li>Every node is colored <b>red</b> or <b>black</b></li><li>The root is always <b>black</b></li><li>All NIL (null) leaves are <b>black</b></li><li>A <b>red</b> node\'s children must both be <b>black</b> (no two consecutive reds)</li><li>Every path from a node to any descendant NIL has the <b>same number of black nodes</b> (black-height)</li></ul><p class="learn-p">These properties guarantee the tree height ≤ 2·log₂(n+1), ensuring <span class="learn-complexity">O(log n)</span> for all operations. Balance is maintained through <b>rotations</b> (left/right) and <b>recoloring</b> after insertions and deletions.</p><div class="learn-tip"><b>Interview tip:</b> You won\'t need to implement a Red-Black tree. Know the properties, why it guarantees O(log n), and that it\'s behind <code>map</code>/<code>set</code>. For self-balancing BSTs, AVL trees are simpler to explain (use balance factors and 4 rotation cases).</div></div><div class="learn-section"><div class="learn-h">Custom Hash Function</div><p class="learn-p">To use <code>pair&lt;int,int&gt;</code> or custom types as <code>unordered_map</code> keys, you must provide a hash function:</p><div class="learn-code">struct PairHash {\n    size_t operator()(const pair&lt;int,int&gt;&amp; p) const {\n        auto h1 = hash&lt;int&gt;{}(p.first);\n        auto h2 = hash&lt;int&gt;{}(p.second);\n        // Combine asymmetrically to avoid (a,b) == (b,a)\n        return h1 ^ (h2 * 2654435761);\n    }\n};\nunordered_map&lt;pair&lt;int,int&gt;, int, PairHash&gt; mp;\nmp[{1, 2}] = 42;</div><div class="learn-warn"><b>Warning:</b> Never use simple XOR (<code>h1 ^ h2</code>) — it maps (a,b) and (b,a) to the same hash. Always combine asymmetrically (multiply, shift, or use a mixing constant).</div></div>',
           code: `#include <iostream>
 #include <map>
 #include <unordered_map>
@@ -867,7 +867,7 @@ int main() {
       topics: [
         {
           t: 'Classes, Objects & Constructors',
-          learn: '<div class="learn-section"><div class="learn-h">What is a Class?</div><p class="learn-p">A <b>class</b> is a user-defined data type that bundles data (member variables) and functions (member methods) together. Think of a class as a <b>blueprint</b> — just as an architectural blueprint defines how to build a house, a class defines how to create objects.</p><div class="learn-code">class Student {\npublic:\n    string name;\n    int age;\n    double gpa;\n\n    void display() {\n        cout &lt;&lt; name &lt;&lt; " (Age: " &lt;&lt; age &lt;&lt; ", GPA: " &lt;&lt; gpa &lt;&lt; ")" &lt;&lt; endl;\n    }\n};</div></div><div class="learn-section"><div class="learn-h">Objects</div><p class="learn-p">An <b>object</b> is an instance of a class. You can create multiple objects from the same class, each with its own data:</p><div class="learn-code">Student s1;\ns1.name = "Alice";\ns1.age = 20;\ns1.gpa = 3.8;\ns1.display();  // Alice (Age: 20, GPA: 3.8)\n\nStudent s2 = {"Bob", 21, 3.5};  // aggregate initialization (if no user constructors)</div></div><div class="learn-section"><div class="learn-h">Access Specifiers</div><p class="learn-p">C++ provides three access levels:</p><table class="learn-table"><tr><th>Specifier</th><th>Access</th></tr><tr><td><code>public</code></td><td>Accessible from anywhere</td></tr><tr><td><code>private</code></td><td>Accessible only within the class</td></tr><tr><td><code>protected</code></td><td>Accessible in the class and its derived classes</td></tr></table><p class="learn-p">By default, members of a class are <code>private</code>. In a <code>struct</code>, they are <code>public</code> by default. This is the <b>only</b> difference between struct and class in C++.</p></div><div class="learn-section"><div class="learn-h">Constructors</div><p class="learn-p">A <b>constructor</b> is a special method that is called automatically when an object is created. It has the same name as the class and no return type.</p><p class="learn-p"><b>1. Default Constructor:</b></p><div class="learn-code">class Point {\npublic:\n    int x, y;\n    Point() : x(0), y(0) {}  // default constructor\n};</div><p class="learn-p"><b>2. Parameterized Constructor:</b></p><div class="learn-code">class Point {\npublic:\n    int x, y;\n    Point(int x, int y) : x(x), y(y) {}  // parameterized\n};\nPoint p(3, 4);  // x=3, y=4</div><p class="learn-p"><b>3. Copy Constructor:</b> Creates an object by copying another object of the same type.</p><div class="learn-code">class Point {\npublic:\n    int x, y;\n    Point(const Point&amp; other) : x(other.x), y(other.y) {\n        cout &lt;&lt; "Copy constructor called" &lt;&lt; endl;\n    }\n};\nPoint p1(3, 4);\nPoint p2 = p1;  // copy constructor called\nPoint p3(p1);   // also copy constructor</div></div><div class="learn-section"><div class="learn-h">Initializer Lists</div><p class="learn-p">The <b>member initializer list</b> initializes members directly rather than assigning them in the constructor body. This is more efficient and required for const members, reference members, and base classes.</p><div class="learn-code">class Student {\n    const int id;\n    string name;\npublic:\n    // Must use initializer list for const member\n    Student(int id, string name) : id(id), name(name) {}\n};</div><div class="learn-tip"><b>Tip:</b> Always use initializer lists for better performance. They initialize members directly, while assignment in the body first default-constructs then assigns.</div></div><div class="learn-section"><div class="learn-h">Destructor</div><p class="learn-p">A <b>destructor</b> is called automatically when an object goes out of scope or is explicitly deleted. It\'s used to release resources (memory, file handles, etc.).</p><div class="learn-code">class FileHandler {\n    FILE* fp;\npublic:\n    FileHandler(const char* filename) {\n        fp = fopen(filename, "r");\n    }\n    ~FileHandler() {  // destructor\n        if (fp) fclose(fp);\n        cout &lt;&lt; "File closed" &lt;&lt; endl;\n    }\n};</div></div><div class="learn-section"><div class="learn-h">Rule of Three / Rule of Five</div><p class="learn-p">If your class manages resources (dynamic memory, file handles), you likely need to define:</p><p class="learn-p"><b>Rule of Three:</b> Destructor, Copy Constructor, Copy Assignment Operator</p><p class="learn-p"><b>Rule of Five (C++11):</b> Add Move Constructor and Move Assignment Operator</p><div class="learn-warn"><b>Warning:</b> If you define any of these special functions, you likely need all of them. Failing to follow the Rule of Three/Five leads to double-free bugs, memory leaks, or dangling pointers.</div></div>',
+          learn: '<div class="learn-section"><div class="learn-h">What is a Class?</div><p class="learn-p">A <b>class</b> is a user-defined data type that bundles data (member variables) and functions (member methods) together. Think of a class as a <b>blueprint</b> — just as an architectural blueprint defines how to build a house, a class defines how to create objects.</p><div class="learn-code">class Student {\npublic:\n    string name;\n    int age;\n    double gpa;\n\n    void display() {\n        cout &lt;&lt; name &lt;&lt; " (Age: " &lt;&lt; age &lt;&lt; ", GPA: " &lt;&lt; gpa &lt;&lt; ")" &lt;&lt; endl;\n    }\n};</div></div><div class="learn-section"><div class="learn-h">Objects</div><p class="learn-p">An <b>object</b> is an instance of a class. You can create multiple objects from the same class, each with its own data:</p><div class="learn-code">Student s1;\ns1.name = "Alice";\ns1.age = 20;\ns1.gpa = 3.8;\ns1.display();  // Alice (Age: 20, GPA: 3.8)\n\nStudent s2 = {"Bob", 21, 3.5};  // aggregate initialization (if no user constructors)</div></div><div class="learn-section"><div class="learn-h">Access Specifiers</div><p class="learn-p">C++ provides three access levels:</p><table class="learn-table"><tr><th>Specifier</th><th>Access</th></tr><tr><td><code>public</code></td><td>Accessible from anywhere</td></tr><tr><td><code>private</code></td><td>Accessible only within the class</td></tr><tr><td><code>protected</code></td><td>Accessible in the class and its derived classes</td></tr></table><p class="learn-p">By default, members of a class are <code>private</code>. In a <code>struct</code>, they are <code>public</code> by default. This is the <b>only</b> difference between struct and class in C++.</p></div><div class="learn-section"><div class="learn-h">Constructors</div><p class="learn-p">A <b>constructor</b> is a special method that is called automatically when an object is created. It has the same name as the class and no return type.</p><p class="learn-p"><b>1. Default Constructor:</b></p><div class="learn-code">class Point {\npublic:\n    int x, y;\n    Point() : x(0), y(0) {}  // default constructor\n};</div><p class="learn-p"><b>2. Parameterized Constructor:</b></p><div class="learn-code">class Point {\npublic:\n    int x, y;\n    Point(int x, int y) : x(x), y(y) {}  // parameterized\n};\nPoint p(3, 4);  // x=3, y=4</div><p class="learn-p"><b>3. Copy Constructor:</b> Creates an object by copying another object of the same type.</p><div class="learn-code">class Point {\npublic:\n    int x, y;\n    Point(const Point&amp; other) : x(other.x), y(other.y) {\n        cout &lt;&lt; "Copy constructor called" &lt;&lt; endl;\n    }\n};\nPoint p1(3, 4);\nPoint p2 = p1;  // copy constructor called\nPoint p3(p1);   // also copy constructor</div></div><div class="learn-section"><div class="learn-h">Initializer Lists</div><p class="learn-p">The <b>member initializer list</b> initializes members directly rather than assigning them in the constructor body. This is more efficient and required for const members, reference members, and base classes.</p><div class="learn-code">class Student {\n    const int id;\n    string name;\npublic:\n    // Must use initializer list for const member\n    Student(int id, string name) : id(id), name(name) {}\n};</div><div class="learn-tip"><b>Tip:</b> Always use initializer lists for better performance. They initialize members directly, while assignment in the body first default-constructs then assigns.</div></div><div class="learn-section"><div class="learn-h">Destructor</div><p class="learn-p">A <b>destructor</b> is called automatically when an object goes out of scope or is explicitly deleted. It\'s used to release resources (memory, file handles, etc.).</p><div class="learn-code">class FileHandler {\n    FILE* fp;\npublic:\n    FileHandler(const char* filename) {\n        fp = fopen(filename, "r");\n    }\n    ~FileHandler() {  // destructor\n        if (fp) fclose(fp);\n        cout &lt;&lt; "File closed" &lt;&lt; endl;\n    }\n};</div></div><div class="learn-section"><div class="learn-h">Rule of Three / Rule of Five</div><p class="learn-p">If your class manages resources (dynamic memory, file handles), you likely need to define:</p><p class="learn-p"><b>Rule of Three:</b> Destructor, Copy Constructor, Copy Assignment Operator</p><p class="learn-p"><b>Rule of Five (C++11):</b> Add Move Constructor and Move Assignment Operator</p><div class="learn-warn"><b>Warning:</b> If you define any of these special functions, you likely need all of them. Failing to follow the Rule of Three/Five leads to double-free bugs, memory leaks, or dangling pointers.</div></div><div class="learn-section"><div class="learn-h">Move Semantics (C++11)</div><p class="learn-p"><b>Rvalue references</b> (<code>&amp;&amp;</code>) bind to temporaries — objects about to be destroyed. <code>std::move</code> casts an lvalue to an rvalue reference, enabling <b>resource theft</b> instead of expensive copying.</p><div class="learn-code">class Buffer {\n    int* data;\n    size_t size;\npublic:\n    Buffer(size_t n) : data(new int[n]), size(n) {}\n    ~Buffer() { delete[] data; }\n\n    // Move constructor: steal resources from other\n    Buffer(Buffer&amp;&amp; other) noexcept\n        : data(other.data), size(other.size) {\n        other.data = nullptr;  // leave in valid empty state\n        other.size = 0;\n    }\n\n    // Move assignment\n    Buffer&amp; operator=(Buffer&amp;&amp; other) noexcept {\n        if (this != &amp;other) {\n            delete[] data;\n            data = other.data; size = other.size;\n            other.data = nullptr; other.size = 0;\n        }\n        return *this;\n    }\n};\n\nBuffer b1(1000000);            // allocates 1M ints\nBuffer b2 = std::move(b1);     // O(1) move, not O(n) copy\n// b1 is now empty (data=nullptr)</div><p class="learn-p">Moving a <code>vector</code> is O(1) — just swap 3 pointers (data, size, capacity). Copying is O(n). STL containers use moves internally during reallocation and in <code>std::sort</code>.</p><div class="learn-tip"><b>Tip:</b> After <code>std::move(obj)</code>, the moved-from object is in a <b>valid but unspecified</b> state. You can only destroy it or assign a new value — don\'t read from it.</div></div><div class="learn-section"><div class="learn-h">vtable &amp; vptr (Virtual Dispatch Internals)</div><p class="learn-p">When a class has <b>virtual functions</b>, the compiler creates a <b>vtable</b> — a static array of function pointers for that class. Each object gets a hidden <b>vptr</b> (8 bytes on 64-bit) pointing to its class\'s vtable.</p><div class="learn-code">// Conceptual vtable layout:\n// Base_vtable:    [&amp;Base::speak,    &amp;Base::eat]\n// Derived_vtable: [&amp;Derived::speak, &amp;Base::eat]  // speak overridden\n\nBase* ptr = new Derived();\nptr-&gt;speak();\n// Resolved at runtime:\n// ptr -&gt; vptr -&gt; Derived_vtable[0] -&gt; Derived::speak()</div><p class="learn-p"><b>Cost of virtual dispatch:</b> ~8 bytes per object (the vptr) + one pointer indirection per call. Non-virtual calls are resolved at compile time (faster). This is why you shouldn\'t make every function virtual.</p><div class="learn-warn"><b>Interview question:</b> "What is the size of an empty class?" — 1 byte (for unique addresses). "What if it has a virtual function?" — at least 8 bytes (for the vptr on 64-bit systems).</div></div>',
           code: `#include <iostream>
 #include <string>
 using namespace std;
@@ -959,7 +959,7 @@ int main() {
         },
         {
           t: 'Inheritance & Polymorphism',
-          learn: '<div class="learn-section"><div class="learn-h">Inheritance Basics</div><p class="learn-p"><b>Inheritance</b> allows a class (derived/child) to inherit properties and behaviors from another class (base/parent). It promotes code reuse and establishes an "is-a" relationship.</p><div class="learn-code">class Animal {\nprotected:\n    string name;\npublic:\n    Animal(string n) : name(n) {}\n    void eat() { cout &lt;&lt; name &lt;&lt; " is eating" &lt;&lt; endl; }\n};\n\nclass Dog : public Animal {\npublic:\n    Dog(string n) : Animal(n) {}  // call base constructor\n    void bark() { cout &lt;&lt; name &lt;&lt; " barks!" &lt;&lt; endl; }\n};\n\nDog d("Rex");\nd.eat();   // inherited from Animal\nd.bark();  // Dog\'s own method</div></div><div class="learn-section"><div class="learn-h">Types of Inheritance</div><table class="learn-table"><tr><th>Type</th><th>Syntax</th><th>public members become</th><th>protected members become</th></tr><tr><td>public</td><td>class D : public B</td><td>public</td><td>protected</td></tr><tr><td>protected</td><td>class D : protected B</td><td>protected</td><td>protected</td></tr><tr><td>private</td><td>class D : private B</td><td>private</td><td>private</td></tr></table><p class="learn-p"><b>public inheritance</b> is the most common and represents "is-a" relationship. Private members of the base class are never directly accessible in derived classes.</p></div><div class="learn-section"><div class="learn-h">Virtual Functions &amp; Polymorphism</div><p class="learn-p"><b>Polymorphism</b> means "many forms." In C++, <b>runtime polymorphism</b> is achieved through virtual functions. When a base class pointer or reference calls a virtual function, the derived class\'s version is executed.</p><div class="learn-code">class Shape {\npublic:\n    virtual double area() const {\n        return 0;  // base implementation\n    }\n    virtual ~Shape() {}  // virtual destructor!\n};\n\nclass Circle : public Shape {\n    double radius;\npublic:\n    Circle(double r) : radius(r) {}\n    double area() const override {\n        return 3.14159 * radius * radius;\n    }\n};\n\nclass Rectangle : public Shape {\n    double w, h;\npublic:\n    Rectangle(double w, double h) : w(w), h(h) {}\n    double area() const override {\n        return w * h;\n    }\n};\n\n// Polymorphism in action\nShape* shapes[] = {new Circle(5), new Rectangle(3, 4)};\nfor (auto s : shapes) {\n    cout &lt;&lt; s-&gt;area() &lt;&lt; endl;  // calls correct version!\n}</div></div><div class="learn-section"><div class="learn-h">Pure Virtual Functions &amp; Abstract Classes</div><p class="learn-p">A <b>pure virtual function</b> has no implementation and forces derived classes to provide one. A class with at least one pure virtual function is an <b>abstract class</b> and cannot be instantiated.</p><div class="learn-code">class Shape {\npublic:\n    virtual double area() const = 0;  // pure virtual\n    virtual ~Shape() {}\n};\n// Shape s;  // ERROR: cannot instantiate abstract class</div><p class="learn-p">Abstract classes define interfaces — they specify what derived classes must implement.</p></div><div class="learn-section"><div class="learn-h">Virtual Destructors</div><p class="learn-p">When deleting a derived object through a base pointer, you <b>must</b> have a virtual destructor in the base class. Otherwise, only the base destructor runs, causing resource leaks.</p><div class="learn-code">class Base {\npublic:\n    virtual ~Base() { cout &lt;&lt; "Base destroyed" &lt;&lt; endl; }\n};\nclass Derived : public Base {\n    int* data;\npublic:\n    Derived() : data(new int[100]) {}\n    ~Derived() { delete[] data; cout &lt;&lt; "Derived destroyed" &lt;&lt; endl; }\n};\n\nBase* ptr = new Derived();\ndelete ptr;  // Both destructors called (correct!)</div><div class="learn-warn"><b>Warning:</b> If a class has virtual functions, always make the destructor virtual. Without it, deleting through a base pointer causes undefined behavior.</div></div><div class="learn-section"><div class="learn-h">Multiple Inheritance &amp; Diamond Problem</div><p class="learn-p">C++ supports <b>multiple inheritance</b>, where a class can inherit from more than one base class. The <b>diamond problem</b> occurs when two base classes inherit from a common ancestor.</p><div class="learn-code">class A { public: int x; };\nclass B : virtual public A {};  // virtual inheritance\nclass C : virtual public A {};  // virtual inheritance\nclass D : public B, public C {};  // only one copy of A::x</div><p class="learn-p">Use <code>virtual</code> inheritance to resolve the diamond problem. Without it, class D would have two copies of A\'s members.</p><div class="learn-tip"><b>Tip:</b> Prefer composition over inheritance when possible. Use inheritance for "is-a" relationships and composition for "has-a" relationships.</div></div>',
+          learn: '<div class="learn-section"><div class="learn-h">Inheritance Basics</div><p class="learn-p"><b>Inheritance</b> allows a class (derived/child) to inherit properties and behaviors from another class (base/parent). It promotes code reuse and establishes an "is-a" relationship.</p><div class="learn-code">class Animal {\nprotected:\n    string name;\npublic:\n    Animal(string n) : name(n) {}\n    void eat() { cout &lt;&lt; name &lt;&lt; " is eating" &lt;&lt; endl; }\n};\n\nclass Dog : public Animal {\npublic:\n    Dog(string n) : Animal(n) {}  // call base constructor\n    void bark() { cout &lt;&lt; name &lt;&lt; " barks!" &lt;&lt; endl; }\n};\n\nDog d("Rex");\nd.eat();   // inherited from Animal\nd.bark();  // Dog\'s own method</div></div><div class="learn-section"><div class="learn-h">Types of Inheritance</div><table class="learn-table"><tr><th>Type</th><th>Syntax</th><th>public members become</th><th>protected members become</th></tr><tr><td>public</td><td>class D : public B</td><td>public</td><td>protected</td></tr><tr><td>protected</td><td>class D : protected B</td><td>protected</td><td>protected</td></tr><tr><td>private</td><td>class D : private B</td><td>private</td><td>private</td></tr></table><p class="learn-p"><b>public inheritance</b> is the most common and represents "is-a" relationship. Private members of the base class are never directly accessible in derived classes.</p></div><div class="learn-section"><div class="learn-h">Virtual Functions &amp; Polymorphism</div><p class="learn-p"><b>Polymorphism</b> means "many forms." In C++, <b>runtime polymorphism</b> is achieved through virtual functions. When a base class pointer or reference calls a virtual function, the derived class\'s version is executed.</p><div class="learn-code">class Shape {\npublic:\n    virtual double area() const {\n        return 0;  // base implementation\n    }\n    virtual ~Shape() {}  // virtual destructor!\n};\n\nclass Circle : public Shape {\n    double radius;\npublic:\n    Circle(double r) : radius(r) {}\n    double area() const override {\n        return 3.14159 * radius * radius;\n    }\n};\n\nclass Rectangle : public Shape {\n    double w, h;\npublic:\n    Rectangle(double w, double h) : w(w), h(h) {}\n    double area() const override {\n        return w * h;\n    }\n};\n\n// Polymorphism in action\nShape* shapes[] = {new Circle(5), new Rectangle(3, 4)};\nfor (auto s : shapes) {\n    cout &lt;&lt; s-&gt;area() &lt;&lt; endl;  // calls correct version!\n}</div></div><div class="learn-section"><div class="learn-h">Pure Virtual Functions &amp; Abstract Classes</div><p class="learn-p">A <b>pure virtual function</b> has no implementation and forces derived classes to provide one. A class with at least one pure virtual function is an <b>abstract class</b> and cannot be instantiated.</p><div class="learn-code">class Shape {\npublic:\n    virtual double area() const = 0;  // pure virtual\n    virtual ~Shape() {}\n};\n// Shape s;  // ERROR: cannot instantiate abstract class</div><p class="learn-p">Abstract classes define interfaces — they specify what derived classes must implement.</p></div><div class="learn-section"><div class="learn-h">Virtual Destructors</div><p class="learn-p">When deleting a derived object through a base pointer, you <b>must</b> have a virtual destructor in the base class. Otherwise, only the base destructor runs, causing resource leaks.</p><div class="learn-code">class Base {\npublic:\n    virtual ~Base() { cout &lt;&lt; "Base destroyed" &lt;&lt; endl; }\n};\nclass Derived : public Base {\n    int* data;\npublic:\n    Derived() : data(new int[100]) {}\n    ~Derived() { delete[] data; cout &lt;&lt; "Derived destroyed" &lt;&lt; endl; }\n};\n\nBase* ptr = new Derived();\ndelete ptr;  // Both destructors called (correct!)</div><div class="learn-warn"><b>Warning:</b> If a class has virtual functions, always make the destructor virtual. Without it, deleting through a base pointer causes undefined behavior.</div></div><div class="learn-section"><div class="learn-h">Multiple Inheritance &amp; Diamond Problem</div><p class="learn-p">C++ supports <b>multiple inheritance</b>, where a class can inherit from more than one base class. The <b>diamond problem</b> occurs when two base classes inherit from a common ancestor.</p><div class="learn-code">class A { public: int x; };\nclass B : virtual public A {};  // virtual inheritance\nclass C : virtual public A {};  // virtual inheritance\nclass D : public B, public C {};  // only one copy of A::x</div><p class="learn-p">Use <code>virtual</code> inheritance to resolve the diamond problem. Without it, class D would have two copies of A\'s members.</p><div class="learn-tip"><b>Tip:</b> Prefer composition over inheritance when possible. Use inheritance for "is-a" relationships and composition for "has-a" relationships.</div></div><div class="learn-section"><div class="learn-h">Object Slicing</div><p class="learn-p"><b>Object slicing</b> occurs when a derived class object is assigned to a base class variable <b>by value</b>. The derived-class part is "sliced off" — only the base portion survives.</p><div class="learn-code">class Base {\npublic:\n    int x = 10;\n    virtual void show() { cout &lt;&lt; "Base: " &lt;&lt; x &lt;&lt; endl; }\n};\n\nclass Derived : public Base {\npublic:\n    int y = 20;\n    void show() override { cout &lt;&lt; "Derived: " &lt;&lt; x &lt;&lt; ", " &lt;&lt; y &lt;&lt; endl; }\n};\n\nDerived d;\nBase b = d;        // SLICING! y is lost, vptr points to Base vtable\nb.show();          // prints "Base: 10" — NOT "Derived: 10, 20"\n\nBase&amp; ref = d;     // No slicing — reference preserves polymorphism\nref.show();        // prints "Derived: 10, 20" ✓\n\nBase* ptr = &amp;d;    // No slicing — pointer preserves polymorphism\nptr-&gt;show();       // prints "Derived: 10, 20" ✓</div><p class="learn-p"><b>Common trap:</b> passing by value to a function slices the object:</p><div class="learn-code">void process(Base b) { b.show(); }    // SLICED — always calls Base::show\nvoid process(Base&amp; b) { b.show(); }   // Correct — polymorphic dispatch\nvoid process(Base* b) { b-&gt;show(); }  // Correct — polymorphic dispatch\n\nDerived d;\nprocess(d);   // first version: sliced. second/third: correct.</div><div class="learn-warn"><b>Interview tip:</b> Object slicing is a classic C++ interview question. The fix is always the same: use pointers or references, never pass polymorphic objects by value. STL containers of base objects also slice — use <code>vector&lt;unique_ptr&lt;Base&gt;&gt;</code> instead of <code>vector&lt;Base&gt;</code>.</div></div>',
           code: `#include <iostream>
 #include <string>
 #include <vector>
@@ -2189,6 +2189,99 @@ int main() {
           ]
         },
         {
+          t: 'Rabin-Karp & Z-Algorithm',
+          learn: '<div class="learn-section"><div class="learn-h">Rabin-Karp Algorithm</div><p class="learn-p"><b>Rabin-Karp</b> uses a <b>rolling hash</b> to find pattern matches in O(n+m) average time. Instead of comparing characters, it compares hash values of the pattern and each window of the text.</p><p class="learn-p">The hash function uses polynomial rolling: <code>H = (c1·p^(m-1) + c2·p^(m-2) + ... + cm) mod M</code> where p is a prime base and M is a large prime modulus.</p><div class="learn-code">// Rolling hash update when window slides right:\n// Remove leftmost char, add new rightmost char\nnewHash = (oldHash - text[i] * p^(m-1)) * p + text[i+m]\n// All operations mod M</div><p class="learn-p"><b>Spurious hits:</b> When hashes match but strings don\'t (hash collision). Must verify character-by-character on hash match. Average case O(n+m), worst case O(nm) with many collisions.</p><div class="learn-tip"><b>Tip:</b> Rabin-Karp excels at <b>multi-pattern matching</b> — precompute hashes for all patterns and check each window against all of them. Also great for finding duplicate substrings.</div></div><div class="learn-section"><div class="learn-h">Z-Algorithm</div><p class="learn-p">The <b>Z-array</b> for a string S: Z[i] = length of the longest substring starting at position i that matches a <b>prefix</b> of S. Z[0] is undefined (or set to 0/n).</p><div class="learn-code">S = "aabxaab"\nZ = [-, 1, 0, 0, 3, 1, 0]\n//   Z[4]=3 because S[4..6]="aab" matches prefix S[0..2]="aab"</div><p class="learn-p"><b>For pattern matching:</b> Create string <code>pattern + "$" + text</code>. Compute Z-array. Any Z[i] == len(pattern) means a match at position i - len(pattern) - 1 in the text.</p><p class="learn-p">The Z-algorithm runs in <span class="learn-complexity">O(n)</span> using a <b>Z-box</b> window [L, R] that tracks the rightmost matching interval, avoiding redundant comparisons.</p><div class="learn-warn"><b>Key insight:</b> Z-algorithm is often simpler to implement than KMP and achieves the same O(n+m) complexity. Many competitive programmers prefer it.</div></div><div class="learn-section"><div class="learn-h">Comparison</div><table class="learn-table"><tr><th>Algorithm</th><th>Time</th><th>Best For</th><th>Key Idea</th></tr><tr><td>KMP</td><td><span class="learn-complexity">O(n+m)</span></td><td>Single pattern, streaming</td><td>Failure function (LPS array)</td></tr><tr><td>Rabin-Karp</td><td><span class="learn-complexity">O(n+m)</span> avg</td><td>Multi-pattern, duplicate finding</td><td>Rolling hash</td></tr><tr><td>Z-Algorithm</td><td><span class="learn-complexity">O(n+m)</span></td><td>Single pattern, prefix matching</td><td>Z-array with Z-box optimization</td></tr></table></div>',
+          code: `#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+// ===== Rabin-Karp Algorithm =====
+vector<int> rabinKarp(const string& text, const string& pattern) {
+    vector<int> result;
+    int n = text.size(), m = pattern.size();
+    if (m > n) return result;
+
+    long long p = 31, MOD = 1e9 + 7;
+    long long patHash = 0, txtHash = 0, power = 1;
+
+    // Compute hash of pattern and first window
+    for (int i = m - 1; i >= 0; i--) {
+        patHash = (patHash + (pattern[i] - 'a' + 1) * power) % MOD;
+        txtHash = (txtHash + (text[i] - 'a' + 1) * power) % MOD;
+        if (i > 0) power = (power * p) % MOD;
+    }
+
+    // Slide window across text
+    for (int i = 0; i <= n - m; i++) {
+        if (patHash == txtHash && text.substr(i, m) == pattern)
+            result.push_back(i);
+        if (i < n - m) {
+            // Remove leftmost, add new rightmost
+            txtHash = (txtHash - (text[i] - 'a' + 1) * power % MOD + MOD) % MOD;
+            txtHash = (txtHash * p + (text[i + m] - 'a' + 1)) % MOD;
+        }
+    }
+    return result;
+}
+
+// ===== Z-Algorithm =====
+vector<int> zFunction(const string& s) {
+    int n = s.size();
+    vector<int> z(n, 0);
+    int l = 0, r = 0;
+    for (int i = 1; i < n; i++) {
+        if (i < r)
+            z[i] = min(r - i, z[i - l]);
+        while (i + z[i] < n && s[z[i]] == s[i + z[i]])
+            z[i]++;
+        if (i + z[i] > r) {
+            l = i;
+            r = i + z[i];
+        }
+    }
+    return z;
+}
+
+vector<int> zSearch(const string& text, const string& pattern) {
+    string combined = pattern + "$" + text;
+    vector<int> z = zFunction(combined);
+    vector<int> result;
+    int m = pattern.size();
+    for (int i = m + 1; i < (int)combined.size(); i++)
+        if (z[i] == m)
+            result.push_back(i - m - 1);
+    return result;
+}
+
+int main() {
+    string text = "aabaabaaab", pattern = "aab";
+
+    cout << "Rabin-Karp matches at: ";
+    for (int idx : rabinKarp(text, pattern)) cout << idx << " ";
+
+    cout << "\\nZ-Algorithm matches at: ";
+    for (int idx : zSearch(text, pattern)) cout << idx << " ";
+
+    cout << "\\n\\nZ-array of \\"aabxaab\\": ";
+    string s = "aabxaab";
+    for (int v : zFunction(s)) cout << v << " ";
+
+    return 0;
+}`,
+          problems: [
+            ['Repeated DNA Sequences', 'https://leetcode.com/problems/repeated-dna-sequences/', 'Medium'],
+            ['Find the Index of First Occurrence', 'https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/', 'Easy'],
+            ['Longest Happy Prefix', 'https://leetcode.com/problems/longest-happy-prefix/', 'Hard'],
+            ['Longest Duplicate Substring', 'https://leetcode.com/problems/longest-duplicate-substring/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'What is the average time complexity of Rabin-Karp?', o: ['O(n*m)', 'O(n+m)', 'O(n log m)', 'O(m log n)'], a: 1},
+            {q: 'What does Z[i] represent in the Z-algorithm?', o: ['Longest palindrome starting at i', 'Length of longest substring from i matching a prefix', 'Number of distinct characters from i to end', 'Depth of recursion at position i'], a: 1},
+            {q: 'How does Rabin-Karp handle hash collisions (spurious hits)?', o: ['Rehashes with a different function', 'Verifies by comparing characters', 'Skips to the next window', 'Uses chaining'], a: 1}
+          ]
+        },
+        {
           t: 'Palindrome Problems',
           learn: '<div class="learn-section"><div class="learn-h">Palindrome Concepts</div><p class="learn-p">A <b>palindrome</b> reads the same forwards and backwards. Palindrome problems are extremely popular in interviews.</p></div><div class="learn-section"><div class="learn-h">Expand Around Center</div><p class="learn-p">To find the <b>Longest Palindromic Substring</b>, expand from each center. There are 2n-1 possible centers (n single characters + n-1 gaps between characters for even-length palindromes).</p><div class="learn-code">string longestPalindrome(string s) {\n    int start = 0, maxLen = 1;\n    auto expand = [&amp;](int l, int r) {\n        while (l &gt;= 0 &amp;&amp; r &lt; s.size() &amp;&amp; s[l] == s[r]) {\n            if (r - l + 1 &gt; maxLen) {\n                start = l;\n                maxLen = r - l + 1;\n            }\n            l--; r++;\n        }\n    };\n    for (int i = 0; i &lt; s.size(); i++) {\n        expand(i, i);     // odd-length\n        expand(i, i + 1); // even-length\n    }\n    return s.substr(start, maxLen);\n}</div><p class="learn-p">Time: <span class="learn-complexity">O(n^2)</span>, Space: <span class="learn-complexity">O(1)</span>.</p></div><div class="learn-section"><div class="learn-h">Palindrome Partitioning</div><p class="learn-p">Split a string into substrings where each substring is a palindrome. Uses backtracking.</p></div><div class="learn-section"><div class="learn-h">Valid Palindrome Variations</div><ul class="learn-list"><li><b>Valid Palindrome II:</b> Can you make it a palindrome by removing at most one character? Use two pointers; on mismatch, try skipping either character.</li><li><b>Palindromic Substrings:</b> Count all palindromic substrings using expand around center.</li></ul><div class="learn-tip"><b>Tip:</b> For palindrome problems, the expand-around-center technique is the most intuitive approach. For more advanced needs, look into Manacher\'s algorithm for O(n).</div></div>',
           code: `#include <iostream>
@@ -2616,6 +2709,7 @@ int main() {
           code: `#include <iostream>
 #include <stack>
 #include <string>
+#include <vector>
 using namespace std;
 
 // Valid Parentheses
@@ -2850,6 +2944,7 @@ int main() {
           learn: '<div class="learn-section"><div class="learn-h">Implementing a Queue using Two Stacks</div><p class="learn-p">A <b>queue</b> is FIFO (First In, First Out). We can implement it using two stacks. There are two approaches:</p><p class="learn-p"><b>Approach 1: Expensive enqueue</b> — Transfer all from s1 to s2, push new element to s1, transfer back.</p><p class="learn-p"><b>Approach 2: Amortized O(1) dequeue</b> — Push to input stack. For dequeue, if output stack is empty, transfer all from input to output. This reverses the order, giving FIFO behavior.</p><div class="learn-code">class MyQueue {\n    stack&lt;int&gt; input, output;\n    void transfer() {\n        while (!input.empty()) {\n            output.push(input.top());\n            input.pop();\n        }\n    }\npublic:\n    void push(int x) { input.push(x); }\n    int pop() {\n        if (output.empty()) transfer();\n        int val = output.top(); output.pop();\n        return val;\n    }\n    int peek() {\n        if (output.empty()) transfer();\n        return output.top();\n    }\n    bool empty() { return input.empty() &amp;&amp; output.empty(); }\n};</div><p class="learn-p">Each element is moved at most once from input to output, so amortized cost per operation is <span class="learn-complexity">O(1)</span>.</p><div class="learn-tip"><b>Tip:</b> The key insight is lazy transfer — only move elements when the output stack is empty.</div></div>',
           code: `#include <iostream>
 #include <stack>
+#include <queue>
 using namespace std;
 
 class MyQueue {
@@ -3584,7 +3679,7 @@ int main() {
         },
         {
           t: 'BST Operations (Insert, Delete, Search)',
-          learn: '<div class="learn-section"><div class="learn-h">Binary Search Tree Property</div><p class="learn-p">A <b>BST</b> satisfies: for every node, all values in its left subtree are <b>less</b>, and all values in its right subtree are <b>greater</b>. This enables <span class="learn-complexity">O(h)</span> search, insert, and delete where h is the height.</p></div><div class="learn-section"><div class="learn-h">Search</div><div class="learn-code">TreeNode* search(TreeNode* root, int val) {\n    if (!root || root-&gt;val == val) return root;\n    if (val &lt; root-&gt;val) return search(root-&gt;left, val);\n    return search(root-&gt;right, val);\n}</div></div><div class="learn-section"><div class="learn-h">Insert</div><div class="learn-code">TreeNode* insert(TreeNode* root, int val) {\n    if (!root) return new TreeNode(val);\n    if (val &lt; root-&gt;val) root-&gt;left = insert(root-&gt;left, val);\n    else root-&gt;right = insert(root-&gt;right, val);\n    return root;\n}</div></div><div class="learn-section"><div class="learn-h">Delete</div><p class="learn-p">Three cases: (1) Leaf node: simply remove. (2) One child: replace with child. (3) Two children: replace with inorder successor (smallest in right subtree), then delete successor.</p><div class="learn-tip"><b>Tip:</b> In a balanced BST, h = O(log n). In the worst case (skewed tree), h = O(n). This is why balanced BSTs (AVL, Red-Black) exist.</div></div>',
+          learn: '<div class="learn-section"><div class="learn-h">Binary Search Tree Property</div><p class="learn-p">A <b>BST</b> satisfies: for every node, all values in its left subtree are <b>less</b>, and all values in its right subtree are <b>greater</b>. This enables <span class="learn-complexity">O(h)</span> search, insert, and delete where h is the height.</p></div><div class="learn-section"><div class="learn-h">Search</div><div class="learn-code">TreeNode* search(TreeNode* root, int val) {\n    if (!root || root-&gt;val == val) return root;\n    if (val &lt; root-&gt;val) return search(root-&gt;left, val);\n    return search(root-&gt;right, val);\n}</div></div><div class="learn-section"><div class="learn-h">Insert</div><div class="learn-code">TreeNode* insert(TreeNode* root, int val) {\n    if (!root) return new TreeNode(val);\n    if (val &lt; root-&gt;val) root-&gt;left = insert(root-&gt;left, val);\n    else root-&gt;right = insert(root-&gt;right, val);\n    return root;\n}</div></div><div class="learn-section"><div class="learn-h">Delete</div><p class="learn-p">Three cases: (1) Leaf node: simply remove. (2) One child: replace with child. (3) Two children: replace with inorder successor (smallest in right subtree), then delete successor.</p><div class="learn-tip"><b>Tip:</b> In a balanced BST, h = O(log n). In the worst case (skewed tree), h = O(n). This is why balanced BSTs (AVL, Red-Black) exist.</div></div><div class="learn-section"><div class="learn-h">AVL Trees — Self-Balancing BSTs</div><p class="learn-p">An <b>AVL tree</b> maintains a <b>balance factor</b> (height of left subtree − height of right subtree) of −1, 0, or +1 at every node. After each insert/delete, if any node becomes unbalanced (|BF| > 1), rotations restore balance.</p><table class="learn-table"><tr><th>Case</th><th>Condition</th><th>Fix</th></tr><tr><td><b>Left-Left (LL)</b></td><td>BF(node) = +2, BF(left child) ≥ 0</td><td>Single Right Rotation</td></tr><tr><td><b>Right-Right (RR)</b></td><td>BF(node) = −2, BF(right child) ≤ 0</td><td>Single Left Rotation</td></tr><tr><td><b>Left-Right (LR)</b></td><td>BF(node) = +2, BF(left child) = −1</td><td>Left rotate left child, then Right rotate node</td></tr><tr><td><b>Right-Left (RL)</b></td><td>BF(node) = −2, BF(right child) = +1</td><td>Right rotate right child, then Left rotate node</td></tr></table><div class="learn-code">// Right rotation (for LL imbalance)\nNode* rightRotate(Node* y) {\n    Node* x = y-&gt;left;\n    Node* T2 = x-&gt;right;\n    x-&gt;right = y;          // x becomes new root\n    y-&gt;left = T2;          // T2 moves under y\n    y-&gt;height = max(h(y-&gt;left), h(y-&gt;right)) + 1;\n    x-&gt;height = max(h(x-&gt;left), h(x-&gt;right)) + 1;\n    return x;               // new root of subtree\n}\n\n// Left rotation (for RR imbalance)\nNode* leftRotate(Node* x) {\n    Node* y = x-&gt;right;\n    Node* T2 = y-&gt;left;\n    y-&gt;left = x;\n    x-&gt;right = T2;\n    x-&gt;height = max(h(x-&gt;left), h(x-&gt;right)) + 1;\n    y-&gt;height = max(h(y-&gt;left), h(y-&gt;right)) + 1;\n    return y;\n}</div><p class="learn-p"><b>AVL vs Red-Black:</b> AVL trees are <b>more strictly balanced</b> (height ≤ 1.44·log₂(n)), giving faster lookups. Red-Black trees allow slightly more imbalance (height ≤ 2·log₂(n)) but do fewer rotations on insert/delete, making them faster for write-heavy workloads. That\'s why <code>std::map</code> uses Red-Black — general-purpose containers do more writes than pure lookups.</p><div class="learn-tip"><b>Interview tip:</b> AVL trees are a common interview topic. Know the 4 rotation cases, when each applies, and the AVL vs RB-tree tradeoff.</div></div>',
           code: `#include <iostream>
 using namespace std;
 
@@ -4698,6 +4793,86 @@ int main() {
             {q: 'In Matrix Chain Multiplication, what does dp[i][j] represent?', o: ['Number of matrices', 'Min scalar multiplications to multiply matrices i through j', 'Max product', 'Size of result matrix'], a: 1},
             {q: 'What is the key idea behind partition DP?', o: ['Sort the input', 'Try all possible split/cut points in a range', 'Use greedy selection', 'Binary search on answer'], a: 1}
           ]
+        },
+        {
+          t: 'Bitmask DP (TSP, Subset Problems)',
+          learn: '<div class="learn-section"><div class="learn-h">What is Bitmask DP?</div><p class="learn-p"><b>Bitmask DP</b> uses integers as compact set representations. Each bit position represents whether an element is included (1) or excluded (0). Combined with DP, this solves problems over <b>all subsets</b> of a small set (n ≤ 20).</p><div class="learn-code">// Bitmask basics:\n// Set of {0, 2, 3} → binary 1101 → integer 13\n// Check if element i is in set:   mask &amp; (1 &lt;&lt; i)\n// Add element i to set:           mask | (1 &lt;&lt; i)\n// Remove element i from set:      mask &amp; ~(1 &lt;&lt; i)\n// Iterate all subsets of mask:    for (int s = mask; s; s = (s-1) &amp; mask)\n// Count elements in set:          __builtin_popcount(mask)\n// Total subsets of n elements:    1 &lt;&lt; n  (2^n)</div></div><div class="learn-section"><div class="learn-h">Travelling Salesman Problem (TSP)</div><p class="learn-p">Given n cities and distances between every pair, find the shortest route visiting each city exactly once and returning to the start. Brute force is O(n!). Bitmask DP reduces this to <span class="learn-complexity">O(n² · 2ⁿ)</span>.</p><p class="learn-p"><b>State:</b> <code>dp[mask][i]</code> = minimum cost to reach city <code>i</code> having visited exactly the cities in <code>mask</code>.</p><div class="learn-code">int tsp(vector&lt;vector&lt;int&gt;&gt;&amp; dist) {\n    int n = dist.size();\n    int FULL = (1 &lt;&lt; n) - 1;\n    // dp[mask][i] = min cost to reach i, visited set = mask\n    vector&lt;vector&lt;int&gt;&gt; dp(1 &lt;&lt; n, vector&lt;int&gt;(n, INT_MAX));\n    dp[1][0] = 0;  // start at city 0\n\n    for (int mask = 1; mask &lt;= FULL; mask++) {\n        for (int u = 0; u &lt; n; u++) {\n            if (!(mask &amp; (1 &lt;&lt; u)) || dp[mask][u] == INT_MAX) continue;\n            for (int v = 0; v &lt; n; v++) {\n                if (mask &amp; (1 &lt;&lt; v)) continue;  // already visited\n                int newMask = mask | (1 &lt;&lt; v);\n                dp[newMask][v] = min(dp[newMask][v],\n                                     dp[mask][u] + dist[u][v]);\n            }\n        }\n    }\n    // Return to start\n    int ans = INT_MAX;\n    for (int u = 1; u &lt; n; u++)\n        if (dp[FULL][u] != INT_MAX)\n            ans = min(ans, dp[FULL][u] + dist[u][0]);\n    return ans;\n}</div></div><div class="learn-section"><div class="learn-h">Assignment Problem (Min Cost)</div><p class="learn-p">Assign n workers to n jobs minimizing total cost. <code>dp[mask]</code> = min cost to assign jobs in <code>mask</code> to the first <code>popcount(mask)</code> workers.</p><div class="learn-code">int assignJobs(vector&lt;vector&lt;int&gt;&gt;&amp; cost) {\n    int n = cost.size();\n    vector&lt;int&gt; dp(1 &lt;&lt; n, INT_MAX);\n    dp[0] = 0;\n    for (int mask = 0; mask &lt; (1 &lt;&lt; n); mask++) {\n        int worker = __builtin_popcount(mask);  // next worker\n        if (worker &gt;= n) continue;\n        for (int job = 0; job &lt; n; job++) {\n            if (mask &amp; (1 &lt;&lt; job)) continue;    // job taken\n            dp[mask | (1 &lt;&lt; job)] = min(\n                dp[mask | (1 &lt;&lt; job)],\n                dp[mask] + cost[worker][job]\n            );\n        }\n    }\n    return dp[(1 &lt;&lt; n) - 1];\n}</div></div><div class="learn-section"><div class="learn-h">Key Patterns &amp; Complexity</div><table class="learn-table"><tr><th>Pattern</th><th>State</th><th>Complexity</th></tr><tr><td>TSP</td><td>dp[mask][last_city]</td><td>O(n² · 2ⁿ)</td></tr><tr><td>Assignment</td><td>dp[mask]</td><td>O(n · 2ⁿ)</td></tr><tr><td>Subset sum over subsets</td><td>dp[mask]</td><td>O(3ⁿ) with subset enumeration</td></tr><tr><td>Matching / Coloring</td><td>dp[mask]</td><td>O(n · 2ⁿ)</td></tr></table><div class="learn-warn"><b>Constraint:</b> Bitmask DP requires n ≤ 20 (since 2²⁰ = ~1M states). For n ≤ 15, it runs comfortably under 1 second. For n = 20, optimize carefully.</div><div class="learn-tip"><b>Tip:</b> If you see a constraint like n ≤ 20 or n ≤ 15 in an interview problem, think Bitmask DP immediately.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+#include <climits>
+using namespace std;
+
+// TSP using Bitmask DP
+int tsp(vector<vector<int>>& dist) {
+    int n = dist.size();
+    int FULL = (1 << n) - 1;
+    vector<vector<int>> dp(1 << n, vector<int>(n, INT_MAX));
+    dp[1][0] = 0;
+
+    for (int mask = 1; mask <= FULL; mask++) {
+        for (int u = 0; u < n; u++) {
+            if (!(mask & (1 << u)) || dp[mask][u] == INT_MAX) continue;
+            for (int v = 0; v < n; v++) {
+                if (mask & (1 << v)) continue;
+                int newMask = mask | (1 << v);
+                dp[newMask][v] = min(dp[newMask][v], dp[mask][u] + dist[u][v]);
+            }
+        }
+    }
+    int ans = INT_MAX;
+    for (int u = 1; u < n; u++)
+        if (dp[FULL][u] != INT_MAX)
+            ans = min(ans, dp[FULL][u] + dist[u][0]);
+    return ans;
+}
+
+// Assignment Problem
+int assignJobs(vector<vector<int>>& cost) {
+    int n = cost.size();
+    vector<int> dp(1 << n, INT_MAX);
+    dp[0] = 0;
+    for (int mask = 0; mask < (1 << n); mask++) {
+        int worker = __builtin_popcount(mask);
+        if (worker >= n) continue;
+        for (int job = 0; job < n; job++) {
+            if (mask & (1 << job)) continue;
+            dp[mask | (1 << job)] = min(dp[mask | (1 << job)],
+                                         dp[mask] + cost[worker][job]);
+        }
+    }
+    return dp[(1 << n) - 1];
+}
+
+int main() {
+    // TSP example: 4 cities
+    vector<vector<int>> dist = {
+        {0, 10, 15, 20},
+        {10, 0, 35, 25},
+        {15, 35, 0, 30},
+        {20, 25, 30, 0}
+    };
+    cout << "TSP min cost: " << tsp(dist) << endl; // 80
+
+    // Assignment: 3 workers, 3 jobs
+    vector<vector<int>> cost = {
+        {9, 2, 7},
+        {6, 4, 3},
+        {5, 8, 1}
+    };
+    cout << "Min assignment cost: " << assignJobs(cost) << endl; // 7
+    return 0;
+}`,
+          problems: [
+            ['Shortest Path Visiting All Nodes', 'https://leetcode.com/problems/shortest-path-visiting-all-nodes/', 'Hard'],
+            ['Partition to K Equal Sum Subsets', 'https://leetcode.com/problems/partition-to-k-equal-sum-subsets/', 'Medium'],
+            ['Find the Shortest Superstring', 'https://leetcode.com/problems/find-the-shortest-superstring/', 'Hard'],
+            ['Maximum Students Taking Exam', 'https://leetcode.com/problems/maximum-students-taking-exam/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'What is the time complexity of TSP using Bitmask DP?', o: ['O(n!)', 'O(n² · 2ⁿ)', 'O(2ⁿ)', 'O(n³)'], a: 1},
+            {q: 'For Bitmask DP to be feasible, what is the typical constraint on n?', o: ['n ≤ 100', 'n ≤ 1000', 'n ≤ 20', 'n ≤ 50'], a: 2},
+            {q: 'How do you check if bit i is set in mask?', o: ['mask % i', 'mask & (1 << i)', 'mask | (1 << i)', 'mask ^ i'], a: 1}
+          ]
         }
       ]
     },
@@ -4985,7 +5160,7 @@ int main() {
           problems: [
             ['Cheapest Flights Within K Stops', 'https://leetcode.com/problems/cheapest-flights-within-k-stops/', 'Medium'],
             ['Network Delay Time', 'https://leetcode.com/problems/network-delay-time/', 'Medium'],
-            ['Negative Weight Cycle', 'https://leetcode.com/problems/find-negative-weight-cycle/', 'Medium']
+            ['Cheapest Flights K Stops (Bellman-Ford)', 'https://leetcode.com/problems/cheapest-flights-within-k-stops/', 'Medium']
           ],
           mcqs: [
             {q: 'How many times does Bellman-Ford relax all edges?', o: ['V times', 'V - 1 times', 'E times', 'E - 1 times'], a: 1},
@@ -5236,6 +5411,88 @@ int main() {
             {q: 'What is the amortized time complexity of find() with both optimizations?', o: ['O(n)', 'O(log n)', 'O(1) (practically, O(alpha(n)))', 'O(sqrt(n))'], a: 2},
             {q: 'How does path compression work?', o: ['Sorts the tree', 'Points all nodes on the find path directly to the root', 'Balances the tree', 'Removes duplicate edges'], a: 1}
           ]
+        },
+        {
+          t: 'Floyd-Warshall All-Pairs Shortest Path',
+          learn: '<div class="learn-section"><div class="learn-h">All-Pairs Shortest Path</div><p class="learn-p"><b>Floyd-Warshall</b> finds shortest paths between <b>all pairs</b> of vertices in <span class="learn-complexity">O(V^3)</span> time and <span class="learn-complexity">O(V^2)</span> space. Unlike Dijkstra (single-source), it computes the entire distance matrix at once.</p></div><div class="learn-section"><div class="learn-h">Core Idea</div><p class="learn-p">For each intermediate vertex k (0 to V-1), check whether the path from i to j through k is shorter than the current best:</p><div class="learn-code">// The key recurrence:\ndist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])\n\n// k MUST be the outermost loop\nfor (int k = 0; k &lt; V; k++)\n    for (int i = 0; i &lt; V; i++)\n        for (int j = 0; j &lt; V; j++)\n            dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);</div><p class="learn-p"><b>Why k is outermost:</b> When we consider vertex k as an intermediate, we need all pairs\' shortest paths using vertices {0, ..., k-1} already computed. If k were an inner loop, this invariant breaks.</p></div><div class="learn-section"><div class="learn-h">Initialization</div><div class="learn-code">dist[i][j] = weight(i, j)  if edge exists\ndist[i][j] = INF            if no edge\ndist[i][i] = 0              diagonal</div></div><div class="learn-section"><div class="learn-h">Negative Cycle Detection</div><p class="learn-p">After running Floyd-Warshall, if <code>dist[i][i] &lt; 0</code> for any vertex i, the graph contains a negative-weight cycle reachable from i.</p></div><div class="learn-section"><div class="learn-h">Path Reconstruction</div><p class="learn-p">Maintain a <code>next[i][j]</code> matrix. Initialize <code>next[i][j] = j</code> for each edge. When updating <code>dist[i][j]</code> through k, set <code>next[i][j] = next[i][k]</code>. To reconstruct path i→j: follow next[i][j], next[next[i][j]][j], ... until reaching j.</p></div><div class="learn-section"><div class="learn-h">When to Use</div><table class="learn-table"><tr><th>Algorithm</th><th>Use Case</th><th>Negative Edges</th><th>Time</th></tr><tr><td>Dijkstra</td><td>Single source, sparse graph</td><td>No</td><td><span class="learn-complexity">O((V+E) log V)</span></td></tr><tr><td>Bellman-Ford</td><td>Single source, negative edges</td><td>Yes</td><td><span class="learn-complexity">O(VE)</span></td></tr><tr><td>Floyd-Warshall</td><td>All pairs, dense graph, V ≤ 500</td><td>Yes</td><td><span class="learn-complexity">O(V^3)</span></td></tr></table><div class="learn-tip"><b>Tip:</b> Floyd-Warshall is ideal when V is small (≤400-500) and you need all-pairs distances. For sparse graphs with larger V, run Dijkstra from each vertex instead.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+#include <climits>
+using namespace std;
+
+const int INF = 1e9;
+
+void floydWarshall(vector<vector<int>>& dist, vector<vector<int>>& next) {
+    int V = dist.size();
+
+    // Initialize next matrix for path reconstruction
+    for (int i = 0; i < V; i++)
+        for (int j = 0; j < V; j++)
+            next[i][j] = (dist[i][j] != INF) ? j : -1;
+
+    // Floyd-Warshall: k must be outermost
+    for (int k = 0; k < V; k++)
+        for (int i = 0; i < V; i++)
+            for (int j = 0; j < V; j++)
+                if (dist[i][k] != INF && dist[k][j] != INF &&
+                    dist[i][k] + dist[k][j] < dist[i][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                    next[i][j] = next[i][k];
+                }
+
+    // Check for negative cycles
+    for (int i = 0; i < V; i++)
+        if (dist[i][i] < 0)
+            cout << "Negative cycle detected at vertex " << i << endl;
+}
+
+vector<int> reconstructPath(int u, int v, vector<vector<int>>& next) {
+    if (next[u][v] == -1) return {};
+    vector<int> path = {u};
+    while (u != v) {
+        u = next[u][v];
+        path.push_back(u);
+    }
+    return path;
+}
+
+int main() {
+    int V = 4;
+    vector<vector<int>> dist(V, vector<int>(V, INF));
+    vector<vector<int>> next(V, vector<int>(V, -1));
+
+    // Initialize diagonal
+    for (int i = 0; i < V; i++) dist[i][i] = 0;
+
+    // Add edges: (u, v, weight)
+    dist[0][1] = 3; dist[0][3] = 7;
+    dist[1][0] = 8; dist[1][2] = 2;
+    dist[2][0] = 5; dist[2][3] = 1;
+    dist[3][0] = 2;
+
+    floydWarshall(dist, next);
+
+    cout << "All-pairs shortest distances:\\n";
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++)
+            cout << (dist[i][j] == INF ? "INF" : to_string(dist[i][j])) << "\\t";
+        cout << "\\n";
+    }
+
+    cout << "\\nPath from 1 to 3: ";
+    for (int v : reconstructPath(1, 3, next)) cout << v << " ";
+    return 0;
+}`,
+          problems: [
+            ['Find the City With Smallest Number of Neighbors', 'https://leetcode.com/problems/find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance/', 'Medium'],
+            ['Shortest Path Visiting All Nodes', 'https://leetcode.com/problems/shortest-path-visiting-all-nodes/', 'Hard'],
+            ['Course Schedule IV', 'https://leetcode.com/problems/course-schedule-iv/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'What is the time complexity of Floyd-Warshall?', o: ['O(V^2)', 'O(V^3)', 'O(V * E)', 'O(E log V)'], a: 1},
+            {q: 'How does Floyd-Warshall detect negative cycles?', o: ['By checking if any edge relaxation occurs in Vth iteration', 'By checking if dist[i][i] < 0 for any vertex i', 'By running BFS after the algorithm', 'It cannot detect negative cycles'], a: 1},
+            {q: 'Why must k be the outermost loop?', o: ['For cache efficiency', 'We need all pairs with 0..k-1 intermediates computed before considering k', 'To avoid negative cycles', 'Any loop order works'], a: 1}
+          ]
         }
       ]
     },
@@ -5385,6 +5642,87 @@ int main() {
             {q: 'In Jump Game I, what does maxReach track?', o: ['Current position', 'The farthest index reachable so far', 'Number of jumps', 'The last valid position'], a: 1},
             {q: 'What is the time complexity of Jump Game II greedy solution?', o: ['O(n^2)', 'O(n log n)', 'O(n)', 'O(2^n)'], a: 2},
             {q: 'In Gas Station, when do you reset the starting point?', o: ['At every station', 'When the running tank becomes negative', 'At the halfway point', 'When total gas < total cost'], a: 1}
+          ]
+        },
+        {
+          t: 'Huffman Coding',
+          learn: '<div class="learn-section"><div class="learn-h">Optimal Prefix-Free Encoding</div><p class="learn-p"><b>Huffman coding</b> is a greedy algorithm that produces an optimal <b>variable-length, prefix-free</b> binary encoding. More frequent characters get shorter codes, minimizing total encoded length.</p><p class="learn-p"><b>Prefix-free</b> means no code is a prefix of another, so decoding is unambiguous — scan bits left to right and output a character whenever a complete code is found.</p></div><div class="learn-section"><div class="learn-h">Algorithm</div><ul class="learn-list"><li>Create a leaf node for each character with its frequency</li><li>Insert all nodes into a <b>min-heap</b> (priority queue)</li><li>Repeat until one node remains: extract two minimum-frequency nodes, create a new internal node with frequency = sum, make the two nodes its children, insert back into heap</li><li>The final node is the root of the Huffman tree</li><li>Assign codes by traversing: left edge = 0, right edge = 1</li></ul></div><div class="learn-section"><div class="learn-h">Worked Example</div><div class="learn-code">Characters: {a:5, b:9, c:12, d:13, e:16, f:45}\n\nStep 1: Combine a(5) + b(9) = ab(14)\nStep 2: Combine c(12) + d(13) = cd(25)\nStep 3: Combine ab(14) + e(16) = abe(30)\nStep 4: Combine cd(25) + abe(30) = abcde(55)\nStep 5: Combine f(45) + abcde(55) = root(100)\n\nResult: f=0, c=100, d=101, a=1100, b=1101, e=111</div><p class="learn-p">Notice: f (freq 45) gets 1-bit code, while a (freq 5) gets 4-bit code. Total bits = 5×4 + 9×4 + 12×3 + 13×3 + 16×3 + 45×1 = 224 bits vs 6×3 = 600 bits with fixed-length coding.</p><div class="learn-tip"><b>Tip:</b> Huffman coding is the basis of many compression algorithms: DEFLATE (used in gzip, PNG), JPEG, MP3. In interviews, focus on the min-heap construction process.</div></div>',
+          code: `#include <iostream>
+#include <queue>
+#include <string>
+#include <unordered_map>
+using namespace std;
+
+struct HuffNode {
+    char ch;
+    int freq;
+    HuffNode *left, *right;
+    HuffNode(char c, int f) : ch(c), freq(f), left(nullptr), right(nullptr) {}
+};
+
+struct Compare {
+    bool operator()(HuffNode* a, HuffNode* b) {
+        return a->freq > b->freq;
+    }
+};
+
+void buildCodes(HuffNode* root, string code, unordered_map<char, string>& codes) {
+    if (!root) return;
+    if (!root->left && !root->right) {
+        codes[root->ch] = code.empty() ? "0" : code;
+        return;
+    }
+    buildCodes(root->left, code + "0", codes);
+    buildCodes(root->right, code + "1", codes);
+}
+
+unordered_map<char, string> huffman(unordered_map<char, int>& freq) {
+    priority_queue<HuffNode*, vector<HuffNode*>, Compare> pq;
+    for (auto& [ch, f] : freq)
+        pq.push(new HuffNode(ch, f));
+
+    while (pq.size() > 1) {
+        auto left = pq.top(); pq.pop();
+        auto right = pq.top(); pq.pop();
+        auto parent = new HuffNode('\\0', left->freq + right->freq);
+        parent->left = left;
+        parent->right = right;
+        pq.push(parent);
+    }
+
+    unordered_map<char, string> codes;
+    if (!pq.empty()) buildCodes(pq.top(), "", codes);
+    return codes;
+}
+
+int main() {
+    unordered_map<char, int> freq = {
+        {'a', 5}, {'b', 9}, {'c', 12},
+        {'d', 13}, {'e', 16}, {'f', 45}
+    };
+
+    auto codes = huffman(freq);
+    cout << "Huffman Codes:\\n";
+    for (auto& [ch, code] : codes)
+        cout << ch << ": " << code << "\\n";
+
+    // Calculate total bits
+    int totalBits = 0;
+    for (auto& [ch, code] : codes)
+        totalBits += freq[ch] * code.size();
+    cout << "Total bits: " << totalBits << "\\n";
+    cout << "Fixed-length would need: " << 100 * 3 << " bits\\n";
+    return 0;
+}`,
+          problems: [
+            ['Minimum Cost to Connect Sticks', 'https://leetcode.com/problems/minimum-cost-to-connect-sticks/', 'Medium'],
+            ['Reorganize String', 'https://leetcode.com/problems/reorganize-string/', 'Medium'],
+            ['Task Scheduler', 'https://leetcode.com/problems/task-scheduler/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'What data structure is primarily used to build a Huffman tree?', o: ['Stack', 'Min-Heap / Priority Queue', 'Hash Table', 'Binary Search Tree'], a: 1},
+            {q: 'Why are Huffman codes called prefix-free?', o: ['All codes share a common prefix', 'No code is a prefix of another code', 'Codes start with a fixed prefix', 'The prefix bits are stripped'], a: 1},
+            {q: 'What is the time complexity of building a Huffman tree for n characters?', o: ['O(n)', 'O(n log n)', 'O(n^2)', 'O(2^n)'], a: 1}
           ]
         }
       ]
@@ -5597,6 +5935,74 @@ int main() {
             {q: 'What is a ^ a?', o: ['a', '0', '2a', '-a'], a: 1},
             {q: 'What does n & (n-1) do?', o: ['Adds 1 to n', 'Clears the lowest set bit', 'Sets the lowest bit', 'Negates n'], a: 1},
             {q: 'How do you check if n is a power of 2?', o: ['n % 2 == 0', 'n > 0 && (n & (n-1)) == 0', 'n == (n >> 1) << 1', 'log2(n) is integer'], a: 1}
+          ]
+        },
+        {
+          t: 'Bitmask Techniques & Subset Enumeration',
+          learn: '<div class="learn-section"><div class="learn-h">Bitmask as a Set</div><p class="learn-p">A <b>bitmask</b> is an integer whose binary representation encodes a set. Bit i being set (1) means element i is in the set. For n elements, we need n bits — so a 32-bit int handles sets up to 32 elements.</p><table class="learn-table"><tr><th>Set Operation</th><th>Bitmask</th><th>Example</th></tr><tr><td>Union (A ∪ B)</td><td><code>a | b</code></td><td>0110 | 1010 = 1110</td></tr><tr><td>Intersection (A ∩ B)</td><td><code>a &amp; b</code></td><td>0110 &amp; 1010 = 0010</td></tr><tr><td>Complement (Ā)</td><td><code>~a &amp; fullMask</code></td><td>~0110 &amp; 1111 = 1001</td></tr><tr><td>Difference (A \\ B)</td><td><code>a &amp; ~b</code></td><td>0110 &amp; ~1010 = 0100</td></tr><tr><td>Symmetric Diff</td><td><code>a ^ b</code></td><td>0110 ^ 1010 = 1100</td></tr><tr><td>Add element i</td><td><code>mask | (1 &lt;&lt; i)</code></td><td></td></tr><tr><td>Remove element i</td><td><code>mask &amp; ~(1 &lt;&lt; i)</code></td><td></td></tr><tr><td>Toggle element i</td><td><code>mask ^ (1 &lt;&lt; i)</code></td><td></td></tr><tr><td>Check element i</td><td><code>(mask &gt;&gt; i) &amp; 1</code></td><td></td></tr></table></div><div class="learn-section"><div class="learn-h">Useful Bit Tricks</div><table class="learn-table"><tr><th>Trick</th><th>Expression</th><th>How It Works</th></tr><tr><td>Lowest set bit</td><td><code>x &amp; (-x)</code></td><td>Two\'s complement: -x = ~x + 1</td></tr><tr><td>Clear lowest set bit</td><td><code>x &amp; (x - 1)</code></td><td>Brian Kernighan\'s trick</td></tr><tr><td>Count set bits</td><td><code>__builtin_popcount(x)</code></td><td>GCC built-in, O(1)</td></tr><tr><td>Set all bits 0..n-1</td><td><code>(1 &lt;&lt; n) - 1</code></td><td>Creates mask 0...0111...1</td></tr><tr><td>Check power of 2</td><td><code>x &amp;&amp; !(x &amp; (x-1))</code></td><td>Power of 2 has exactly one set bit</td></tr></table></div><div class="learn-section"><div class="learn-h">Iterating All Subsets of a Mask</div><p class="learn-p">Given a bitmask <code>mask</code>, iterate through all its subsets (including empty set):</p><div class="learn-code">// All subsets of mask (excluding empty set)\nfor (int sub = mask; sub &gt; 0; sub = (sub - 1) &amp; mask) {\n    // process subset \'sub\'\n}\n// Don\'t forget to handle empty set (sub = 0) separately if needed\n\n// All subsets of {0, 1, ..., n-1}\nfor (int mask = 0; mask &lt; (1 &lt;&lt; n); mask++) {\n    // mask represents a subset\n}</div><p class="learn-p">The subset enumeration trick runs in O(2^k) where k is the number of set bits in mask, NOT O(2^n). This is crucial for bitmask DP.</p><div class="learn-warn"><b>Important:</b> Bitmask techniques are the foundation of <b>Bitmask DP</b> (e.g., Traveling Salesman, assignment problems). Master these operations before moving to bitmask DP.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+void printSet(int mask, int n) {
+    cout << "{";
+    bool first = true;
+    for (int i = 0; i < n; i++) {
+        if (mask & (1 << i)) {
+            if (!first) cout << ", ";
+            cout << i;
+            first = false;
+        }
+    }
+    cout << "}";
+}
+
+int main() {
+    int n = 4;
+
+    // Enumerate all subsets of {0, 1, 2, 3}
+    cout << "All subsets of {0,1,2,3}:\\n";
+    for (int mask = 0; mask < (1 << n); mask++) {
+        printSet(mask, n);
+        cout << "\\n";
+    }
+
+    // Enumerate all subsets of a specific mask
+    int mask = 0b1101; // {0, 2, 3}
+    cout << "\\nAll subsets of {0, 2, 3}:\\n";
+    for (int sub = mask; sub > 0; sub = (sub - 1) & mask) {
+        printSet(sub, n);
+        cout << "\\n";
+    }
+    cout << "{}\\n"; // empty set
+
+    // Count set bits (Brian Kernighan)
+    int x = 0b101101;
+    int count = 0;
+    int temp = x;
+    while (temp) { temp &= (temp - 1); count++; }
+    cout << "\\nSet bits in " << x << ": " << count << "\\n";
+
+    // Lowest set bit
+    cout << "Lowest set bit of " << x << ": " << (x & (-x)) << "\\n";
+
+    // Swap without temp using XOR
+    int a = 5, b = 3;
+    a ^= b; b ^= a; a ^= b;
+    cout << "After swap: a=" << a << " b=" << b << "\\n";
+
+    return 0;
+}`,
+          problems: [
+            ['Subsets', 'https://leetcode.com/problems/subsets/', 'Medium'],
+            ['Counting Bits', 'https://leetcode.com/problems/counting-bits/', 'Easy'],
+            ['Maximum XOR of Two Numbers', 'https://leetcode.com/problems/maximum-xor-of-two-numbers-in-an-array/', 'Medium'],
+            ['Total Hamming Distance', 'https://leetcode.com/problems/total-hamming-distance/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'What does the expression x & (-x) isolate?', o: ['The highest set bit', 'The lowest set bit', 'All even-positioned bits', 'The sign bit'], a: 1},
+            {q: 'How many subsets does a set of n elements have?', o: ['n', 'n^2', '2^n', 'n!'], a: 2},
+            {q: 'To iterate all subsets of mask m, the loop is:', o: ['for(s=m; s>=0; s--)', 'for(s=m; s>0; s=(s-1)&m)', 'for(s=0; s<=m; s++)', 'for(s=1; s<m; s<<=1)'], a: 1}
           ]
         }
       ]
