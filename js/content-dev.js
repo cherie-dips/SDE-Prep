@@ -452,6 +452,79 @@ console.log(Object.getPrototypeOf(Object.prototype)); // null — end of chain`,
             {q: 'What is the value of this inside an arrow function?', o: ['The calling object', 'The global object', 'The enclosing lexical scope this', 'undefined'], a: 2},
             {q: 'What does Object.create(proto) do?', o: ['Clones the proto object deeply', 'Creates a new object with proto as its [[Prototype]]', 'Calls the constructor of proto', 'Freezes the proto object'], a: 1}
           ]
+        },
+        {
+          t: 'TypeScript Essentials',
+          learn: '<div class="learn-section"><div class="learn-h">Why TypeScript?</div><p class="learn-p"><b>TypeScript</b> is a typed superset of JavaScript that compiles to plain JS. It adds <b>static type checking</b> at compile time, catching bugs early and enabling better IDE support (autocompletion, refactoring).</p></div><div class="learn-section"><div class="learn-h">Core Types</div><div class="learn-code">// Primitive types\nlet name: string = "Alice";\nlet age: number = 30;\nlet active: boolean = true;\nlet data: null = null;\nlet x: undefined = undefined;\n\n// Arrays\nlet nums: number[] = [1, 2, 3];\nlet names: Array&lt;string&gt; = ["a", "b"];\n\n// Tuple (fixed-length, typed array)\nlet pair: [string, number] = ["age", 30];\n\n// Enum\nenum Direction { Up, Down, Left, Right }\nlet dir: Direction = Direction.Up; // 0\n\n// Union types\nlet id: string | number = "abc";\nid = 123; // also valid\n\n// Literal types\nlet status: "active" | "inactive" = "active";</div></div><div class="learn-section"><div class="learn-h">Interfaces & Type Aliases</div><div class="learn-code">// Interface (extendable, for objects)\ninterface User {\n  id: number;\n  name: string;\n  email?: string;        // optional\n  readonly createdAt: Date; // immutable\n}\n\n// Type alias (more flexible)\ntype ID = string | number;\ntype Point = { x: number; y: number };\n\n// Intersection types\ntype Admin = User &amp; { role: "admin"; permissions: string[] };\n\n// Extending interfaces\ninterface Employee extends User {\n  department: string;\n  salary: number;\n}</div></div><div class="learn-section"><div class="learn-h">Generics</div><div class="learn-code">// Generic function\nfunction identity&lt;T&gt;(arg: T): T { return arg; }\nidentity&lt;string&gt;("hello"); // explicit\nidentity(42);              // inferred as number\n\n// Generic interface\ninterface ApiResponse&lt;T&gt; {\n  data: T;\n  status: number;\n  error?: string;\n}\n\n// Generic constraint\nfunction getLength&lt;T extends { length: number }&gt;(arg: T): number {\n  return arg.length;\n}\ngetLength("hello"); // OK\ngetLength([1,2,3]); // OK\n// getLength(123);  // Error: number has no .length</div></div><div class="learn-section"><div class="learn-h">Utility Types</div><table class="learn-table"><tr><th>Type</th><th>What It Does</th><th>Example</th></tr><tr><td>Partial&lt;T&gt;</td><td>All properties optional</td><td>Partial&lt;User&gt;</td></tr><tr><td>Required&lt;T&gt;</td><td>All properties required</td><td>Required&lt;User&gt;</td></tr><tr><td>Readonly&lt;T&gt;</td><td>All properties readonly</td><td>Readonly&lt;User&gt;</td></tr><tr><td>Pick&lt;T, K&gt;</td><td>Subset of properties</td><td>Pick&lt;User, "id" | "name"&gt;</td></tr><tr><td>Omit&lt;T, K&gt;</td><td>All except specified</td><td>Omit&lt;User, "email"&gt;</td></tr><tr><td>Record&lt;K, V&gt;</td><td>Object with key type K, value type V</td><td>Record&lt;string, number&gt;</td></tr></table><div class="learn-tip"><b>Interview tip:</b> Know the difference between <code>interface</code> and <code>type</code>. Interfaces support declaration merging and are preferred for object shapes. Type aliases support unions, intersections, and mapped types.</div></div>',
+          code: `// TypeScript Essentials — Code Examples
+
+// ===== Type Guards =====
+function processValue(val: string | number) {
+  if (typeof val === 'string') {
+    console.log(val.toUpperCase()); // TS knows it's string
+  } else {
+    console.log(val.toFixed(2));     // TS knows it's number
+  }
+}
+
+// ===== Discriminated Unions =====
+interface Circle { kind: 'circle'; radius: number; }
+interface Rectangle { kind: 'rectangle'; width: number; height: number; }
+type Shape = Circle | Rectangle;
+
+function area(shape: Shape): number {
+  switch (shape.kind) {
+    case 'circle': return Math.PI * shape.radius ** 2;
+    case 'rectangle': return shape.width * shape.height;
+  }
+}
+
+// ===== Generic API Client =====
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message: string;
+}
+
+async function fetchApi<T>(url: string): Promise<ApiResponse<T>> {
+  const res = await fetch(url);
+  return res.json();
+}
+
+// Usage with type inference
+interface User { id: number; name: string; }
+// const { data } = await fetchApi<User[]>('/api/users');
+// data is User[]
+
+// ===== Mapped Types =====
+type Optional<T> = { [K in keyof T]?: T[K] };
+type Nullable<T> = { [K in keyof T]: T[K] | null };
+
+// ===== Conditional Types =====
+type IsString<T> = T extends string ? 'yes' : 'no';
+// IsString<string> = 'yes'
+// IsString<number> = 'no'
+
+// ===== React with TypeScript =====
+// interface Props {
+//   name: string;
+//   age?: number;
+//   onClick: (id: string) => void;
+//   children: React.ReactNode;
+// }
+// const MyComponent: React.FC<Props> = ({ name, onClick, children }) => {
+//   return <div onClick={() => onClick(name)}>{children}</div>;
+// };`,
+          problems: [
+            ['TypeScript Handbook', 'https://www.geeksforgeeks.org/typescript/', 'Easy'],
+            ['TypeScript Generics', 'https://www.geeksforgeeks.org/typescript-generic/', 'Medium'],
+            ['Advanced TypeScript Patterns', 'https://www.geeksforgeeks.org/typescript-advanced-types/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'TypeScript\'s type checking happens at:', o: ['Runtime', 'Compile time', 'Both', 'Neither — it\'s just documentation'], a: 1},
+            {q: 'Which utility type makes all properties optional?', o: ['Required<T>', 'Partial<T>', 'Readonly<T>', 'Pick<T, K>'], a: 1},
+            {q: 'Generics in TypeScript allow:', o: ['Dynamic typing like JavaScript', 'Creating reusable components that work with multiple types', 'Automatic type conversion', 'Bypassing type checks'], a: 1}
+          ]
         }
       ]
     },
@@ -850,6 +923,104 @@ function TodoApp() {
             {q: 'React.memo performs what type of comparison on props by default?', o: ['Deep equality', 'Shallow equality', 'Reference equality only', 'JSON.stringify comparison'], a: 1},
             {q: 'Custom hooks must follow which naming convention?', o: ['Start with "hook"', 'Start with "use"', 'Start with "custom"', 'End with "Hook"'], a: 1},
             {q: 'What does React.lazy() enable?', o: ['Lazy state initialization', 'Code splitting via dynamic import', 'Delayed rendering by time', 'Background data fetching'], a: 1}
+          ]
+        },
+        {
+          t: 'Testing (Jest, React Testing Library, Cypress)',
+          learn: '<div class="learn-section"><div class="learn-h">Testing Pyramid</div><table class="learn-table"><tr><th>Level</th><th>Tool</th><th>Speed</th><th>What It Tests</th></tr><tr><td>Unit Tests</td><td>Jest</td><td>Fast (ms)</td><td>Individual functions, hooks, utilities</td></tr><tr><td>Integration Tests</td><td>React Testing Library</td><td>Medium</td><td>Components interacting with each other</td></tr><tr><td>E2E Tests</td><td>Cypress / Playwright</td><td>Slow (sec)</td><td>Full user flows in a browser</td></tr></table></div><div class="learn-section"><div class="learn-h">Jest — JavaScript Test Framework</div><p class="learn-p">Jest provides test runner, assertions, mocking, and code coverage out of the box.</p><div class="learn-code">// sum.test.js\nconst sum = require(\'./sum\');\n\ndescribe(\'sum\', () => {\n  test(\'adds two numbers\', () => {\n    expect(sum(1, 2)).toBe(3);\n  });\n\n  test(\'handles negative numbers\', () => {\n    expect(sum(-1, -2)).toBe(-3);\n  });\n});\n\n// Common matchers:\n// .toBe(value)         — strict equality (===)\n// .toEqual(obj)        — deep equality\n// .toBeTruthy()        — truthy check\n// .toThrow()           — expects function to throw\n// .toHaveBeenCalled()  — mock function was called\n// .toMatchSnapshot()   — snapshot testing</div></div><div class="learn-section"><div class="learn-h">React Testing Library (RTL)</div><p class="learn-p">RTL tests components the way users interact with them — by querying DOM elements by role, text, label, etc. instead of implementation details like component state or props.</p><div class="learn-code">import { render, screen, fireEvent } from \'@testing-library/react\';\nimport Counter from \'./Counter\';\n\ntest(\'increments counter\', () => {\n  render(&lt;Counter /&gt;);\n  const button = screen.getByRole(\'button\', { name: /increment/i });\n  fireEvent.click(button);\n  expect(screen.getByText(\'Count: 1\')).toBeInTheDocument();\n});\n\n// Query priority (most to least preferred):\n// getByRole > getByLabelText > getByPlaceholderText >\n// getByText > getByDisplayValue > getByTestId</div><div class="learn-tip"><b>Key principle:</b> "The more your tests resemble the way your software is used, the more confidence they give you." Test behavior, not implementation.</div></div><div class="learn-section"><div class="learn-h">Mocking in Jest</div><div class="learn-code">// Mock a module\njest.mock(\'./api\', () => ({\n  fetchUsers: jest.fn(() => Promise.resolve([{name: \'Alice\'}]))\n}));\n\n// Mock a function\nconst mockFn = jest.fn();\nmockFn.mockReturnValue(42);\nmockFn.mockResolvedValue({data: []});  // async mock\n\n// Spy on existing method\njest.spyOn(console, \'log\').mockImplementation(() => {});</div></div><div class="learn-section"><div class="learn-h">Cypress — E2E Testing</div><div class="learn-code">// cypress/e2e/login.cy.js\ndescribe(\'Login\', () => {\n  it(\'logs in successfully\', () => {\n    cy.visit(\'/login\');\n    cy.get(\'[data-testid="email"]\').type(\'user@example.com\');\n    cy.get(\'[data-testid="password"]\').type(\'password123\');\n    cy.get(\'button[type="submit"]\').click();\n    cy.url().should(\'include\', \'/dashboard\');\n    cy.contains(\'Welcome\').should(\'be.visible\');\n  });\n});</div></div>',
+          code: `// ===== Jest + RTL Testing Examples =====
+
+// --- Unit test: utility function ---
+// utils.test.js
+const { formatCurrency, debounce } = require('./utils');
+
+describe('formatCurrency', () => {
+  test('formats positive amounts', () => {
+    expect(formatCurrency(1234.5)).toBe('$1,234.50');
+  });
+
+  test('handles zero', () => {
+    expect(formatCurrency(0)).toBe('$0.00');
+  });
+
+  test('handles negative', () => {
+    expect(formatCurrency(-50)).toBe('-$50.00');
+  });
+});
+
+// --- Integration test: React component ---
+// UserList.test.jsx
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import UserList from './UserList';
+import * as api from './api';
+
+jest.mock('./api');
+
+describe('UserList', () => {
+  test('renders users after loading', async () => {
+    api.fetchUsers.mockResolvedValue([
+      { id: 1, name: 'Alice' },
+      { id: 2, name: 'Bob' }
+    ]);
+
+    render(<UserList />);
+
+    // Loading state
+    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+
+    // Loaded state
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.getByText('Bob')).toBeInTheDocument();
+    });
+  });
+
+  test('shows error on API failure', async () => {
+    api.fetchUsers.mockRejectedValue(new Error('Network error'));
+    render(<UserList />);
+    await waitFor(() => {
+      expect(screen.getByText(/error/i)).toBeInTheDocument();
+    });
+  });
+});
+
+// --- Testing custom hooks ---
+import { renderHook, act } from '@testing-library/react';
+import useCounter from './useCounter';
+
+test('useCounter increments and decrements', () => {
+  const { result } = renderHook(() => useCounter(0));
+  expect(result.current.count).toBe(0);
+
+  act(() => result.current.increment());
+  expect(result.current.count).toBe(1);
+
+  act(() => result.current.decrement());
+  expect(result.current.count).toBe(0);
+});
+
+// --- Cypress E2E ---
+// cypress/e2e/todo.cy.js
+// describe('Todo App', () => {
+//   beforeEach(() => cy.visit('/'));
+//
+//   it('adds and completes a todo', () => {
+//     cy.get('[data-testid="todo-input"]').type('Buy groceries{enter}');
+//     cy.contains('Buy groceries').should('exist');
+//     cy.get('[data-testid="todo-checkbox"]').first().click();
+//     cy.contains('Buy groceries').should('have.class', 'completed');
+//   });
+// });`,
+          problems: [
+            ['Jest Testing Guide', 'https://www.geeksforgeeks.org/jest-tutorial/', 'Easy'],
+            ['React Testing Library', 'https://www.geeksforgeeks.org/react-testing-library/', 'Medium'],
+            ['Cypress E2E Testing', 'https://www.geeksforgeeks.org/cypress-tutorial/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'React Testing Library\'s guiding principle is to test:', o: ['Component state and props', 'Implementation details', 'How users interact with the UI', 'Render cycle count'], a: 2},
+            {q: 'Which Jest function creates a mock function?', o: ['jest.create()', 'jest.fn()', 'jest.mock()', 'jest.spy()'], a: 1},
+            {q: 'In the testing pyramid, which tests should be most numerous?', o: ['E2E tests', 'Integration tests', 'Unit tests', 'Manual tests'], a: 2}
           ]
         }
       ]
@@ -1796,7 +1967,7 @@ git bisect good v1.0.0
 # .DS_Store`,
           problems: [
             ['Merge Intervals', 'https://leetcode.com/problems/merge-intervals/', 'Medium'],
-            ['Version Control System (HackerRank)', 'https://www.hackerrank.com/challenges/30-bitwise-and/problem', 'Easy'],
+            ['Git Cheat Sheet & Concepts', 'https://www.geeksforgeeks.org/git-cheat-sheet/', 'Easy'],
             ['Git Branching Interactive Tutorial', 'https://learngitbranching.js.org/', 'Easy']
           ],
           mcqs: [
@@ -1944,7 +2115,7 @@ CMD ["node", "server.js"]
 # docker inspect api                # Detailed container info`,
           problems: [
             ['Design a Container Runtime (System Design)', 'https://www.geeksforgeeks.org/docker-tutorial/', 'Medium'],
-            ['Process Isolation Concepts', 'https://www.hackerrank.com/challenges/bash-tutorials-lets-echo/problem', 'Easy'],
+            ['Docker Basics & Commands', 'https://www.geeksforgeeks.org/docker-tutorial/', 'Easy'],
             ['Docker Multi-Stage Build Challenge', 'https://www.geeksforgeeks.org/docker-multistage-build/', 'Medium']
           ],
           mcqs: [
@@ -2123,7 +2294,7 @@ jobs:
           SLACK_WEBHOOK_URL: \${{ secrets.SLACK_WEBHOOK }}`,
           problems: [
             ['Build a CI Pipeline (Hands-on)', 'https://www.geeksforgeeks.org/what-is-ci-cd/', 'Medium'],
-            ['Automate Testing with GitHub Actions', 'https://www.hackerrank.com/challenges/bash-tutorials---a-personalized-echo/problem', 'Easy'],
+            ['GitHub Actions Workflow Syntax', 'https://www.geeksforgeeks.org/github-actions-tutorial/', 'Easy'],
             ['GitHub Actions Certification Prep', 'https://www.geeksforgeeks.org/github-actions-tutorial/', 'Hard']
           ],
           mcqs: [
@@ -2297,7 +2468,7 @@ module.exports = app;`,
           problems: [
             ['Design a Logging System', 'https://www.geeksforgeeks.org/logging-in-node-js/', 'Medium'],
             ['Rate Limiter (System Design)', 'https://leetcode.com/problems/logger-rate-limiter/', 'Easy'],
-            ['Monitoring Dashboard Design', 'https://www.hackerrank.com/challenges/time-conversion/problem', 'Medium']
+            ['Monitoring & Observability Guide', 'https://www.geeksforgeeks.org/prometheus-monitoring/', 'Medium']
           ],
           mcqs: [
             {
@@ -2787,7 +2958,7 @@ server {
           problems: [
             ['Design a Rate Limiter', 'https://leetcode.com/discuss/interview-question/system-design/124657/Design-a-Rate-Limiter', 'Hard'],
             ['Design a Load Balancer (System Design)', 'https://www.geeksforgeeks.org/load-balancer-system-design/', 'Hard'],
-            ['Web Server Configuration Challenge', 'https://www.hackerrank.com/challenges/bash-tutorials-the-world-of-numbers/problem', 'Easy']
+            ['Nginx Configuration Guide', 'https://www.geeksforgeeks.org/nginx/', 'Easy']
           ],
           mcqs: [
             {
@@ -3215,6 +3386,184 @@ print(f"Best RF AUC: {grid.best_score_:.4f}")`,
             {q: 'What is the primary difference between bagging and boosting?', o: ['Bagging uses neural networks, boosting uses trees', 'Bagging trains models in parallel to reduce variance; boosting trains sequentially to reduce bias', 'Bagging is faster than boosting', 'Boosting always outperforms bagging'], a: 1},
             {q: 'In a Random Forest, approximately what fraction of training samples are out-of-bag for each tree?', o: ['~10%', '~25%', '~37%', '~50%'], a: 2},
             {q: 'Which Gradient Boosting library grows trees leaf-wise instead of level-wise?', o: ['XGBoost', 'LightGBM', 'CatBoost', 'sklearn GradientBoosting'], a: 1}
+          ]
+        },
+        {
+          t: 'SVM, KNN & Naive Bayes',
+          learn: '<div class="learn-section"><div class="learn-h">Support Vector Machine (SVM)</div><p class="learn-p">SVM finds the <b>maximum-margin hyperplane</b> that separates classes. The margin is the distance between the hyperplane and the nearest data points from each class (the <b>support vectors</b>).</p><table class="learn-table"><tr><th>Concept</th><th>Description</th></tr><tr><td>Hard margin</td><td>No misclassification allowed (linearly separable data only)</td></tr><tr><td>Soft margin (C parameter)</td><td>Allows some misclassification; C controls the trade-off. High C = less tolerance, low C = more tolerance</td></tr><tr><td>Kernel trick</td><td>Maps data to higher dimensions to find linear separator. Common kernels: linear, RBF, polynomial</td></tr></table><div class="learn-code">Decision boundary: w·x + b = 0\nMargin = 2 / ||w||\n\nKernel trick:\n  K(x, y) = φ(x)·φ(y)  — compute dot product in high-D without explicit mapping\n\nRBF kernel: K(x,y) = exp(-γ||x-y||²)\n  γ high → overfitting (complex boundary)\n  γ low  → underfitting (smooth boundary)</div><div class="learn-tip"><b>When to use SVM:</b> Small to medium datasets, high-dimensional data (text classification), clear margin of separation. Not ideal for very large datasets (training is O(n²) to O(n³)).</div></div><div class="learn-section"><div class="learn-h">K-Nearest Neighbors (KNN)</div><p class="learn-p">KNN is a <b>lazy learner</b> — no training phase. For a new point, find the K nearest neighbors and vote (classification) or average (regression).</p><table class="learn-table"><tr><th>Aspect</th><th>Detail</th></tr><tr><td>Distance metric</td><td>Euclidean (default), Manhattan, Minkowski, cosine</td></tr><tr><td>Choosing K</td><td>Small K → noisy/overfitting; Large K → smooth/underfitting. Use cross-validation.</td></tr><tr><td>Preprocessing</td><td>Feature scaling is critical (distances depend on scale)</td></tr><tr><td>Time complexity</td><td>O(n·d) per prediction (brute force); use KD-tree or Ball-tree for faster lookup</td></tr></table><div class="learn-warn"><b>Curse of dimensionality:</b> KNN breaks down in high dimensions because distances become meaningless. Reduce dimensions (PCA) before applying KNN in high-D.</div></div><div class="learn-section"><div class="learn-h">Naive Bayes</div><p class="learn-p">Based on <b>Bayes\' theorem</b> with the "naive" assumption of <b>feature independence</b>: P(y|x1,...,xn) ∝ P(y) × ∏P(xi|y).</p><table class="learn-table"><tr><th>Variant</th><th>Feature Type</th><th>Use Case</th></tr><tr><td>Gaussian NB</td><td>Continuous (assumes normal distribution)</td><td>General classification</td></tr><tr><td>Multinomial NB</td><td>Discrete counts</td><td>Text classification (word counts)</td></tr><tr><td>Bernoulli NB</td><td>Binary features</td><td>Text classification (word presence/absence)</td></tr></table><p class="learn-p"><b>Pros:</b> Very fast, works well with small datasets, handles high dimensions (text). <b>Cons:</b> Independence assumption rarely holds; poor with correlated features.</p><div class="learn-tip"><b>Spam filtering</b> is the classic Naive Bayes application. Despite the "naive" assumption, it works surprisingly well in practice for text classification.</div></div>',
+          code: `# SVM, KNN & Naive Bayes — Python
+
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import make_classification, load_iris
+from sklearn.metrics import classification_report
+import numpy as np
+
+# Generate sample data
+X, y = make_classification(n_samples=500, n_features=10, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Feature scaling (critical for SVM and KNN)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# ===== SVM =====
+svm_linear = SVC(kernel='linear', C=1.0)
+svm_rbf = SVC(kernel='rbf', C=1.0, gamma='scale')
+svm_rbf.fit(X_train_scaled, y_train)
+print("SVM (RBF) accuracy:", svm_rbf.score(X_test_scaled, y_test))
+
+# Cross-validation to tune C
+for C in [0.01, 0.1, 1, 10, 100]:
+    scores = cross_val_score(SVC(C=C, kernel='rbf'), X_train_scaled, y_train, cv=5)
+    print(f"  C={C}: {scores.mean():.3f} ± {scores.std():.3f}")
+
+# ===== KNN =====
+knn = KNeighborsClassifier(n_neighbors=5, metric='euclidean')
+knn.fit(X_train_scaled, y_train)
+print("\\nKNN (k=5) accuracy:", knn.score(X_test_scaled, y_test))
+
+# Find optimal K
+for k in [1, 3, 5, 7, 11, 15]:
+    scores = cross_val_score(KNeighborsClassifier(n_neighbors=k), X_train_scaled, y_train, cv=5)
+    print(f"  k={k}: {scores.mean():.3f}")
+
+# ===== Naive Bayes =====
+gnb = GaussianNB()
+gnb.fit(X_train, y_train)  # NB doesn't need scaling
+print("\\nGaussian NB accuracy:", gnb.score(X_test, y_test))
+
+# For text classification (would use MultinomialNB with CountVectorizer)
+# from sklearn.feature_extraction.text import CountVectorizer
+# vectorizer = CountVectorizer()
+# X_text = vectorizer.fit_transform(documents)
+# mnb = MultinomialNB().fit(X_text, labels)`,
+          problems: [
+            ['SVM Intuition', 'https://www.geeksforgeeks.org/support-vector-machine-algorithm/', 'Medium'],
+            ['KNN Algorithm', 'https://www.geeksforgeeks.org/k-nearest-neighbours/', 'Easy'],
+            ['Naive Bayes Classifier', 'https://www.geeksforgeeks.org/naive-bayes-classifiers/', 'Easy'],
+            ['SVM Kernel Trick', 'https://www.geeksforgeeks.org/svm-kernels/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'In SVM, support vectors are:', o: ['All training points', 'Points farthest from the hyperplane', 'Points closest to the decision boundary that define the margin', 'Points that are misclassified'], a: 2},
+            {q: 'KNN is called a "lazy learner" because:', o: ['It trains slowly', 'It has no explicit training phase — all work is at prediction time', 'It only works on small datasets', 'It uses simple distance metrics'], a: 1},
+            {q: 'The "naive" assumption in Naive Bayes is:', o: ['The prior is uniform', 'Features are conditionally independent given the class', 'The data is normally distributed', 'There are only two classes'], a: 1}
+          ]
+        }
+      ]
+    },
+    {
+      id: 'unsup', t: 'Unsupervised Learning',
+      topics: [
+        {
+          t: 'Clustering (K-Means, DBSCAN, Hierarchical)',
+          learn: '<div class="learn-section"><div class="learn-h">What is Unsupervised Learning?</div><p class="learn-p">Unsupervised learning finds hidden patterns in <b>unlabeled data</b>. Key tasks: <b>clustering</b> (grouping similar data points), <b>dimensionality reduction</b> (compressing features), and <b>anomaly detection</b>.</p></div><div class="learn-section"><div class="learn-h">K-Means Clustering</div><p class="learn-p">Partitions n data points into K clusters by minimizing within-cluster sum of squared distances (inertia). Algorithm:</p><ol class="learn-list"><li>Initialize K centroids (randomly or via K-Means++)</li><li>Assign each point to the nearest centroid</li><li>Recalculate centroids as the mean of assigned points</li><li>Repeat steps 2-3 until convergence</li></ol><table class="learn-table"><tr><th>Aspect</th><th>Detail</th></tr><tr><td>Time complexity</td><td>O(n × K × I × d) where I = iterations, d = dimensions</td></tr><tr><td>Must specify K</td><td>Use Elbow method or Silhouette score to choose K</td></tr><tr><td>Limitations</td><td>Assumes spherical clusters, sensitive to outliers, non-deterministic</td></tr></table><div class="learn-code">K-Means++ Initialization:\n  1. Choose first centroid randomly\n  2. For each remaining centroid:\n     - Compute distance D(x) from each point to nearest existing centroid\n     - Choose next centroid with probability ∝ D(x)²\n  This ensures centroids are spread apart.</div></div><div class="learn-section"><div class="learn-h">DBSCAN</div><p class="learn-p"><b>Density-Based Spatial Clustering</b>. Groups points in dense regions; marks sparse points as noise. No need to specify K.</p><p class="learn-p"><b>Parameters:</b> ε (epsilon) = neighborhood radius, MinPts = minimum points for a core point.</p><table class="learn-table"><tr><th>Point Type</th><th>Condition</th></tr><tr><td>Core point</td><td>≥ MinPts within ε radius</td></tr><tr><td>Border point</td><td>&lt; MinPts within ε but in a core point\'s neighborhood</td></tr><tr><td>Noise point</td><td>Neither core nor border</td></tr></table><div class="learn-tip"><b>DBSCAN vs K-Means:</b> DBSCAN finds arbitrary-shaped clusters, handles noise, doesn\'t need K. But struggles with varying densities and high dimensions.</div></div><div class="learn-section"><div class="learn-h">Hierarchical Clustering</div><p class="learn-p"><b>Agglomerative</b> (bottom-up): Start with each point as a cluster, merge the closest pair until one cluster remains. Produces a <b>dendrogram</b> — cut at desired height to get K clusters.</p><table class="learn-table"><tr><th>Linkage</th><th>Distance Measure</th><th>Tendency</th></tr><tr><td>Single</td><td>Min distance between clusters</td><td>Elongated clusters (chaining)</td></tr><tr><td>Complete</td><td>Max distance</td><td>Compact, spherical clusters</td></tr><tr><td>Average</td><td>Average pairwise distance</td><td>Balanced</td></tr><tr><td>Ward\'s</td><td>Minimizes total within-cluster variance</td><td>Similar to K-Means</td></tr></table></div>',
+          code: `# Clustering — Python with scikit-learn
+
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+import numpy as np
+
+np.random.seed(42)
+X = np.vstack([
+    np.random.randn(100, 2) + [2, 2],
+    np.random.randn(100, 2) + [-2, -2],
+    np.random.randn(100, 2) + [2, -2]
+])
+
+# K-Means
+kmeans = KMeans(n_clusters=3, init='k-means++', random_state=42)
+labels_km = kmeans.fit_predict(X)
+print(f"K-Means inertia: {kmeans.inertia_:.2f}")
+print(f"Silhouette: {silhouette_score(X, labels_km):.3f}")
+
+# Elbow method
+inertias = []
+for k in range(1, 10):
+    km = KMeans(n_clusters=k, random_state=42).fit(X)
+    inertias.append(km.inertia_)
+# Plot inertias vs k — look for the "elbow"
+
+# DBSCAN
+X_scaled = StandardScaler().fit_transform(X)
+dbscan = DBSCAN(eps=0.5, min_samples=5)
+labels_db = dbscan.fit_predict(X_scaled)
+n_clusters = len(set(labels_db)) - (1 if -1 in labels_db else 0)
+n_noise = list(labels_db).count(-1)
+print(f"DBSCAN: {n_clusters} clusters, {n_noise} noise points")
+
+# Hierarchical
+agg = AgglomerativeClustering(n_clusters=3, linkage='ward')
+labels_hc = agg.fit_predict(X)
+print(f"Hierarchical Silhouette: {silhouette_score(X, labels_hc):.3f}")`,
+          problems: [
+            ['K-Means Clustering', 'https://www.geeksforgeeks.org/k-means-clustering-introduction/', 'Easy'],
+            ['DBSCAN Algorithm', 'https://www.geeksforgeeks.org/dbscan-clustering-in-ml-density-based-clustering/', 'Medium'],
+            ['Hierarchical Clustering', 'https://www.geeksforgeeks.org/ml-hierarchical-clustering-agglomerative-and-divisive-clustering/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'K-Means requires you to specify:', o: ['The distance metric', 'The number of clusters K', 'The cluster shapes', 'The noise threshold'], a: 1},
+            {q: 'DBSCAN classifies a point as noise when:', o: ['It is far from the centroid', 'It has fewer than MinPts within ε and is not in any core point\'s neighborhood', 'It is in the largest cluster', 'Its feature values are outliers'], a: 1},
+            {q: 'The Elbow method for choosing K plots:', o: ['Accuracy vs K', 'Inertia (within-cluster SSE) vs K', 'Silhouette vs time', 'Number of iterations vs K'], a: 1}
+          ]
+        },
+        {
+          t: 'Dimensionality Reduction (PCA, t-SNE)',
+          learn: '<div class="learn-section"><div class="learn-h">Why Reduce Dimensions?</div><p class="learn-p">High-dimensional data suffers from the <b>curse of dimensionality</b>: distances become meaningless, models overfit, and computation is expensive. Dimensionality reduction projects data to a lower-dimensional space while preserving important structure.</p></div><div class="learn-section"><div class="learn-h">PCA (Principal Component Analysis)</div><p class="learn-p">PCA finds <b>orthogonal directions of maximum variance</b> and projects data onto them. It is a linear, deterministic method.</p><ol class="learn-list"><li>Standardize the data (zero mean, unit variance)</li><li>Compute the covariance matrix</li><li>Find eigenvalues and eigenvectors</li><li>Sort by eigenvalue (largest first) — these are the principal components</li><li>Project data onto the top-k eigenvectors</li></ol><div class="learn-code">Explained Variance Ratio:\n  eigenvalue_i / sum(all eigenvalues)\n\nChoose k such that cumulative explained variance ≥ 95%\n(or use the scree plot elbow)</div><div class="learn-tip"><b>PCA for interviews:</b> Know that PCA is equivalent to SVD on the centered data matrix. PCA is unsupervised (ignores labels). For supervised dimensionality reduction, use LDA (Linear Discriminant Analysis).</div></div><div class="learn-section"><div class="learn-h">t-SNE</div><p class="learn-p"><b>t-distributed Stochastic Neighbor Embedding</b> is a non-linear technique for <b>visualization</b> (projects to 2D or 3D). It preserves local structure — nearby points in high-D stay nearby in low-D.</p><table class="learn-table"><tr><th>PCA</th><th>t-SNE</th></tr><tr><td>Linear</td><td>Non-linear</td></tr><tr><td>Preserves global structure</td><td>Preserves local structure</td></tr><tr><td>Deterministic</td><td>Stochastic (different runs differ)</td></tr><tr><td>Fast, scalable</td><td>Slow for large datasets</td></tr><tr><td>Good for pre-processing</td><td>Good for visualization only</td></tr></table><div class="learn-warn"><b>Warning:</b> t-SNE is only for visualization, NOT for feature reduction in ML pipelines. Cluster sizes and distances in t-SNE plots are not meaningful. Always use PCA for feature reduction.</div></div>',
+          code: `# PCA and t-SNE — Python
+
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.datasets import load_digits
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+
+# Load data
+digits = load_digits()
+X, y = digits.data, digits.target  # 1797 samples, 64 features
+
+# Standardize
+X_scaled = StandardScaler().fit_transform(X)
+
+# PCA
+pca = PCA(n_components=0.95)  # keep 95% variance
+X_pca = pca.fit_transform(X_scaled)
+print(f"PCA: {X.shape[1]} → {X_pca.shape[1]} components")
+print(f"Explained variance: {pca.explained_variance_ratio_.sum():.3f}")
+
+# PCA with fixed components for visualization
+pca_2d = PCA(n_components=2)
+X_pca_2d = pca_2d.fit_transform(X_scaled)
+
+# t-SNE (for visualization)
+tsne = TSNE(n_components=2, perplexity=30, random_state=42)
+X_tsne = tsne.fit_transform(X_scaled)
+
+# Manual PCA from scratch
+def pca_from_scratch(X, k):
+    X_centered = X - X.mean(axis=0)
+    cov = np.cov(X_centered.T)
+    eigenvalues, eigenvectors = np.linalg.eigh(cov)
+    idx = np.argsort(eigenvalues)[::-1][:k]
+    W = eigenvectors[:, idx]
+    return X_centered @ W, eigenvalues[idx] / eigenvalues.sum()
+
+X_manual, ratios = pca_from_scratch(X_scaled, 2)
+print(f"Manual PCA explained: {ratios.sum():.3f}")`,
+          problems: [
+            ['PCA Basics', 'https://www.geeksforgeeks.org/principal-component-analysis-pca/', 'Medium'],
+            ['t-SNE Explained', 'https://www.geeksforgeeks.org/ml-t-distributed-stochastic-neighbor-embedding-t-sne-algorithm/', 'Medium'],
+            ['Curse of Dimensionality', 'https://www.geeksforgeeks.org/curse-of-dimensionality-machine-learning/', 'Easy']
+          ],
+          mcqs: [
+            {q: 'PCA finds directions that maximize:', o: ['Classification accuracy', 'Variance in the data', 'Number of clusters', 'Training speed'], a: 1},
+            {q: 't-SNE is primarily used for:', o: ['Feature engineering', 'Regression', 'High-dimensional data visualization', 'Time series forecasting'], a: 2},
+            {q: 'PCA requires the data to be:', o: ['Normalized to [0,1]', 'Standardized (zero mean, unit variance)', 'Binary', 'Sorted'], a: 1}
           ]
         }
       ]
@@ -5118,6 +5467,323 @@ print(f"Hands coincide at 3:{t} = 3:{float(t):.4f} min")`,
             {q: 'What is the remainder when 2^100 is divided by 7?', o: ['1', '2', '4', '6'], a: 1},
             {q: 'How many divisors does 360 have?', o: ['12', '18', '24', '36'], a: 2},
             {q: 'At what time between 3 and 4 o\'clock do the hour and minute hands of a clock coincide?', o: ['3:15', '3:16 and 4/11 min', '3:18', '3:20'], a: 1}
+          ]
+        }
+      ]
+    },
+    {
+      id: 'arith', t: 'Arithmetic & Algebra',
+      topics: [
+        {
+          t: 'Time, Speed & Distance',
+          learn: '<div class="learn-section"><div class="learn-h">Fundamental Formula</div><p class="learn-p"><code>Speed = Distance / Time</code>. Units must be consistent: km/hr with km and hours, m/s with meters and seconds.</p><div class="learn-code">Conversions:\n  km/hr → m/s: multiply by 5/18\n  m/s → km/hr: multiply by 18/5\n\nExample: 72 km/hr = 72 × 5/18 = 20 m/s</div></div><div class="learn-section"><div class="learn-h">Relative Speed</div><table class="learn-table"><tr><th>Direction</th><th>Relative Speed</th></tr><tr><td>Same direction</td><td>|S1 − S2|</td></tr><tr><td>Opposite direction</td><td>S1 + S2</td></tr></table></div><div class="learn-section"><div class="learn-h">Average Speed</div><p class="learn-p">If a person travels distance d at speed S1 and returns at speed S2:</p><div class="learn-code">Average Speed = 2 × S1 × S2 / (S1 + S2)  (Harmonic mean)\n\nNOT (S1 + S2) / 2 — that\'s only correct for equal time, not equal distance.</div><div class="learn-warn"><b>Common mistake:</b> Average speed ≠ average of speeds. Use harmonic mean when distances are equal, arithmetic mean when times are equal.</div></div><div class="learn-section"><div class="learn-h">Trains</div><ul class="learn-list"><li>Train passing a pole/person: distance = length of train</li><li>Train passing a platform: distance = length of train + length of platform</li><li>Two trains crossing each other: distance = sum of both lengths, speed = relative speed</li></ul><div class="learn-code">Train of length 200m crosses a 300m platform in 25 seconds.\nDistance = 200 + 300 = 500m\nSpeed = 500/25 = 20 m/s = 72 km/hr</div></div><div class="learn-section"><div class="learn-h">Boats & Streams</div><p class="learn-p">Let boat speed in still water = B, stream speed = S.</p><table class="learn-table"><tr><th>Direction</th><th>Effective Speed</th></tr><tr><td>Downstream (with stream)</td><td>B + S</td></tr><tr><td>Upstream (against stream)</td><td>B − S</td></tr></table><div class="learn-code">B = (Downstream + Upstream) / 2\nS = (Downstream − Upstream) / 2</div></div>',
+          code: `# Time, Speed & Distance — Python Solutions
+
+def average_speed(s1, s2):
+    """Average speed for equal distances (harmonic mean)"""
+    return 2 * s1 * s2 / (s1 + s2)
+
+def train_crossing_platform(train_len, platform_len, time_sec):
+    """Speed of train crossing a platform"""
+    distance = train_len + platform_len
+    speed_ms = distance / time_sec
+    speed_kmh = speed_ms * 18 / 5
+    return speed_kmh
+
+def boats_and_streams(downstream_speed, upstream_speed):
+    """Find boat speed and stream speed"""
+    boat = (downstream_speed + upstream_speed) / 2
+    stream = (downstream_speed - upstream_speed) / 2
+    return boat, stream
+
+def circular_track_meeting(circumference, s1, s2):
+    """Time for two people to meet on a circular track"""
+    # Same direction
+    if s1 != s2:
+        same_dir = circumference / abs(s1 - s2)
+    else:
+        same_dir = float('inf')
+    # Opposite direction
+    opp_dir = circumference / (s1 + s2)
+    return same_dir, opp_dir
+
+# Examples
+print(f"Avg speed (40,60 km/hr): {average_speed(40, 60)} km/hr")  # 48, not 50
+print(f"Train speed: {train_crossing_platform(200, 300, 25)} km/hr")  # 72
+print(f"Boat, Stream: {boats_and_streams(20, 10)}")  # (15, 5)
+print(f"Meet times: {circular_track_meeting(600, 10, 8)}")  # (300, 33.33)`,
+          problems: [
+            ['Time Speed Distance Problems', 'https://www.geeksforgeeks.org/time-speed-and-distance/', 'Easy'],
+            ['Train Problems', 'https://www.geeksforgeeks.org/problems-on-trains/', 'Medium'],
+            ['Boats & Streams', 'https://www.geeksforgeeks.org/boats-and-streams/', 'Medium'],
+            ['Circular Track Problems', 'https://www.geeksforgeeks.org/circular-motion/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'A car covers equal distances at 40 km/hr and 60 km/hr. Average speed?', o: ['50 km/hr', '48 km/hr', '45 km/hr', '55 km/hr'], a: 1},
+            {q: 'A 150m train passes a 250m platform in 20 seconds. Speed in km/hr?', o: ['72', '54', '36', '90'], a: 0},
+            {q: 'A boat goes 20 km downstream in 2 hrs and returns in 4 hrs. Stream speed?', o: ['5 km/hr', '2.5 km/hr', '7.5 km/hr', '10 km/hr'], a: 1}
+          ]
+        },
+        {
+          t: 'Time & Work',
+          learn: '<div class="learn-section"><div class="learn-h">Work Rate Concept</div><p class="learn-p">If A can do a work in <b>n days</b>, A\'s rate = <b>1/n per day</b>. If A and B work together, combined rate = 1/a + 1/b. Time to complete = 1 / (combined rate).</p><div class="learn-code">A completes in 10 days → rate = 1/10 per day\nB completes in 15 days → rate = 1/15 per day\nTogether: 1/10 + 1/15 = 3/30 + 2/30 = 5/30 = 1/6\nTime together = 6 days</div></div><div class="learn-section"><div class="learn-h">LCM Method (Faster!)</div><p class="learn-p">Instead of fractions, assume total work = LCM of individual times. This makes rates integers — much faster to compute.</p><div class="learn-code">A: 10 days, B: 15 days\nTotal work = LCM(10, 15) = 30 units\nA\'s rate = 30/10 = 3 units/day\nB\'s rate = 30/15 = 2 units/day\nTogether = 5 units/day → Time = 30/5 = 6 days</div><div class="learn-tip"><b>Use LCM method in interviews</b> — it avoids fraction arithmetic and is much less error-prone.</div></div><div class="learn-section"><div class="learn-h">Pipes & Cisterns</div><p class="learn-p">Same concept as Time & Work. Filling pipes have positive rates, emptying pipes have negative rates.</p><div class="learn-code">Pipe A fills in 12 hrs → rate = +1/12\nPipe B fills in 15 hrs → rate = +1/15\nPipe C empties in 20 hrs → rate = -1/20\n\nLCM(12,15,20) = 60 units\nA = +5, B = +4, C = -3\nNet = 5 + 4 - 3 = 6 units/hr\nTime = 60/6 = 10 hours</div></div><div class="learn-section"><div class="learn-h">Efficiency Problems</div><p class="learn-p">If A is twice as efficient as B, and B finishes in 30 days, then A finishes in 15 days. Efficiency ratio = Inverse of time ratio.</p><div class="learn-code">Efficiency : Time\n   2x      : t/2\n   3x      : t/3\n\nA is 50% more efficient than B:\nIf B takes 30 days, A takes 30/1.5 = 20 days</div></div>',
+          code: `# Time & Work — Python Solutions
+
+from math import gcd
+
+def lcm(a, b):
+    return a * b // gcd(a, b)
+
+def combined_work_time(days_list):
+    """Find time when multiple workers work together using LCM method"""
+    total_work = days_list[0]
+    for d in days_list[1:]:
+        total_work = lcm(total_work, d)
+
+    total_rate = sum(total_work // d for d in days_list)
+    return total_work / total_rate
+
+def pipes_and_cisterns(fill_pipes, empty_pipes):
+    """Find time to fill tank with fill and empty pipes"""
+    all_times = fill_pipes + empty_pipes
+    total = all_times[0]
+    for t in all_times[1:]:
+        total = lcm(total, t)
+
+    net_rate = sum(total // t for t in fill_pipes) - sum(total // t for t in empty_pipes)
+    if net_rate <= 0:
+        return float('inf')  # tank never fills
+    return total / net_rate
+
+def work_with_alternating(a_days, b_days):
+    """A and B work on alternate days, A starts. Find total days."""
+    total = lcm(a_days, b_days)
+    a_rate = total // a_days
+    b_rate = total // b_days
+    two_day_work = a_rate + b_rate
+
+    full_cycles = total // two_day_work
+    remaining = total % two_day_work
+    days = full_cycles * 2
+    if remaining > 0:
+        days += 1
+        remaining -= a_rate
+    if remaining > 0:
+        days += 1
+    return days
+
+# Examples
+print(f"A(10 days) + B(15 days) = {combined_work_time([10, 15])} days")  # 6.0
+print(f"Fill(12h,15h) Drain(20h) = {pipes_and_cisterns([12,15], [20])} hrs")  # 10.0`,
+          problems: [
+            ['Time and Work Problems', 'https://www.geeksforgeeks.org/time-and-work/', 'Easy'],
+            ['Pipes and Cisterns', 'https://www.geeksforgeeks.org/pipes-and-cisterns/', 'Medium'],
+            ['Efficiency Based Problems', 'https://www.geeksforgeeks.org/time-work-efficiency/', 'Medium'],
+            ['Alternate Day Work', 'https://www.geeksforgeeks.org/time-work-tricks/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'A finishes in 10 days, B in 15 days. Working together, they finish in:', o: ['5 days', '6 days', '8 days', '12.5 days'], a: 1},
+            {q: 'In the LCM method, total work is assumed to be:', o: ['100 units', 'LCM of all individual times', 'Sum of all times', '1 unit'], a: 1},
+            {q: 'A pipe fills in 6 hrs, another empties in 8 hrs. Net time to fill?', o: ['24 hrs', '14 hrs', '7 hrs', '3.4 hrs'], a: 0}
+          ]
+        },
+        {
+          t: 'Percentages, Profit & Loss',
+          learn: '<div class="learn-section"><div class="learn-h">Percentage Basics</div><p class="learn-p"><code>x% of N = x × N / 100</code>. If a quantity increases by x%, multiply by <code>(1 + x/100)</code>. If it decreases by x%, multiply by <code>(1 - x/100)</code>.</p><div class="learn-code">Successive percentages:\nIf price increases by a% then b%, net effect:\n  = (a + b + ab/100)%\n\nExample: 20% increase then 10% decrease:\n  = 20 + (-10) + 20×(-10)/100\n  = 20 - 10 - 2 = 8% net increase</div></div><div class="learn-section"><div class="learn-h">Profit & Loss</div><table class="learn-table"><tr><th>Term</th><th>Formula</th></tr><tr><td>Profit</td><td>SP − CP (when SP > CP)</td></tr><tr><td>Loss</td><td>CP − SP (when CP > SP)</td></tr><tr><td>Profit %</td><td>(Profit / CP) × 100</td></tr><tr><td>Loss %</td><td>(Loss / CP) × 100</td></tr><tr><td>SP from Profit%</td><td>CP × (1 + P%/100)</td></tr><tr><td>SP from Loss%</td><td>CP × (1 − L%/100)</td></tr></table><div class="learn-code">Markup & Discount:\n  Marked Price (MP) = CP × (1 + markup%/100)\n  Selling Price (SP) = MP × (1 - discount%/100)\n\nDishonest Dealer:\n  Uses 900g weight instead of 1000g\n  Profit% = (True weight - False weight) / False weight × 100\n           = (1000 - 900) / 900 × 100 = 11.11%</div></div><div class="learn-section"><div class="learn-h">Simple & Compound Interest</div><div class="learn-code">Simple Interest: SI = P × R × T / 100\nAmount = P + SI = P(1 + RT/100)\n\nCompound Interest: A = P × (1 + R/100)^T\nCI = A - P\n\nHalf-yearly: A = P × (1 + R/200)^(2T)\nQuarterly:   A = P × (1 + R/400)^(4T)</div><div class="learn-tip"><b>DE Shaw tip:</b> Compound interest questions often appear. For 2 years, CI - SI = P(R/100)². Know this shortcut.</div></div><div class="learn-section"><div class="learn-h">Population Growth/Decay</div><div class="learn-code">Growth: P_final = P_initial × (1 + rate/100)^years\nDecay:  P_final = P_initial × (1 - rate/100)^years\n\nDepreciation of machinery follows the decay formula.</div></div>',
+          code: `# Percentages, Profit & Loss — Python Solutions
+
+def successive_percentage(a, b):
+    """Net effect of successive percentage changes"""
+    return a + b + a * b / 100
+
+def profit_loss_percent(cp, sp):
+    """Calculate profit/loss percentage"""
+    if sp > cp:
+        return ("Profit", (sp - cp) / cp * 100)
+    else:
+        return ("Loss", (cp - sp) / cp * 100)
+
+def dishonest_dealer(true_weight, false_weight):
+    """Profit% from using false weight"""
+    return (true_weight - false_weight) / false_weight * 100
+
+def compound_interest(principal, rate, time, n=1):
+    """Compound interest (n = compounding frequency per year)"""
+    amount = principal * (1 + rate / (100 * n)) ** (n * time)
+    return amount - principal
+
+def si_ci_difference_2years(principal, rate):
+    """Shortcut: CI - SI for 2 years"""
+    return principal * (rate / 100) ** 2
+
+# Examples
+print(f"20% up then 10% down = {successive_percentage(20, -10)}% net")  # 8%
+print(f"CP=800, SP=920: {profit_loss_percent(800, 920)}")  # Profit, 15%
+print(f"Dishonest (1000g vs 900g): {dishonest_dealer(1000, 900):.2f}%")  # 11.11%
+print(f"CI on 10000 at 10% for 2 yrs: {compound_interest(10000, 10, 2):.2f}")  # 2100
+print(f"CI-SI for 2 yrs: {si_ci_difference_2years(10000, 10)}")  # 100`,
+          problems: [
+            ['Percentage Problems', 'https://www.geeksforgeeks.org/percentage/', 'Easy'],
+            ['Profit and Loss', 'https://www.geeksforgeeks.org/profit-and-loss/', 'Easy'],
+            ['Simple & Compound Interest', 'https://www.geeksforgeeks.org/simple-interest/', 'Medium'],
+            ['Successive Discounts', 'https://www.geeksforgeeks.org/successive-discount/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'A 20% increase followed by a 20% decrease gives a net change of:', o: ['0%', '-4%', '+4%', '-2%'], a: 1},
+            {q: 'CI - SI for 2 years on Rs.5000 at 10% is:', o: ['Rs.50', 'Rs.100', 'Rs.25', 'Rs.75'], a: 0},
+            {q: 'A shopkeeper marks goods 40% above CP and gives 10% discount. Profit%?', o: ['30%', '26%', '24%', '20%'], a: 1}
+          ]
+        }
+      ]
+    },
+    {
+      id: 'logic', t: 'Logical Reasoning',
+      topics: [
+        {
+          t: 'Data Interpretation',
+          learn: '<div class="learn-section"><div class="learn-h">What is Data Interpretation?</div><p class="learn-p"><b>Data Interpretation (DI)</b> tests your ability to read data from tables, charts, and graphs and answer questions involving calculations, comparisons, and trends. Common in DE Shaw, Goldman Sachs, and other quant firm aptitude tests.</p></div><div class="learn-section"><div class="learn-h">Types of DI</div><table class="learn-table"><tr><th>Type</th><th>Description</th><th>Key Skills</th></tr><tr><td>Tables</td><td>Raw numerical data in rows and columns</td><td>Percentage change, ratios, averages</td></tr><tr><td>Bar Charts</td><td>Compare categories or track changes over time</td><td>Visual comparison, growth rate</td></tr><tr><td>Pie Charts</td><td>Show parts of a whole (proportions)</td><td>Percentage of total, degree calculation</td></tr><tr><td>Line Graphs</td><td>Show trends over time</td><td>Rate of change, peak/trough identification</td></tr><tr><td>Caselets</td><td>Data embedded in paragraphs (no chart)</td><td>Extract data, form equations</td></tr></table></div><div class="learn-section"><div class="learn-h">Common Calculation Shortcuts</div><div class="learn-code">Percentage change = (New - Old) / Old × 100\n\nRatio comparison: a/b vs c/d → compare a×d vs b×c (cross-multiply)\n\nApproximation tricks:\n  1/3 ≈ 33.3%    1/6 ≈ 16.7%    1/7 ≈ 14.3%\n  1/8 = 12.5%     1/9 ≈ 11.1%    1/11 ≈ 9.1%\n  1/12 ≈ 8.3%     1/13 ≈ 7.7%    1/15 ≈ 6.7%\n\nCAGR = (Final/Initial)^(1/n) - 1\n\nWeighted average: Σ(value × weight) / Σ(weight)</div></div><div class="learn-section"><div class="learn-h">Strategy</div><ol class="learn-list"><li><b>Read the question first</b> — know what you\'re looking for before studying the data</li><li><b>Approximate</b> — exact calculations waste time; round to nearest friendly numbers</li><li><b>Use elimination</b> — often 2-3 options can be eliminated by rough estimation</li><li><b>Check units</b> — lakhs vs crores, thousands vs millions</li></ol><div class="learn-tip"><b>Speed tip:</b> Practice mental math. Learn to quickly compute 15% of 840 (= 10% + 5% = 84 + 42 = 126). Master fraction-to-percentage conversions.</div></div>',
+          code: `# Data Interpretation — Python Helper Functions
+
+def percentage_change(old, new):
+    """Calculate percentage change"""
+    return (new - old) / old * 100
+
+def cagr(initial, final, years):
+    """Compound Annual Growth Rate"""
+    return ((final / initial) ** (1 / years) - 1) * 100
+
+def weighted_average(values, weights):
+    """Weighted average"""
+    return sum(v * w for v, w in zip(values, weights)) / sum(weights)
+
+def ratio_comparison(a, b, c, d):
+    """Compare a/b with c/d without division"""
+    cross1 = a * d
+    cross2 = b * c
+    if cross1 > cross2: return f"{a}/{b} > {c}/{d}"
+    elif cross1 < cross2: return f"{a}/{b} < {c}/{d}"
+    else: return f"{a}/{b} = {c}/{d}"
+
+# DI Practice: Sales data
+sales = {2020: 450, 2021: 520, 2022: 610, 2023: 580, 2024: 720}
+
+# Year-over-year growth
+for y in range(2021, 2025):
+    growth = percentage_change(sales[y-1], sales[y])
+    print(f"{y}: {sales[y]} (growth: {growth:+.1f}%)")
+
+# CAGR over 4 years
+print(f"\\nCAGR (2020-2024): {cagr(450, 720, 4):.1f}%")
+
+# Weighted average score
+subjects = [85, 90, 78, 92]
+credits = [4, 3, 3, 2]
+print(f"Weighted GPA: {weighted_average(subjects, credits):.1f}")
+
+# Quick ratio comparison
+print(ratio_comparison(3, 7, 5, 12))  # 3/7 vs 5/12 → 36 vs 35 → 3/7 > 5/12`,
+          problems: [
+            ['Data Interpretation Questions', 'https://www.geeksforgeeks.org/data-interpretation/', 'Medium'],
+            ['Bar Graph DI', 'https://www.geeksforgeeks.org/data-interpretation-bar-graphs/', 'Easy'],
+            ['Pie Chart DI', 'https://www.geeksforgeeks.org/data-interpretation-pie-charts/', 'Medium'],
+            ['Caselet DI', 'https://www.geeksforgeeks.org/data-interpretation-caselets/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'CAGR stands for:', o: ['Combined Average Growth Rate', 'Compound Annual Growth Rate', 'Cumulative Annual Gain Ratio', 'Compounded Aggregate Growth Result'], a: 1},
+            {q: 'To compare 7/13 and 5/9 quickly, you can:', o: ['Convert both to decimals', 'Cross-multiply: 7×9=63 vs 13×5=65, so 7/13 < 5/9', 'Find the LCM', 'Subtract them'], a: 1},
+            {q: 'In a pie chart, a sector representing 25% corresponds to:', o: ['25°', '45°', '90°', '120°'], a: 2}
+          ]
+        },
+        {
+          t: 'Puzzles & Logical Arrangements',
+          learn: '<div class="learn-section"><div class="learn-h">Types of Logic Puzzles</div><table class="learn-table"><tr><th>Type</th><th>Description</th><th>Approach</th></tr><tr><td>Seating Arrangement</td><td>Arrange people around a table or in a row based on clues</td><td>Draw diagram, use elimination</td></tr><tr><td>Blood Relations</td><td>Determine relationships from statements</td><td>Draw family tree, decode coded relations</td></tr><tr><td>Syllogisms</td><td>Conclusions from given statements (All/Some/No)</td><td>Venn diagrams, logical rules</td></tr><tr><td>Coding-Decoding</td><td>Decode a pattern from examples</td><td>Letter shifting, position mapping</td></tr><tr><td>Direction Sense</td><td>Track movement and find final position/distance</td><td>Draw on compass grid</td></tr></table></div><div class="learn-section"><div class="learn-h">Seating Arrangement</div><div class="learn-code">Linear: _ _ _ _ _ (facing one direction or both)\nCircular: draw a circle with positions\n\nStrategy:\n1. Start with definite clues ("A sits at end", "B is 3rd from left")\n2. Apply relative clues ("C is to the right of D")\n3. Apply negative clues last ("E does not sit next to F")\n\nCircular: "immediate right" = clockwise next\n          "immediate left" = counter-clockwise next\n          Facing center vs facing outward changes left/right</div></div><div class="learn-section"><div class="learn-h">Syllogisms — Quick Rules</div><div class="learn-code">Statements: "All A are B" and "All B are C"\n  Conclusion: "All A are C" ✓, "Some C are A" ✓\n\nStatements: "All A are B" and "No B is C"\n  Conclusion: "No A is C" ✓\n\nStatements: "Some A are B" and "All B are C"\n  Conclusion: "Some A are C" ✓\n\nStatements: "Some A are B" and "Some B are C"\n  Conclusion: No definite conclusion about A and C!\n\nKey: Draw ALL possible Venn diagrams. A conclusion is\nvalid only if it holds in EVERY possible diagram.</div><div class="learn-tip"><b>Strategy:</b> For logical puzzles, <b>tabulate the information</b> — create a grid with entities on one axis and attributes on the other. Mark definite YES/NO, then use elimination.</div></div><div class="learn-section"><div class="learn-h">Classic Interview Puzzles</div><ul class="learn-list"><li><b>12 Balls Problem:</b> One ball is heavier/lighter. Find it in 3 weighings.</li><li><b>Coin Flip:</b> Make a fair decision with a biased coin (Von Neumann trick: flip twice, HT=heads, TH=tails, ignore HH/TT).</li><li><b>100 Doors:</b> Toggle doors 1-100. Only perfect squares remain open.</li><li><b>Hat Puzzle:</b> n people in a line, each sees hats ahead. Strategy: XOR parity.</li><li><b>Two Egg Problem:</b> Find the critical floor with 2 eggs and a 100-floor building (answer: 14 drops).</li></ul><div class="learn-code">Two Egg Problem:\n  Drop from floor x. If breaks, test 1 to x-1 (x-1 drops).\n  If survives, go to x + (x-1) next, then x + (x-1) + (x-2)...\n  x + (x-1) + (x-2) + ... + 1 ≥ 100\n  x(x+1)/2 ≥ 100\n  x ≥ 14 (since 14×15/2 = 105 ≥ 100)\n\n  Drop sequence: 14, 27, 39, 50, 60, 69, 77, 84, 90, 95, 99, 100</div></div>',
+          code: `# Puzzles & Logic — Python Solutions
+
+# ===== Two Egg Problem (Generalized) =====
+def min_drops(eggs, floors):
+    """Minimum drops to find critical floor with e eggs and f floors"""
+    # dp[e][f] = min drops needed
+    dp = [[0] * (floors + 1) for _ in range(eggs + 1)]
+    for f in range(1, floors + 1):
+        dp[1][f] = f  # 1 egg: must try linearly
+
+    for e in range(2, eggs + 1):
+        for f in range(1, floors + 1):
+            dp[e][f] = float('inf')
+            # Binary search for optimal floor to drop from
+            lo, hi = 1, f
+            while lo <= hi:
+                mid = (lo + hi) // 2
+                breaks = dp[e-1][mid-1]      # egg breaks: go down
+                survives = dp[e][f-mid]       # egg survives: go up
+                worst = 1 + max(breaks, survives)
+                dp[e][f] = min(dp[e][f], worst)
+                if breaks > survives:
+                    hi = mid - 1
+                else:
+                    lo = mid + 1
+    return dp[eggs][floors]
+
+print(f"2 eggs, 100 floors: {min_drops(2, 100)} drops")  # 14
+
+# ===== 100 Doors Problem =====
+def hundred_doors():
+    """Which doors are open after toggling?"""
+    open_doors = []
+    for i in range(1, 101):
+        # Door i is toggled by every divisor of i
+        # It ends up open if i has an ODD number of divisors
+        # Only perfect squares have odd number of divisors!
+        sqrt = int(i ** 0.5)
+        if sqrt * sqrt == i:
+            open_doors.append(i)
+    return open_doors
+
+print(f"Open doors: {hundred_doors()}")
+# [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+
+# ===== Fair Coin from Biased Coin (Von Neumann) =====
+import random
+def biased_flip(p=0.7):
+    return 'H' if random.random() < p else 'T'
+
+def fair_flip():
+    """Generate fair outcome from biased coin"""
+    while True:
+        a, b = biased_flip(), biased_flip()
+        if a == 'H' and b == 'T': return 'H'
+        if a == 'T' and b == 'H': return 'T'
+        # HH or TT: try again
+
+# ===== Seating Arrangement Solver =====
+from itertools import permutations
+
+def solve_linear_seating(people, constraints):
+    """Brute force solver for small seating problems"""
+    for perm in permutations(people):
+        if all(constraint(perm) for constraint in constraints):
+            return perm
+    return None
+
+# Example: A, B, C, D, E in a row
+# A is at one end, B is not next to C
+people = ['A', 'B', 'C', 'D', 'E']
+constraints = [
+    lambda p: p[0] == 'A' or p[-1] == 'A',  # A at end
+    lambda p: abs(p.index('B') - p.index('C')) > 1,  # B not next to C
+]
+result = solve_linear_seating(people, constraints)
+print(f"Seating: {result}")`,
+          problems: [
+            ['Seating Arrangement', 'https://www.geeksforgeeks.org/seating-arrangement-reasoning/', 'Medium'],
+            ['Syllogism Problems', 'https://www.geeksforgeeks.org/syllogism/', 'Easy'],
+            ['Classic Puzzles', 'https://www.geeksforgeeks.org/puzzles/', 'Hard'],
+            ['Egg Drop Problem', 'https://leetcode.com/problems/super-egg-drop/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'In the 100 doors problem, which doors remain open?', o: ['All odd-numbered doors', 'All prime-numbered doors', 'All perfect square-numbered doors', 'Every 10th door'], a: 2},
+            {q: 'The Two Egg Problem with 100 floors requires at minimum:', o: ['10 drops', '14 drops', '50 drops', '7 drops'], a: 1},
+            {q: 'In syllogisms, "Some A are B" and "Some B are C" means:', o: ['Some A are C', 'No A is C', 'All A are C', 'No definite conclusion about A and C'], a: 3}
           ]
         }
       ]

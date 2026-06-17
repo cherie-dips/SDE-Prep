@@ -3195,6 +3195,161 @@ int main() {
             {q: 'In CSMA/CD, what happens after a collision is detected?', o: ['Station retransmits immediately', 'Station sends a jam signal and uses binary exponential backoff', 'Station waits for a token', 'Station sends an RTS frame'], a: 1},
           ],
         },
+        {
+          t: 'Sliding Window Protocols',
+          learn: '<div class="learn-section"><div class="learn-h">Why Sliding Window?</div><p class="learn-p"><b>Stop-and-Wait</b> is simple but extremely inefficient: the sender sends one frame, waits for an ACK, then sends the next. Utilization = t_trans / (t_trans + 2 * t_prop), which is very low for high bandwidth-delay product links. <b>Sliding Window protocols</b> allow the sender to transmit <b>multiple frames</b> before needing an acknowledgment, dramatically increasing throughput.</p><p class="learn-p">The "window" is the set of sequence numbers the sender is allowed to transmit. As ACKs arrive, the window "slides" forward.</p><div class="learn-code">Sender window size = W\nSequence number bits = n → sequence space = 2^n\n\nUtilization (a = t_prop / t_trans):\n  If W ≥ 1 + 2a:  utilization = 100%\n  If W &lt; 1 + 2a:  utilization = W / (1 + 2a)</div></div><div class="learn-section"><div class="learn-h">Go-Back-N (GBN)</div><p class="learn-p">In GBN, the sender can have up to <b>W</b> unacknowledged frames outstanding. The receiver only accepts frames <b>in order</b>. If a frame is lost or corrupted, the receiver discards all subsequent frames until the missing one is retransmitted.</p><table class="learn-table"><tr><th>Property</th><th>Go-Back-N</th></tr><tr><td>Sender window size</td><td>W ≤ 2^n − 1</td></tr><tr><td>Receiver window size</td><td>1 (only accepts in-order)</td></tr><tr><td>ACK type</td><td>Cumulative ACK</td></tr><tr><td>On error</td><td>Retransmit lost frame + all subsequent frames</td></tr><tr><td>Receiver complexity</td><td>Simple (no buffering)</td></tr><tr><td>Bandwidth waste</td><td>High (retransmits correct frames too)</td></tr></table><div class="learn-code">Example: Window W=4, Frames 0-6, Frame 2 lost\n\nSender:   [0] [1] [2] [3] [4] [5] ...\nReceiver: ACK0 ACK1 NAK2 (discards 3,4)\nSender retransmits: [2] [3] [4] [5] ...\n\nWhy W ≤ 2^n − 1?\nWith n=2 bits (seq 0-3), if W=4:\n  Sender sends 0,1,2,3 → all ACKed → window slides to 0,1,2,3\n  If all ACKs lost, sender retransmits 0,1,2,3\n  Receiver thinks these are NEW frames 0,1,2,3 → DUPLICATE ACCEPTED!</div></div><div class="learn-section"><div class="learn-h">Selective Repeat (SR)</div><p class="learn-p">In SR, the receiver accepts <b>out-of-order frames</b> and buffers them. Only the specific lost/corrupted frame is retransmitted, not the entire window. This is more bandwidth-efficient but requires more receiver buffering.</p><table class="learn-table"><tr><th>Property</th><th>Selective Repeat</th></tr><tr><td>Sender window size</td><td>W ≤ 2^(n−1)</td></tr><tr><td>Receiver window size</td><td>W ≤ 2^(n−1)</td></tr><tr><td>ACK type</td><td>Individual (selective) ACK</td></tr><tr><td>On error</td><td>Retransmit ONLY the lost frame</td></tr><tr><td>Receiver complexity</td><td>Complex (must buffer & reorder)</td></tr><tr><td>Bandwidth waste</td><td>Low (only retransmit what\'s lost)</td></tr></table><div class="learn-code">Example: Window W=4, Frames 0-6, Frame 2 lost\n\nSender:   [0] [1] [2] [3] [4] ...\nReceiver: ACK0 ACK1 (buffers 3,4) NAK2\nSender retransmits: [2] only\nReceiver: delivers 2,3,4 in order from buffer\n\nWhy W ≤ 2^(n−1)?\nSender window + Receiver window ≤ 2^n\nBoth windows same size → W + W ≤ 2^n → W ≤ 2^(n−1)\nThis prevents the receiver from confusing retransmitted \nframes with new frames in the next window cycle.</div></div><div class="learn-section"><div class="learn-h">GBN vs Selective Repeat — Side by Side</div><table class="learn-table"><tr><th>Feature</th><th>Go-Back-N</th><th>Selective Repeat</th></tr><tr><td>Sender window</td><td>2^n − 1</td><td>2^(n−1)</td></tr><tr><td>Receiver window</td><td>1</td><td>2^(n−1)</td></tr><tr><td>Retransmission</td><td>All from lost frame onward</td><td>Only lost frame</td></tr><tr><td>ACK type</td><td>Cumulative</td><td>Individual</td></tr><tr><td>Receiver buffer</td><td>Not needed</td><td>Required</td></tr><tr><td>Efficiency</td><td>Lower on lossy links</td><td>Higher on lossy links</td></tr><tr><td>Use case</td><td>Low error rate links</td><td>High error rate links</td></tr></table><div class="learn-tip"><b>GATE/Interview favorite:</b> Given n sequence bits, calculate max window size for GBN (2^n − 1) and SR (2^(n−1)). Also know the efficiency formula: η = W × t_frame / (t_frame + 2 × t_prop) when W &lt; 1 + 2a.</div></div>',
+          code: `// Sliding Window Protocol Simulation
+
+#include <iostream>
+#include <vector>
+#include <queue>
+using namespace std;
+
+// Go-Back-N Sender Simulation
+class GBN_Sender {
+    int window_size;
+    int seq_bits;
+    int seq_max;  // 2^n
+    int base;     // oldest unacknowledged frame
+    int next_seq; // next frame to send
+
+public:
+    GBN_Sender(int n_bits, int W)
+        : seq_bits(n_bits), window_size(W), base(0), next_seq(0) {
+        seq_max = 1 << n_bits;
+        // Constraint: W <= 2^n - 1
+        if (W > seq_max - 1) {
+            cout << "Error: Window too large for GBN! Max = " << seq_max - 1 << endl;
+        }
+    }
+
+    bool can_send() {
+        return (next_seq - base + seq_max) % seq_max < window_size;
+    }
+
+    int send_frame() {
+        if (!can_send()) return -1;
+        int seq = next_seq % seq_max;
+        cout << "GBN: Sent frame " << seq << endl;
+        next_seq = (next_seq + 1) % seq_max;
+        return seq;
+    }
+
+    void receive_ack(int ack) {
+        // Cumulative ACK: all frames up to ack are acknowledged
+        base = (ack + 1) % seq_max;
+        cout << "GBN: Cumulative ACK " << ack << ", window slides to " << base << endl;
+    }
+
+    void timeout() {
+        // Retransmit ALL frames from base to next_seq-1
+        cout << "GBN: Timeout! Retransmitting frames " << base
+             << " to " << (next_seq - 1 + seq_max) % seq_max << endl;
+        // In real implementation: resend all frames in window
+    }
+};
+
+// Selective Repeat Sender Simulation
+class SR_Sender {
+    int window_size;
+    int seq_bits;
+    int seq_max;
+    int base;
+    int next_seq;
+    vector<bool> acked;
+
+public:
+    SR_Sender(int n_bits, int W)
+        : seq_bits(n_bits), window_size(W), base(0), next_seq(0) {
+        seq_max = 1 << n_bits;
+        acked.assign(seq_max, false);
+        // Constraint: W <= 2^(n-1)
+        if (W > seq_max / 2) {
+            cout << "Error: Window too large for SR! Max = " << seq_max / 2 << endl;
+        }
+    }
+
+    bool can_send() {
+        return (next_seq - base + seq_max) % seq_max < window_size;
+    }
+
+    int send_frame() {
+        if (!can_send()) return -1;
+        int seq = next_seq % seq_max;
+        cout << "SR: Sent frame " << seq << endl;
+        next_seq = (next_seq + 1) % seq_max;
+        return seq;
+    }
+
+    void receive_ack(int ack) {
+        // Individual ACK: only this specific frame is acknowledged
+        acked[ack] = true;
+        cout << "SR: Individual ACK for frame " << ack << endl;
+
+        // Slide window past consecutive acked frames
+        while (acked[base]) {
+            acked[base] = false;
+            base = (base + 1) % seq_max;
+        }
+    }
+
+    void nak_received(int seq) {
+        // Retransmit ONLY the specific frame
+        cout << "SR: NAK for frame " << seq << ", retransmitting ONLY frame " << seq << endl;
+    }
+};
+
+// Efficiency Calculator
+void calculate_efficiency(int W, double t_frame, double t_prop) {
+    double a = t_prop / t_frame;
+    double efficiency;
+
+    if (W >= 1 + 2 * a) {
+        efficiency = 1.0;  // 100%
+    } else {
+        efficiency = (double)W / (1.0 + 2.0 * a);
+    }
+
+    cout << "\\nEfficiency Calculation:" << endl;
+    cout << "Window size W = " << W << endl;
+    cout << "a = t_prop/t_frame = " << a << endl;
+    cout << "1 + 2a = " << 1 + 2*a << endl;
+    cout << "Efficiency = " << efficiency * 100 << "%" << endl;
+}
+
+int main() {
+    cout << "=== Go-Back-N (3 bits, W=7) ===" << endl;
+    GBN_Sender gbn(3, 7);
+    for (int i = 0; i < 7; i++) gbn.send_frame();
+    gbn.receive_ack(2);  // frames 0,1,2 acknowledged
+    gbn.timeout();        // retransmit 3,4,5,6
+
+    cout << "\\n=== Selective Repeat (3 bits, W=4) ===" << endl;
+    SR_Sender sr(3, 4);
+    for (int i = 0; i < 4; i++) sr.send_frame();
+    sr.receive_ack(0);
+    sr.receive_ack(1);
+    sr.nak_received(2);   // only retransmit frame 2
+    sr.receive_ack(3);
+
+    cout << "\\n=== Efficiency Example ===" << endl;
+    // t_frame = 1ms, t_prop = 10ms, W = 7
+    calculate_efficiency(7, 1.0, 10.0);
+
+    return 0;
+}`,
+          problems: [
+            ['Sliding Window Protocols', 'https://www.geeksforgeeks.org/sliding-window-protocol-set-1/', 'Easy'],
+            ['Go-Back-N vs SR Comparison', 'https://www.geeksforgeeks.org/difference-between-go-back-n-and-selective-repeat-protocol/', 'Medium'],
+            ['Window Size Numericals', 'https://www.geeksforgeeks.org/sliding-window-protocol-set-3-selective-repeat/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'In Go-Back-N with n sequence number bits, the maximum sender window size is:', o: ['2^n', '2^n − 1', '2^(n−1)', '2^n + 1'], a: 1},
+            {q: 'In Selective Repeat, if 3 bits are used for sequence numbers, the maximum window size is:', o: ['7', '8', '4', '3'], a: 2},
+            {q: 'Which protocol retransmits only the lost frame?', o: ['Stop-and-Wait', 'Go-Back-N', 'Selective Repeat', 'Pure ALOHA'], a: 2},
+            {q: 'In GBN, when frame 3 is lost but frames 4,5 arrive, the receiver:', o: ['Buffers 4,5 and waits for 3', 'Discards 4,5 and sends NAK for 3', 'Accepts 4,5 and ACKs them', 'Sends cumulative ACK for 2'], a: 1}
+          ]
+        }
       ]
     },
 
@@ -4015,6 +4170,145 @@ int main() {
             {q: 'TCP\'s AIMD stands for:', o: ['Adaptive Increase, Moderate Decrease', 'Additive Increase, Multiplicative Decrease', 'Aggressive Increase, Minimal Decrease', 'Automatic Increase, Manual Decrease'], a: 1},
           ],
         },
+        {
+          t: 'Socket Programming',
+          learn: '<div class="learn-section"><div class="learn-h">What is a Socket?</div><p class="learn-p">A <b>socket</b> is an endpoint for communication between two machines over a network. It is identified by an <b>IP address + port number</b> pair. The socket API (Berkeley sockets) provides a standard interface for network programming across TCP and UDP.</p><p class="learn-p">Socket = (IP Address, Port Number). A connection is uniquely identified by a <b>4-tuple</b>: (source IP, source port, destination IP, destination port).</p></div><div class="learn-section"><div class="learn-h">TCP Socket Flow</div><div class="learn-code">SERVER SIDE:                         CLIENT SIDE:\n─────────────                        ────────────\nsocket()      ← Create socket        socket()\n    │                                     │\nbind()        ← Bind to port              │\n    │                                     │\nlisten()      ← Mark as passive           │\n    │                                     │\naccept()      ← Wait for connection  connect()  ← Initiate 3-way handshake\n    │         ←─── TCP Handshake ───→     │\n    │              (SYN/SYN-ACK/ACK)      │\nrecv()/send() ← Data exchange ─────→ send()/recv()\n    │                                     │\nclose()       ← Terminate ──────────→ close()\n              ←─── FIN/ACK ──────────→</div></div><div class="learn-section"><div class="learn-h">Key Socket System Calls</div><table class="learn-table"><tr><th>Call</th><th>Description</th><th>TCP</th><th>UDP</th></tr><tr><td>socket()</td><td>Create a new socket (returns file descriptor)</td><td>Yes</td><td>Yes</td></tr><tr><td>bind()</td><td>Assign local address and port to socket</td><td>Server</td><td>Optional</td></tr><tr><td>listen()</td><td>Mark socket as passive (accepts connections)</td><td>Server</td><td>N/A</td></tr><tr><td>accept()</td><td>Accept incoming connection (blocks, returns new fd)</td><td>Server</td><td>N/A</td></tr><tr><td>connect()</td><td>Initiate connection to remote server</td><td>Client</td><td>Optional</td></tr><tr><td>send()/recv()</td><td>Send/receive data on connected socket</td><td>Yes</td><td>No</td></tr><tr><td>sendto()/recvfrom()</td><td>Send/receive with explicit address</td><td>No</td><td>Yes</td></tr><tr><td>close()</td><td>Close the socket</td><td>Yes</td><td>Yes</td></tr></table></div><div class="learn-section"><div class="learn-h">UDP Socket Flow</div><div class="learn-code">SERVER:                       CLIENT:\nsocket(SOCK_DGRAM)            socket(SOCK_DGRAM)\nbind()                             │\n    │                         sendto(server_addr)\nrecvfrom() ←──── datagram ────     │\nsendto()   ────  datagram ───→ recvfrom()\nclose()                        close()\n\nNo connection setup! No handshake!\nEach datagram is independent.</div></div><div class="learn-section"><div class="learn-h">Concurrency Models for Servers</div><table class="learn-table"><tr><th>Model</th><th>Mechanism</th><th>Pros</th><th>Cons</th></tr><tr><td>Iterative</td><td>Handle one client at a time</td><td>Simple</td><td>Blocks on slow clients</td></tr><tr><td>Fork per client</td><td>fork() on each accept()</td><td>Isolation</td><td>Heavy (process overhead)</td></tr><tr><td>Thread per client</td><td>pthread_create on each accept()</td><td>Lighter than fork</td><td>Thread limits, races</td></tr><tr><td>I/O Multiplexing</td><td>select()/poll()/epoll()</td><td>Single thread, many clients</td><td>Complexity</td></tr><tr><td>Event-driven</td><td>epoll + non-blocking I/O</td><td>Scalable (Node.js, nginx)</td><td>Callback complexity</td></tr></table><div class="learn-tip"><b>Interview tip:</b> Know the C10K problem: how to handle 10,000+ concurrent connections. The answer is I/O multiplexing (epoll on Linux, kqueue on macOS) — not thread-per-connection. This is how nginx, Node.js, and Redis achieve high concurrency.</div></div><div class="learn-section"><div class="learn-h">Important Socket Options</div><table class="learn-table"><tr><th>Option</th><th>Level</th><th>Purpose</th></tr><tr><td>SO_REUSEADDR</td><td>SOL_SOCKET</td><td>Allow reuse of local address (avoids "Address already in use")</td></tr><tr><td>SO_KEEPALIVE</td><td>SOL_SOCKET</td><td>Send periodic probes to detect dead connections</td></tr><tr><td>TCP_NODELAY</td><td>IPPROTO_TCP</td><td>Disable Nagle\'s algorithm (send small packets immediately)</td></tr><tr><td>SO_RCVBUF / SO_SNDBUF</td><td>SOL_SOCKET</td><td>Set receive/send buffer sizes</td></tr><tr><td>SO_LINGER</td><td>SOL_SOCKET</td><td>Control behavior on close() with pending data</td></tr></table></div>',
+          code: `// === TCP Socket Programming in C++ (POSIX) ===
+
+// ===== TCP SERVER =====
+#include <iostream>
+#include <cstring>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
+void tcp_server() {
+    // 1. Create socket
+    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd < 0) { perror("socket"); return; }
+
+    // Allow address reuse (avoid "Address already in use")
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    // 2. Bind to address and port
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;  // Listen on all interfaces
+    addr.sin_port = htons(8080);         // Port 8080, network byte order
+
+    if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        perror("bind"); return;
+    }
+
+    // 3. Listen (backlog = 5 pending connections)
+    listen(server_fd, 5);
+    std::cout << "Server listening on port 8080..." << std::endl;
+
+    // 4. Accept connections in a loop
+    while (true) {
+        struct sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+        int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
+
+        if (client_fd < 0) { perror("accept"); continue; }
+
+        char client_ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip));
+        std::cout << "Client connected: " << client_ip
+                  << ":" << ntohs(client_addr.sin_port) << std::endl;
+
+        // 5. Receive and echo back
+        char buffer[1024];
+        ssize_t bytes = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes > 0) {
+            buffer[bytes] = '\\0';
+            std::cout << "Received: " << buffer << std::endl;
+            send(client_fd, buffer, bytes, 0);  // Echo back
+        }
+
+        // 6. Close client connection
+        close(client_fd);
+    }
+    close(server_fd);
+}
+
+// ===== TCP CLIENT =====
+void tcp_client() {
+    // 1. Create socket
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+
+    // 2. Connect to server
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(8080);
+    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+
+    if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        perror("connect"); return;
+    }
+
+    // 3. Send data
+    const char* msg = "Hello, Server!";
+    send(sock, msg, strlen(msg), 0);
+
+    // 4. Receive response
+    char buffer[1024];
+    ssize_t bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+    buffer[bytes] = '\\0';
+    std::cout << "Server replied: " << buffer << std::endl;
+
+    close(sock);
+}
+
+// ===== UDP SERVER (connectionless) =====
+void udp_server() {
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);  // SOCK_DGRAM for UDP
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(9090);
+
+    bind(sock, (struct sockaddr*)&addr, sizeof(addr));
+
+    char buffer[1024];
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+
+    // No listen() or accept() — just recvfrom()
+    ssize_t bytes = recvfrom(sock, buffer, sizeof(buffer) - 1, 0,
+                             (struct sockaddr*)&client_addr, &client_len);
+    buffer[bytes] = '\\0';
+    std::cout << "UDP received: " << buffer << std::endl;
+
+    // Echo back using sendto()
+    sendto(sock, buffer, bytes, 0,
+           (struct sockaddr*)&client_addr, client_len);
+
+    close(sock);
+}
+
+int main() {
+    std::cout << "Socket Programming Demo" << std::endl;
+    // Run tcp_server() or tcp_client() or udp_server()
+    return 0;
+}`,
+          problems: [
+            ['Socket Programming Basics', 'https://www.geeksforgeeks.org/socket-programming-cc/', 'Medium'],
+            ['TCP vs UDP Sockets', 'https://www.geeksforgeeks.org/differences-between-tcp-and-udp/', 'Easy'],
+            ['Concurrent Server Design', 'https://www.geeksforgeeks.org/handling-multiple-clients-on-server-with-multithreading-using-socket-programming-in-c-cpp/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'The accept() system call on a TCP server returns:', o: ['The same socket file descriptor', 'A NEW socket file descriptor for the client connection', 'The client\'s IP address only', 'The number of bytes received'], a: 1},
+            {q: 'Which socket type is used for UDP communication?', o: ['SOCK_STREAM', 'SOCK_DGRAM', 'SOCK_RAW', 'SOCK_SEQPACKET'], a: 1},
+            {q: 'What does htons() do?', o: ['Hash the port number', 'Convert host byte order to network byte order (short)', 'Create a new socket handle', 'Set the socket to non-blocking mode'], a: 1},
+            {q: 'In a concurrent server using I/O multiplexing, which system call monitors multiple file descriptors?', o: ['fork()', 'accept()', 'select() / epoll()', 'listen()'], a: 2}
+          ]
+        }
       ]
     },
 
@@ -5259,6 +5553,71 @@ CREATE TABLE Staff (
             {q: 'If a relation has N candidate keys, how many primary keys does it have?', o: ['N', '1', 'N-1', 'Depends on the DBMS'], a: 1},
             {q: 'Which of the following is NOT an Armstrong\'s axiom?', o: ['Reflexivity', 'Augmentation', 'Transitivity', 'Complementation'], a: 3},
             {q: 'A foreign key in table T1 references the primary key of table T2. If a row in T2 is deleted and the FK action is SET NULL, what happens?', o: ['The corresponding rows in T1 are deleted', 'The FK column in T1 is set to NULL', 'The delete operation is rejected', 'The FK column is set to the default value'], a: 1}
+          ]
+        },
+        {
+          t: 'Relational Algebra',
+          learn: '<div class="learn-section"><div class="learn-h">What is Relational Algebra?</div><p class="learn-p"><b>Relational Algebra</b> is a procedural query language that forms the theoretical foundation of SQL. It specifies <b>how</b> to retrieve data using a set of operations on relations (tables). Every SQL query can be expressed as a relational algebra expression.</p></div><div class="learn-section"><div class="learn-h">Unary Operations</div><table class="learn-table"><tr><th>Operation</th><th>Symbol</th><th>SQL Equivalent</th><th>Description</th></tr><tr><td>Selection</td><td>σ (sigma)</td><td>WHERE</td><td>Filter rows by condition</td></tr><tr><td>Projection</td><td>π (pi)</td><td>SELECT columns</td><td>Choose specific columns (removes duplicates)</td></tr><tr><td>Rename</td><td>ρ (rho)</td><td>AS</td><td>Rename relation or attributes</td></tr></table><div class="learn-code">σ_{salary > 50000}(Employee)     →  SELECT * FROM Employee WHERE salary > 50000\nπ_{name, salary}(Employee)        →  SELECT DISTINCT name, salary FROM Employee\nρ_{S}(Employee)                   →  Employee AS S</div></div><div class="learn-section"><div class="learn-h">Binary Set Operations</div><table class="learn-table"><tr><th>Operation</th><th>Symbol</th><th>Requirement</th><th>SQL</th></tr><tr><td>Union</td><td>∪</td><td>Union-compatible (same schema)</td><td>UNION</td></tr><tr><td>Set Difference</td><td>−</td><td>Union-compatible</td><td>EXCEPT</td></tr><tr><td>Intersection</td><td>∩</td><td>Union-compatible</td><td>INTERSECT</td></tr><tr><td>Cartesian Product</td><td>×</td><td>No requirement</td><td>CROSS JOIN</td></tr></table></div><div class="learn-section"><div class="learn-h">Join Operations</div><table class="learn-table"><tr><th>Join</th><th>Notation</th><th>Description</th></tr><tr><td>Natural Join</td><td>R ⋈ S</td><td>Join on all common attributes, remove duplicates</td></tr><tr><td>Theta Join</td><td>R ⋈_{θ} S</td><td>Join on arbitrary condition θ</td></tr><tr><td>Equi-Join</td><td>R ⋈_{R.a=S.b} S</td><td>Theta join where θ uses only equality</td></tr><tr><td>Left Outer Join</td><td>R ⟕ S</td><td>Keep all rows from R, NULL-fill unmatched S</td></tr><tr><td>Semijoin</td><td>R ⋉ S</td><td>Tuples in R that have a match in S</td></tr><tr><td>Anti-join</td><td>R ▷ S</td><td>Tuples in R with NO match in S</td></tr></table></div><div class="learn-section"><div class="learn-h">Division Operation</div><p class="learn-p"><b>Division</b> (R ÷ S) answers "find all X that are associated with every Y in S." Classic example: "Find students enrolled in ALL courses."</p><div class="learn-code">-- R(student, course) ÷ S(course) = students enrolled in ALL courses in S\n\n-- SQL equivalent:\nSELECT student FROM R\nGROUP BY student\nHAVING COUNT(DISTINCT course) = (SELECT COUNT(*) FROM S);</div><div class="learn-tip"><b>Interview tip:</b> Division is rarely asked directly, but the SQL pattern (GROUP BY + HAVING COUNT = total) is very common. Know both the RA notation and the SQL translation.</div></div><div class="learn-section"><div class="learn-h">Expression Trees &amp; Precedence</div><p class="learn-p">Relational algebra expressions can be drawn as <b>expression trees</b> (also called query trees). Leaves are base relations; internal nodes are RA operations. The query optimizer converts SQL to these trees and rearranges operations for efficiency (e.g., pushing selections down).</p><div class="learn-code">-- Query: Names of employees in IT dept with salary > 80000\n\n-- RA expression:\nπ_{name}(σ_{dept=\'IT\' AND salary>80000}(Employee))\n\n-- Optimized (push selection down):\nπ_{name}(σ_{salary>80000}(σ_{dept=\'IT\'}(Employee)))\n\n-- Even better with join:\nπ_{name}(σ_{salary>80000}(Employee ⋈ σ_{dname=\'IT\'}(Department)))</div></div>',
+          code: `-- Relational Algebra → SQL Translations
+
+-- Selection (σ): Filter rows
+-- σ_{age > 25}(Students)
+SELECT * FROM Students WHERE age > 25;
+
+-- Projection (π): Select columns
+-- π_{name, gpa}(Students)
+SELECT DISTINCT name, gpa FROM Students;
+
+-- Union (∪): Combine two compatible relations
+-- CSStudents ∪ MathStudents
+SELECT name FROM CSStudents
+UNION
+SELECT name FROM MathStudents;
+
+-- Set Difference (−): Rows in R but not in S
+-- CSStudents − MathStudents
+SELECT name FROM CSStudents
+EXCEPT
+SELECT name FROM MathStudents;
+
+-- Cartesian Product (×):
+-- Students × Courses
+SELECT * FROM Students CROSS JOIN Courses;
+
+-- Natural Join (⋈):
+-- Students ⋈ Enrollment (join on common column student_id)
+SELECT * FROM Students NATURAL JOIN Enrollment;
+
+-- Theta Join:
+-- Students ⋈_{Students.advisor_id = Faculty.fac_id} Faculty
+SELECT * FROM Students s
+JOIN Faculty f ON s.advisor_id = f.fac_id;
+
+-- Division (÷):
+-- "Students enrolled in ALL courses"
+-- Enrollment(student_id, course_id) ÷ Courses(course_id)
+SELECT student_id FROM Enrollment
+GROUP BY student_id
+HAVING COUNT(DISTINCT course_id) = (SELECT COUNT(*) FROM Courses);
+
+-- Semi-Join (⋉):
+-- Students who have at least one enrollment
+SELECT * FROM Students s
+WHERE EXISTS (SELECT 1 FROM Enrollment e WHERE e.student_id = s.student_id);
+
+-- Anti-Join (▷):
+-- Students with NO enrollment
+SELECT * FROM Students s
+WHERE NOT EXISTS (SELECT 1 FROM Enrollment e WHERE e.student_id = s.student_id);`,
+          problems: [
+            ['Relational Algebra Basics', 'https://www.geeksforgeeks.org/introduction-of-relational-algebra-in-dbms/', 'Easy'],
+            ['RA to SQL Conversion', 'https://www.geeksforgeeks.org/difference-between-relational-algebra-and-relational-calculus/', 'Medium'],
+            ['Division Operation Practice', 'https://www.geeksforgeeks.org/division-operator-in-relational-algebra/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'Which RA operation corresponds to the SQL WHERE clause?', o: ['Projection (π)', 'Selection (σ)', 'Rename (ρ)', 'Join (⋈)'], a: 1},
+            {q: 'The Division operation R ÷ S finds:', o: ['Rows in R but not S', 'All X in R associated with every Y in S', 'The Cartesian product of R and S', 'Common rows between R and S'], a: 1},
+            {q: 'Natural Join automatically joins on:', o: ['The first column of each table', 'All columns with the same name', 'The primary keys only', 'A user-specified condition'], a: 1}
           ]
         }
       ]
@@ -6615,6 +6974,144 @@ SELECT * FROM information_schema.INNODB_TRX;  -- Active transactions
             {q: 'In ARIES, what is the correct order of recovery phases?', o: ['Undo → Redo → Analysis', 'Redo → Undo → Analysis', 'Analysis → Redo → Undo', 'Analysis → Undo → Redo'], a: 2},
             {q: 'The Write-Ahead Log (WAL) rule states:', o: ['Data must be written to disk before the log', 'The log record must be written to stable storage before the corresponding data modification is written to disk', 'The log is written after the transaction commits', 'Logs are not needed if checkpoints are frequent'], a: 1},
             {q: 'Compensation Log Records (CLRs) in ARIES are:', o: ['Undo-only records', 'Redo-only records that are never undone', 'Both redo and undo records', 'Checkpoint records'], a: 1}
+          ]
+        }
+      ]
+    },
+    {
+      id: 'nosql', t: 'NoSQL & CAP Theorem',
+      topics: [
+        {
+          t: 'CAP Theorem',
+          learn: '<div class="learn-section"><div class="learn-h">Brewer\'s CAP Theorem</div><p class="learn-p">The <b>CAP Theorem</b> (Eric Brewer, 2000) states that a distributed data store can provide at most <b>two of three</b> guarantees simultaneously:</p><table class="learn-table"><tr><th>Property</th><th>Meaning</th></tr><tr><td><b>C</b>onsistency</td><td>Every read returns the most recent write (all nodes see the same data at the same time)</td></tr><tr><td><b>A</b>vailability</td><td>Every request receives a non-error response (but not necessarily the most recent data)</td></tr><tr><td><b>P</b>artition Tolerance</td><td>System continues operating despite network partitions between nodes</td></tr></table><p class="learn-p">Since <b>network partitions are inevitable</b> in distributed systems, the real choice is between <b>CP</b> (consistency + partition tolerance) and <b>AP</b> (availability + partition tolerance).</p><div class="learn-code">During a network partition:\n\n  CP System: Refuse requests to maintain consistency\n     → Returns error or timeout rather than stale data\n     → Examples: HBase, MongoDB (with majority read concern), ZooKeeper\n\n  AP System: Continue serving requests with possibly stale data\n     → Returns data that might not be the latest\n     → Examples: Cassandra, DynamoDB, CouchDB\n\n  CA System: Not practical in distributed systems\n     → No partition tolerance = single node = traditional RDBMS</div></div><div class="learn-section"><div class="learn-h">PACELC Theorem</div><p class="learn-p">PACELC extends CAP: <b>if Partition → choose A or C; Else → choose Latency or Consistency</b>. Even when the network is working fine, there\'s a tradeoff between latency and consistency.</p><table class="learn-table"><tr><th>System</th><th>During Partition</th><th>Else (Normal)</th><th>Classification</th></tr><tr><td>Cassandra</td><td>AP</td><td>EL (low latency)</td><td>PA/EL</td></tr><tr><td>MongoDB</td><td>CP</td><td>EC (consistent)</td><td>PC/EC</td></tr><tr><td>DynamoDB</td><td>AP</td><td>EL</td><td>PA/EL</td></tr><tr><td>HBase</td><td>CP</td><td>EC</td><td>PC/EC</td></tr></table></div><div class="learn-section"><div class="learn-h">Consistency Models</div><table class="learn-table"><tr><th>Model</th><th>Guarantee</th><th>Example</th></tr><tr><td>Strong Consistency</td><td>Read always returns latest write</td><td>RDBMS, ZooKeeper</td></tr><tr><td>Eventual Consistency</td><td>All replicas converge eventually</td><td>DNS, Cassandra</td></tr><tr><td>Causal Consistency</td><td>Causally related operations seen in order</td><td>MongoDB (causal sessions)</td></tr><tr><td>Read-your-writes</td><td>Client always sees its own writes</td><td>Session consistency</td></tr></table></div>',
+          code: `-- CAP Theorem — Decision Framework
+
+-- When designing a distributed system, ask:
+-- 1. Can we tolerate stale reads? → AP (availability-first)
+-- 2. Must every read be the latest? → CP (consistency-first)
+
+-- Example: Cassandra (AP) tunable consistency
+-- Write with quorum: W replicas must acknowledge
+-- Read with quorum: R replicas must respond
+-- If W + R > N (replication factor), strong consistency achieved
+
+-- Cassandra CQL examples:
+CREATE KEYSPACE shop WITH replication = {
+  'class': 'NetworkTopologyStrategy',
+  'dc1': 3, 'dc2': 3
+};
+
+-- Consistency levels:
+-- ONE: Write to 1 replica (fast, eventual consistency)
+-- QUORUM: Write to majority (balance speed + consistency)
+-- ALL: Write to all replicas (slowest, strongest consistency)
+
+-- Read with different consistency:
+CONSISTENCY QUORUM;
+SELECT * FROM products WHERE id = 123;
+
+-- With N=3 replicas:
+-- W=QUORUM(2) + R=QUORUM(2) = 4 > 3 → STRONG consistency
+-- W=ONE(1) + R=ONE(1) = 2 < 3 → EVENTUAL consistency`,
+          problems: [
+            ['CAP Theorem Explained', 'https://www.geeksforgeeks.org/the-cap-theorem-in-dbms/', 'Easy'],
+            ['PACELC Theorem', 'https://www.geeksforgeeks.org/pacelc-theorem/', 'Medium'],
+            ['Consistency Models', 'https://www.geeksforgeeks.org/eventual-vs-strong-consistency-in-distributed-databases/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'According to CAP theorem, during a network partition, a distributed system must choose between:', o: ['Consistency and Availability', 'Latency and Throughput', 'Consistency and Partition Tolerance', 'Availability and Latency'], a: 0},
+            {q: 'Cassandra is classified as which type of CAP system?', o: ['CA', 'CP', 'AP', 'CAP'], a: 2},
+            {q: 'In eventual consistency, if no new updates are made, all replicas will:', o: ['Immediately synchronize', 'Eventually converge to the same value', 'Remain inconsistent forever', 'Delete stale data'], a: 1}
+          ]
+        },
+        {
+          t: 'NoSQL Database Types',
+          learn: '<div class="learn-section"><div class="learn-h">Why NoSQL?</div><p class="learn-p">NoSQL databases emerged to handle: <b>massive scale</b> (petabytes), <b>flexible schemas</b> (schema-on-read), <b>high write throughput</b>, and <b>horizontal scaling</b>. They sacrifice some RDBMS features (joins, ACID) for scalability and performance.</p></div><div class="learn-section"><div class="learn-h">4 Types of NoSQL Databases</div><table class="learn-table"><tr><th>Type</th><th>Data Model</th><th>Examples</th><th>Best For</th></tr><tr><td><b>Key-Value</b></td><td>Simple key → value pairs</td><td>Redis, DynamoDB, Memcached</td><td>Caching, sessions, simple lookups</td></tr><tr><td><b>Document</b></td><td>Key → JSON/BSON document</td><td>MongoDB, CouchDB, Firestore</td><td>Content management, catalogs, user profiles</td></tr><tr><td><b>Column-Family</b></td><td>Row key → column families</td><td>Cassandra, HBase, ScyllaDB</td><td>Time-series, IoT, analytics at scale</td></tr><tr><td><b>Graph</b></td><td>Nodes + edges + properties</td><td>Neo4j, Amazon Neptune, ArangoDB</td><td>Social networks, recommendations, fraud detection</td></tr></table></div><div class="learn-section"><div class="learn-h">Key-Value Stores (Redis)</div><p class="learn-p">Simplest NoSQL model. Every item is a <b>key-value pair</b>. No schema, no relationships. Extremely fast O(1) lookups. Redis adds data structures (strings, lists, sets, sorted sets, hashes, streams).</p><div class="learn-code">Redis Commands:\nSET user:1001 \'{"name":"Alice","age":30}\'    -- String\nGET user:1001                                  -- O(1) lookup\n\nHSET user:1001 name Alice age 30              -- Hash\nHGET user:1001 name                           -- Get field\n\nLPUSH queue:jobs "job1" "job2"                -- List (queue)\nRPOP queue:jobs                                -- Dequeue\n\nSADD tags:post1 "python" "redis" "nosql"      -- Set\nSMEMBERS tags:post1                            -- All members\n\nZADD leaderboard 100 "Alice" 85 "Bob"         -- Sorted set\nZRANGE leaderboard 0 -1 WITHSCORES            -- Ranked</div></div><div class="learn-section"><div class="learn-h">Document Stores (MongoDB)</div><p class="learn-p">Store data as <b>JSON-like documents</b> (BSON in MongoDB). Documents can have nested objects and arrays — no need to normalize into multiple tables. Schema-flexible: each document in a collection can have different fields.</p><div class="learn-code">// MongoDB document\n{\n  _id: ObjectId("507f1f77bcf86cd799439011"),\n  name: "Alice",\n  age: 30,\n  address: { city: "NYC", zip: "10001" },   // Embedded document\n  orders: [                                   // Array of subdocs\n    { product: "Laptop", price: 999 },\n    { product: "Mouse", price: 25 }\n  ]\n}\n\n// No JOIN needed — data is denormalized into one document\n// Trade-off: data duplication vs. read performance</div></div><div class="learn-section"><div class="learn-h">Column-Family Stores (Cassandra)</div><p class="learn-p">Data organized by <b>column families</b> (similar to tables but columns can vary per row). Optimized for <b>write-heavy</b> workloads and <b>time-series data</b>. Uses a partition key for distribution across nodes.</p><div class="learn-code">Cassandra Data Model:\n\nCREATE TABLE sensor_data (\n  sensor_id UUID,\n  timestamp TIMESTAMP,\n  temperature FLOAT,\n  humidity FLOAT,\n  PRIMARY KEY (sensor_id, timestamp)\n) WITH CLUSTERING ORDER BY (timestamp DESC);\n\n-- sensor_id = partition key (determines which node)\n-- timestamp = clustering key (sorts within partition)\n-- Reads within a partition are sequential → fast!</div></div><div class="learn-section"><div class="learn-h">Graph Databases (Neo4j)</div><p class="learn-p">Model data as <b>nodes</b> (entities), <b>edges</b> (relationships), and <b>properties</b>. Relationships are first-class citizens — stored explicitly, not computed via JOINs. Traversals are O(1) per hop regardless of total data size.</p><div class="learn-code">-- Cypher query language (Neo4j)\nCREATE (alice:Person {name: "Alice"})\nCREATE (bob:Person {name: "Bob"})\nCREATE (alice)-[:FRIENDS_WITH {since: 2020}]->(bob)\n\n-- Find friends of friends (2-hop traversal)\nMATCH (p:Person {name: "Alice"})-[:FRIENDS_WITH*2]->(fof)\nRETURN fof.name\n\n-- This would require multiple self-JOINs in SQL!</div></div><div class="learn-section"><div class="learn-h">SQL vs NoSQL — When to Choose What</div><table class="learn-table"><tr><th>Factor</th><th>SQL (RDBMS)</th><th>NoSQL</th></tr><tr><td>Schema</td><td>Fixed, predefined</td><td>Flexible, schema-on-read</td></tr><tr><td>Scaling</td><td>Vertical (scale up)</td><td>Horizontal (scale out)</td></tr><tr><td>Transactions</td><td>Full ACID</td><td>BASE (basic availability, soft state, eventual consistency)</td></tr><tr><td>Joins</td><td>Native support</td><td>Generally not supported</td></tr><tr><td>Best for</td><td>Complex queries, relationships, ACID needs</td><td>Big data, real-time, flexible schema</td></tr></table><div class="learn-warn"><b>Important:</b> NoSQL doesn\'t mean "never SQL." Modern systems often use <b>polyglot persistence</b> — SQL for transactional data, Redis for caching, MongoDB for content, Elasticsearch for search.</div></div>',
+          code: `// === NoSQL Database Comparison & Usage Patterns ===
+
+// ===== 1. KEY-VALUE: Redis (using pseudo C++ client) =====
+// Best for: caching, session store, rate limiting, leaderboards
+/*
+  redis_client.SET("session:abc123", "{user_id: 1001}", "EX", 3600);
+  string session = redis_client.GET("session:abc123");
+
+  // Rate limiting with sliding window
+  redis_client.INCR("api:user1001:minute");
+  redis_client.EXPIRE("api:user1001:minute", 60);
+  int count = redis_client.GET("api:user1001:minute");
+  if (count > 100) reject_request();
+*/
+
+// ===== 2. DOCUMENT: MongoDB operations =====
+// Best for: user profiles, content, catalogs, event logging
+
+// Insert
+// db.users.insertOne({
+//   name: "Alice", age: 30,
+//   address: { city: "NYC" },
+//   tags: ["premium", "active"]
+// })
+
+// Query with filters
+// db.users.find({ age: { $gte: 25 }, "address.city": "NYC" })
+
+// Aggregation pipeline
+// db.orders.aggregate([
+//   { $match: { status: "completed" } },
+//   { $group: { _id: "$customer_id", total: { $sum: "$amount" } } },
+//   { $sort: { total: -1 } },
+//   { $limit: 10 }
+// ])
+
+// ===== 3. COLUMN-FAMILY: Cassandra CQL =====
+// Best for: time-series, IoT, write-heavy, multi-datacenter
+
+// CREATE TABLE user_activity (
+//   user_id UUID,
+//   activity_date DATE,
+//   activity_time TIMESTAMP,
+//   action TEXT,
+//   PRIMARY KEY ((user_id, activity_date), activity_time)
+// ) WITH CLUSTERING ORDER BY (activity_time DESC);
+//
+// -- Partition key: (user_id, activity_date) → one partition per user per day
+// -- Query: "all activities for user X on date Y" is a single partition read
+
+// ===== 4. GRAPH: Neo4j Cypher =====
+// Best for: social networks, recommendations, fraud detection
+
+// Shortest path between two people:
+// MATCH path = shortestPath(
+//   (a:Person {name:"Alice"})-[:KNOWS*..6]-(b:Person {name:"Eve"})
+// )
+// RETURN path
+
+// Recommendation: "People who bought X also bought Y"
+// MATCH (u:User)-[:BOUGHT]->(p:Product {name:"Laptop"})
+//       -[:BOUGHT_WITH]->(rec:Product)
+// WHERE NOT (u)-[:BOUGHT]->(rec)
+// RETURN rec.name, COUNT(*) as score ORDER BY score DESC
+
+// ===== DATA MODELING PATTERNS =====
+
+// Embedding vs Referencing (MongoDB):
+// EMBED when: 1:1 or 1:few, data read together, atomic updates needed
+// REFERENCE when: 1:many (unbounded), data updated independently, many:many
+
+// Denormalization (Cassandra):
+// Model tables around your QUERIES, not your entities
+// Duplicate data across tables to avoid JOINs
+// One table per query pattern is the norm`,
+          problems: [
+            ['NoSQL Database Types', 'https://www.geeksforgeeks.org/types-of-nosql-databases/', 'Easy'],
+            ['MongoDB vs Cassandra', 'https://www.geeksforgeeks.org/difference-between-mongodb-and-cassandra/', 'Medium'],
+            ['SQL vs NoSQL', 'https://www.geeksforgeeks.org/difference-between-sql-and-nosql/', 'Easy']
+          ],
+          mcqs: [
+            {q: 'Which NoSQL database type is best for representing social network relationships?', o: ['Key-Value', 'Document', 'Column-Family', 'Graph'], a: 3},
+            {q: 'Redis primarily operates as a:', o: ['Document store', 'Column-family store', 'In-memory key-value store', 'Graph database'], a: 2},
+            {q: 'In MongoDB, embedding a subdocument is preferred when:', o: ['The relationship is many-to-many', 'Data is always read together and has a 1:few relationship', 'The subdocument grows unboundedly', 'Data needs to be updated independently'], a: 1},
+            {q: 'BASE stands for:', o: ['Basic ACID, Soft Events', 'Basically Available, Soft state, Eventually consistent', 'Basic Availability, Strong Encryption', 'Batch Access, Sequential Execution'], a: 1}
           ]
         }
       ]

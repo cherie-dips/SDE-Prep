@@ -53,14 +53,14 @@ int main() {
 
     // ---- Constants and auto ----
     const int MAX = 1000;
+    // ---- Fast I/O (must be FIRST in main, before any I/O) ----
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
     auto x = 42;       // int
     auto y = 3.14;     // double
     auto z = 'c';      // char
     constexpr int SQ = 10 * 10; // compile-time constant
-
-    // ---- Fast I/O (must be FIRST in main, before any I/O) ----
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
 
     // ---- Limits ----
     cout << "INT_MAX: " << INT_MAX << endl;
@@ -1156,6 +1156,142 @@ int main() {
             {q: 'When are C++ templates instantiated?', o: ['At runtime', 'At link time', 'At compile time', 'At preprocessing time'], a: 2},
             {q: 'Why must template implementations be in header files?', o: ['It is a style convention', 'The compiler needs the full definition at the point of instantiation', 'Templates cannot be in .cpp files', 'Linker requires it'], a: 1},
             {q: 'What is template specialization?', o: ['Making a template work with pointers', 'Providing a custom implementation for a specific type', 'Restricting templates to certain types', 'Optimizing template performance'], a: 1}
+          ]
+        },
+        {
+          t: 'Operator Overloading',
+          learn: '<div class="learn-section"><div class="learn-h">What is Operator Overloading?</div><p class="learn-p"><b>Operator overloading</b> lets you redefine how operators (<code>+</code>, <code>-</code>, <code>==</code>, <code>&lt;&lt;</code>, etc.) work with user-defined types. The operator is implemented as a special function named <code>operator&lt;symbol&gt;</code>.</p><div class="learn-code">class Vec2 {\npublic:\n    double x, y;\n    Vec2(double x = 0, double y = 0) : x(x), y(y) {}\n\n    // Member function: binary +\n    Vec2 operator+(const Vec2&amp; rhs) const {\n        return Vec2(x + rhs.x, y + rhs.y);\n    }\n\n    // Member function: unary - (negation)\n    Vec2 operator-() const { return Vec2(-x, -y); }\n\n    // Member function: ==\n    bool operator==(const Vec2&amp; rhs) const {\n        return x == rhs.x &amp;&amp; y == rhs.y;\n    }\n};\n\nVec2 a(1, 2), b(3, 4);\nVec2 c = a + b;  // calls a.operator+(b) → Vec2(4, 6)</div></div><div class="learn-section"><div class="learn-h">Member vs Friend (Non-Member) Overloading</div><table class="learn-table"><tr><th>Approach</th><th>Syntax</th><th>Use When</th></tr><tr><td>Member function</td><td><code>T operator+(const T&amp; rhs)</code></td><td>Left operand is your class</td></tr><tr><td>Friend / non-member</td><td><code>friend T operator+(const T&amp; lhs, const T&amp; rhs)</code></td><td>Left operand may not be your class (e.g., <code>int + Vec2</code>)</td></tr></table><p class="learn-p"><b>Stream operators</b> (<code>&lt;&lt;</code>, <code>&gt;&gt;</code>) must be non-member (the left operand is <code>ostream</code>/<code>istream</code>, not your class):</p><div class="learn-code">class Vec2 {\n    // ... members ...\n    friend ostream&amp; operator&lt;&lt;(ostream&amp; os, const Vec2&amp; v) {\n        os &lt;&lt; "(" &lt;&lt; v.x &lt;&lt; ", " &lt;&lt; v.y &lt;&lt; ")";\n        return os;\n    }\n};\ncout &lt;&lt; Vec2(3, 4);  // prints "(3, 4)"</div></div><div class="learn-section"><div class="learn-h">Overloading operator&lt; (for STL Containers)</div><p class="learn-p">STL containers like <code>set</code>, <code>map</code>, and <code>sort()</code> require <code>operator&lt;</code> for ordering:</p><div class="learn-code">struct Student {\n    string name;\n    int grade;\n    bool operator&lt;(const Student&amp; other) const {\n        if (grade != other.grade) return grade &gt; other.grade; // higher grade first\n        return name &lt; other.name; // alphabetical tiebreak\n    }\n};\n\nset&lt;Student&gt; students;  // automatically sorted by operator&lt;\nsort(vec.begin(), vec.end()); // uses operator&lt;</div><div class="learn-tip"><b>Tip:</b> For <code>unordered_set</code>/<code>unordered_map</code>, you need a <b>hash function</b> instead of <code>operator&lt;</code>. For <code>priority_queue</code>, the default max-heap uses <code>operator&lt;</code>.</div></div><div class="learn-section"><div class="learn-h">Operators You Cannot Overload</div><ul class="learn-list"><li><code>::</code> (scope resolution)</li><li><code>.</code> (member access)</li><li><code>.*</code> (pointer-to-member)</li><li><code>?:</code> (ternary)</li><li><code>sizeof</code>, <code>typeid</code>, <code>alignof</code></li></ul><div class="learn-warn"><b>Best practice:</b> Only overload operators when the meaning is intuitive. <code>Matrix + Matrix</code> makes sense. <code>Dog + Dog</code> does not. When in doubt, use a named function instead.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <set>
+using namespace std;
+
+class Fraction {
+    int num, den;
+    int gcd(int a, int b) { return b ? gcd(b, a % b) : a; }
+    void reduce() { int g = gcd(abs(num), abs(den)); num /= g; den /= g; if (den < 0) { num = -num; den = -den; } }
+public:
+    Fraction(int n = 0, int d = 1) : num(n), den(d) { reduce(); }
+
+    Fraction operator+(const Fraction& o) const { return Fraction(num * o.den + o.num * den, den * o.den); }
+    Fraction operator-(const Fraction& o) const { return Fraction(num * o.den - o.num * den, den * o.den); }
+    Fraction operator*(const Fraction& o) const { return Fraction(num * o.num, den * o.den); }
+    bool operator==(const Fraction& o) const { return num == o.num && den == o.den; }
+    bool operator<(const Fraction& o) const { return num * o.den < o.num * den; }
+
+    friend ostream& operator<<(ostream& os, const Fraction& f) {
+        os << f.num;
+        if (f.den != 1) os << "/" << f.den;
+        return os;
+    }
+};
+
+int main() {
+    Fraction a(1, 2), b(1, 3);
+    cout << a << " + " << b << " = " << (a + b) << endl; // 5/6
+    cout << a << " * " << b << " = " << (a * b) << endl; // 1/6
+    cout << a << " == " << b << " ? " << (a == b) << endl; // 0
+    cout << a << " < " << b << " ? " << (a < b) << endl;   // 0
+
+    // Using operator< with STL
+    set<Fraction> s = {Fraction(3,4), Fraction(1,2), Fraction(2,3)};
+    cout << "Sorted fractions: ";
+    for (auto& f : s) cout << f << " "; // 1/2 2/3 3/4
+    cout << endl;
+
+    return 0;
+}`,
+          problems: [
+            ['Design Complex Number Class', 'https://www.geeksforgeeks.org/operator-overloading-cpp/', 'Easy'],
+            ['Design Matrix Class with Operators', 'https://www.geeksforgeeks.org/operator-overloading-cpp/', 'Medium'],
+            ['Design Iterator for 2D Vector', 'https://leetcode.com/problems/flatten-2d-vector/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'The << operator for cout must be overloaded as:', o: ['A member function', 'A static function', 'A non-member (friend) function', 'A virtual function'], a: 2},
+            {q: 'Which operator CANNOT be overloaded in C++?', o: ['+', '<<', '::', '[]'], a: 2},
+            {q: 'To use a custom class as a key in std::set, you need:', o: ['operator==', 'operator<', 'operator>', 'A hash function'], a: 1}
+          ]
+        },
+        {
+          t: 'Exception Handling & RAII',
+          learn: '<div class="learn-section"><div class="learn-h">Exception Handling Basics</div><p class="learn-p">C++ uses <code>try</code>/<code>catch</code>/<code>throw</code> for exception handling. When an error occurs, you <b>throw</b> an exception object. The runtime unwinds the stack until it finds a matching <b>catch</b> block.</p><div class="learn-code">try {\n    int result = divide(10, 0);\n} catch (const runtime_error&amp; e) {\n    cerr &lt;&lt; "Error: " &lt;&lt; e.what() &lt;&lt; endl;\n} catch (const exception&amp; e) {\n    cerr &lt;&lt; "Generic: " &lt;&lt; e.what() &lt;&lt; endl;\n} catch (...) {\n    cerr &lt;&lt; "Unknown exception" &lt;&lt; endl;\n}</div><p class="learn-p"><b>Stack unwinding:</b> When an exception is thrown, destructors are called for all local objects in each stack frame as the runtime walks back to the catch block. This is why RAII works — resources are automatically cleaned up.</p></div><div class="learn-section"><div class="learn-h">Standard Exception Hierarchy</div><div class="learn-code">std::exception\n├── std::logic_error\n│   ├── std::invalid_argument\n│   ├── std::out_of_range\n│   └── std::domain_error\n├── std::runtime_error\n│   ├── std::overflow_error\n│   ├── std::underflow_error\n│   └── std::range_error\n└── std::bad_alloc        (thrown by new)\n└── std::bad_cast         (thrown by dynamic_cast)</div><p class="learn-p">Catch by <b>const reference</b> (<code>const exception&amp;</code>) to avoid slicing and unnecessary copies. Catch more specific exceptions first — the first matching catch block is used.</p></div><div class="learn-section"><div class="learn-h">Custom Exceptions</div><div class="learn-code">class InsufficientFundsError : public runtime_error {\n    double amount;\npublic:\n    InsufficientFundsError(double amt)\n        : runtime_error("Insufficient funds"), amount(amt) {}\n    double getAmount() const { return amount; }\n};\n\nvoid withdraw(double balance, double amount) {\n    if (amount &gt; balance)\n        throw InsufficientFundsError(amount - balance);\n}</div></div><div class="learn-section"><div class="learn-h">noexcept Specifier</div><p class="learn-p"><code>noexcept</code> declares that a function will not throw exceptions. The compiler can optimize noexcept functions, and STL containers use <code>noexcept</code> to decide whether to move or copy during reallocation.</p><div class="learn-code">void safe() noexcept { /* guaranteed not to throw */ }\nint compute() noexcept(true) { return 42; } // same as noexcept\n\n// Move constructor SHOULD be noexcept for STL optimization\nBuffer(Buffer&amp;&amp; other) noexcept { /* ... */ }</div><div class="learn-warn"><b>Warning:</b> If a <code>noexcept</code> function throws, <code>std::terminate()</code> is called — the program crashes. Only mark functions noexcept when you are certain they won\'t throw.</div></div><div class="learn-section"><div class="learn-h">RAII (Resource Acquisition Is Initialization)</div><p class="learn-p"><b>RAII</b> ties resource management to object lifetime. Acquire the resource in the constructor, release it in the destructor. Since destructors are called during stack unwinding, resources are always cleaned up — even when exceptions occur.</p><div class="learn-code">class FileHandle {\n    FILE* fp;\npublic:\n    FileHandle(const char* name) : fp(fopen(name, "r")) {\n        if (!fp) throw runtime_error("Cannot open file");\n    }\n    ~FileHandle() { if (fp) fclose(fp); }  // always closes!\n    // ... read methods ...\n};\n\nvoid process() {\n    FileHandle f("data.txt");  // file opened\n    // ... do work, may throw ...\n}  // f destroyed here, file always closed</div><p class="learn-p"><b>RAII in the STL:</b> <code>unique_ptr</code>, <code>shared_ptr</code>, <code>lock_guard</code>, <code>fstream</code>, <code>vector</code> — all are RAII wrappers. You almost never need <code>new</code>/<code>delete</code> or raw resource management in modern C++.</p><div class="learn-tip"><b>Interview tip:</b> "What is RAII?" is one of the most common C++ interview questions. Answer: it ties resource lifetime to object lifetime, ensuring cleanup via destructors. Combined with smart pointers, it makes memory leaks and resource leaks nearly impossible.</div></div>',
+          code: `#include <iostream>
+#include <stdexcept>
+#include <memory>
+#include <fstream>
+using namespace std;
+
+// Custom exception
+class DivisionByZero : public runtime_error {
+public:
+    DivisionByZero() : runtime_error("Division by zero") {}
+};
+
+double divide(double a, double b) {
+    if (b == 0) throw DivisionByZero();
+    return a / b;
+}
+
+// RAII wrapper for a dynamic array
+class SafeArray {
+    int* data;
+    size_t size;
+public:
+    SafeArray(size_t n) : data(new int[n]()), size(n) {}
+    ~SafeArray() { delete[] data; }
+    SafeArray(const SafeArray&) = delete;
+    SafeArray& operator=(const SafeArray&) = delete;
+    int& operator[](size_t i) {
+        if (i >= size) throw out_of_range("Index out of bounds");
+        return data[i];
+    }
+    size_t getSize() const noexcept { return size; }
+};
+
+int main() {
+    // Basic exception handling
+    try {
+        cout << divide(10, 3) << endl;
+        cout << divide(10, 0) << endl;
+    } catch (const DivisionByZero& e) {
+        cerr << "Caught: " << e.what() << endl;
+    }
+
+    // RAII: SafeArray
+    try {
+        SafeArray arr(5);
+        arr[0] = 42;
+        arr[3] = 99;
+        cout << "arr[0] = " << arr[0] << endl;
+        arr[10] = 1; // throws out_of_range
+    } catch (const out_of_range& e) {
+        cerr << "Caught: " << e.what() << endl;
+    }
+    // arr's destructor already called — no memory leak!
+
+    // Smart pointers (RAII for heap objects)
+    auto ptr = make_unique<int>(42);
+    cout << "Smart pointer: " << *ptr << endl;
+    // No delete needed — unique_ptr handles it
+
+    // RAII for files
+    {
+        ofstream out("test.txt");
+        out << "Hello RAII!" << endl;
+    } // file automatically closed here
+
+    return 0;
+}`,
+          problems: [
+            ['Implement Smart Pointer', 'https://www.geeksforgeeks.org/smart-pointers-cpp/', 'Medium'],
+            ['Exception Safety in C++', 'https://www.geeksforgeeks.org/exception-handling-c/', 'Easy'],
+            ['RAII Design Pattern', 'https://www.geeksforgeeks.org/resource-acquisition-is-initialization/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'What happens during stack unwinding?', o: ['All variables are set to zero', 'Destructors are called for local objects as the stack is unwound to the catch block', 'The program terminates', 'Memory is freed by the garbage collector'], a: 1},
+            {q: 'Why should move constructors be marked noexcept?', o: ['To prevent compilation errors', 'So STL containers use move instead of copy during reallocation', 'To make them faster', 'noexcept is required by the standard'], a: 1},
+            {q: 'RAII stands for:', o: ['Runtime Allocation Is Important', 'Resource Acquisition Is Initialization', 'Reference And Iterator Interface', 'Recursive Algorithm Is Invalid'], a: 1}
           ]
         }
       ]
@@ -4873,6 +5009,84 @@ int main() {
             {q: 'For Bitmask DP to be feasible, what is the typical constraint on n?', o: ['n ≤ 100', 'n ≤ 1000', 'n ≤ 20', 'n ≤ 50'], a: 2},
             {q: 'How do you check if bit i is set in mask?', o: ['mask % i', 'mask & (1 << i)', 'mask | (1 << i)', 'mask ^ i'], a: 1}
           ]
+        },
+        {
+          t: 'Digit DP',
+          learn: '<div class="learn-section"><div class="learn-h">What is Digit DP?</div><p class="learn-p"><b>Digit DP</b> counts numbers in a range [L, R] satisfying digit-based properties. Instead of iterating through all numbers, we build them digit by digit, tracking constraints.</p><p class="learn-p">Core idea: <code>count(L, R) = f(R) - f(L-1)</code> where f(N) counts valid numbers from 0 to N.</p></div><div class="learn-section"><div class="learn-h">State Design</div><ul class="learn-list"><li><b>pos:</b> Current digit position (MSB to LSB)</li><li><b>tight:</b> Are we still bounded by N? If true, current digit ≤ digit of N at this position</li><li><b>started:</b> Have we placed a non-zero digit? (handles leading zeros)</li><li><b>Extra state:</b> Problem-specific (digit sum, last digit, digit set, remainder)</li></ul><div class="learn-code">// Template: count numbers from 0 to N with some property\nint dp[20][2][2][extra_states]; // pos, tight, started, ...\n\nint solve(string&amp; num, int pos, bool tight, bool started, /* extra */) {\n    if (pos == num.size()) return started ? (valid condition) : 0;\n    if (dp[pos][tight][started][...] != -1) return dp[...];\n    \n    int limit = tight ? (num[pos] - \'0\') : 9;\n    int ans = 0;\n    for (int d = 0; d &lt;= limit; d++) {\n        bool newTight = tight &amp;&amp; (d == limit);\n        bool newStarted = started || (d != 0);\n        ans += solve(num, pos + 1, newTight, newStarted, /* updated extra */);\n    }\n    return dp[pos][tight][started][...] = ans;\n}</div></div><div class="learn-section"><div class="learn-h">Classic Problems</div><table class="learn-table"><tr><th>Problem</th><th>Extra State</th><th>Valid Condition</th></tr><tr><td>Count numbers with digit sum = S</td><td>current sum</td><td>sum == S at end</td></tr><tr><td>Count numbers with no repeated digits</td><td>bitmask of used digits</td><td>no bit set twice</td></tr><tr><td>Count numbers divisible by K</td><td>remainder mod K</td><td>remainder == 0</td></tr><tr><td>Count numbers without digit 4</td><td>none extra</td><td>never placed 4</td></tr></table><div class="learn-tip"><b>Tip:</b> When you see "count numbers in [L,R] with property X", think Digit DP. The constraint on N can be up to 10^18 (18 digits) — standard iteration is impossible but Digit DP handles it in O(18 × states).</div></div>',
+          code: `#include <iostream>
+#include <cstring>
+#include <string>
+using namespace std;
+
+// Count numbers from 1 to N with digit sum = target
+int dp[20][200][2];
+string num;
+int target;
+
+int solve(int pos, int sum, bool tight) {
+    if (pos == num.size())
+        return (sum == target) ? 1 : 0;
+    if (dp[pos][sum][tight] != -1)
+        return dp[pos][sum][tight];
+
+    int limit = tight ? (num[pos] - '0') : 9;
+    int ans = 0;
+    for (int d = 0; d <= limit; d++) {
+        ans += solve(pos + 1, sum + d, tight && (d == limit));
+    }
+    return dp[pos][sum][tight] = ans;
+}
+
+int countWithDigitSum(int N, int S) {
+    num = to_string(N);
+    target = S;
+    memset(dp, -1, sizeof(dp));
+    return solve(0, 0, true);
+}
+
+// Count numbers from 1 to N with no repeated digits
+int dp2[20][1024][2][2]; // pos, mask of used digits, tight, started
+string num2;
+
+int solveUnique(int pos, int mask, bool tight, bool started) {
+    if (pos == num2.size())
+        return started ? 1 : 0;
+    if (dp2[pos][mask][tight][started] != -1)
+        return dp2[pos][mask][tight][started];
+
+    int limit = tight ? (num2[pos] - '0') : 9;
+    int ans = 0;
+    for (int d = 0; d <= limit; d++) {
+        if (d == 0 && !started) {
+            ans += solveUnique(pos + 1, mask, tight && (d == limit), false);
+        } else if (!(mask & (1 << d))) {
+            ans += solveUnique(pos + 1, mask | (1 << d), tight && (d == limit), true);
+        }
+    }
+    return dp2[pos][mask][tight][started] = ans;
+}
+
+int countUniqueDigits(int N) {
+    num2 = to_string(N);
+    memset(dp2, -1, sizeof(dp2));
+    return solveUnique(0, 0, true, false);
+}
+
+int main() {
+    cout << "Numbers 1-100 with digit sum 5: " << countWithDigitSum(100, 5) << endl;
+    cout << "Numbers 1-1000 with unique digits: " << countUniqueDigits(1000) << endl;
+    return 0;
+}`,
+          problems: [
+            ['Numbers At Most N Given Digit Set', 'https://leetcode.com/problems/numbers-at-most-n-given-digit-set/', 'Hard'],
+            ['Count Numbers with Unique Digits', 'https://leetcode.com/problems/count-numbers-with-unique-digits/', 'Medium'],
+            ['Non-negative Integers without Consecutive Ones', 'https://leetcode.com/problems/non-negative-integers-without-consecutive-ones/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'In Digit DP, the "tight" flag indicates:', o: ['The number must be exactly N', 'The digits placed so far match N\'s prefix, limiting the next digit', 'All digits must be non-zero', 'The number is negative'], a: 1},
+            {q: 'To count numbers in range [L, R] using Digit DP, we compute:', o: ['f(R) - f(L)', 'f(R) - f(L-1)', 'f(R-L)', 'f(R) + f(L)'], a: 1},
+            {q: 'Digit DP can handle numbers up to 10^18 because:', o: ['It uses BigInteger', 'It processes at most 18 digit positions', 'It runs in O(1)', 'It stores numbers in binary'], a: 1}
+          ]
         }
       ]
     },
@@ -5059,6 +5273,65 @@ int main() {
           ]
         },
         {
+          t: 'Bipartite Graph Check',
+          learn: '<div class="learn-section"><div class="learn-h">What is a Bipartite Graph?</div><p class="learn-p">A graph is <b>bipartite</b> if its vertices can be divided into two disjoint sets U and V such that every edge connects a vertex in U to a vertex in V. Equivalently, a graph is bipartite if and only if it contains <b>no odd-length cycle</b>.</p><div class="learn-code">Bipartite:        NOT Bipartite:\n  0 ─── 1           0 ─── 1\n  |     |           |   / |\n  3 ─── 2           3 ── 2\n\nU = {0, 2}          Triangle 0-1-2 has\nV = {1, 3}          odd cycle length 3</div></div><div class="learn-section"><div class="learn-h">BFS 2-Coloring</div><p class="learn-p">Try to color the graph with 2 colors. Start from any node, assign color 0. All neighbors get color 1. Their neighbors get color 0. If we ever find a neighbor with the same color as the current node, the graph is NOT bipartite.</p><div class="learn-code">bool isBipartite(vector&lt;vector&lt;int&gt;&gt;&amp; adj, int n) {\n    vector&lt;int&gt; color(n, -1);\n    for (int i = 0; i &lt; n; i++) {\n        if (color[i] != -1) continue;\n        queue&lt;int&gt; q;\n        q.push(i); color[i] = 0;\n        while (!q.empty()) {\n            int u = q.front(); q.pop();\n            for (int v : adj[u]) {\n                if (color[v] == -1) {\n                    color[v] = 1 - color[u];\n                    q.push(v);\n                } else if (color[v] == color[u])\n                    return false; // odd cycle\n            }\n        }\n    }\n    return true;\n}</div><p class="learn-p">Time: <span class="learn-complexity">O(V + E)</span>. Works for disconnected graphs by iterating over all components.</p><div class="learn-tip"><b>Applications:</b> Task scheduling (workers vs tasks), graph coloring, matching problems (Hungarian algorithm requires bipartite graph).</div></div>',
+          code: `#include <iostream>
+#include <vector>
+#include <queue>
+using namespace std;
+
+bool isBipartite(vector<vector<int>>& adj, int n) {
+    vector<int> color(n, -1);
+    for (int start = 0; start < n; start++) {
+        if (color[start] != -1) continue;
+        queue<int> q;
+        q.push(start);
+        color[start] = 0;
+        while (!q.empty()) {
+            int u = q.front(); q.pop();
+            for (int v : adj[u]) {
+                if (color[v] == -1) {
+                    color[v] = 1 - color[u];
+                    q.push(v);
+                } else if (color[v] == color[u]) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+// DFS version
+bool dfs_color(int u, int c, vector<vector<int>>& adj, vector<int>& color) {
+    color[u] = c;
+    for (int v : adj[u]) {
+        if (color[v] == -1) {
+            if (!dfs_color(v, 1 - c, adj, color)) return false;
+        } else if (color[v] == c) return false;
+    }
+    return true;
+}
+
+int main() {
+    int n = 4;
+    vector<vector<int>> adj(n);
+    adj[0] = {1, 3}; adj[1] = {0, 2};
+    adj[2] = {1, 3}; adj[3] = {2, 0};
+    cout << "Bipartite: " << isBipartite(adj, n) << endl; // 1
+    return 0;
+}`,
+          problems: [
+            ['Is Graph Bipartite?', 'https://leetcode.com/problems/is-graph-bipartite/', 'Medium'],
+            ['Possible Bipartition', 'https://leetcode.com/problems/possible-bipartition/', 'Medium'],
+            ['Odd-Length Cycle Detection', 'https://www.geeksforgeeks.org/check-graphs-cycle-odd-length/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'A graph is bipartite if and only if:', o: ['It has no cycles', 'It has no odd-length cycles', 'It is connected', 'All vertices have the same degree'], a: 1},
+            {q: 'What algorithm is used to check bipartiteness?', o: ['Dijkstra\'s', 'BFS/DFS 2-coloring', 'Kruskal\'s', 'Floyd-Warshall'], a: 1}
+          ]
+        },
+        {
           t: 'Dijkstra\'s Shortest Path',
           learn: '<div class="learn-section"><div class="learn-h">Dijkstra\'s Algorithm</div><p class="learn-p"><b>Dijkstra\'s</b> finds the shortest path from a source to all other vertices in a <b>weighted graph with non-negative edges</b>. It uses a min-heap (priority queue).</p><div class="learn-code">vector&lt;int&gt; dijkstra(int src, vector&lt;vector&lt;pair&lt;int,int&gt;&gt;&gt;&amp; adj, int n) {\n    vector&lt;int&gt; dist(n, INT_MAX);\n    priority_queue&lt;pair&lt;int,int&gt;, vector&lt;pair&lt;int,int&gt;&gt;, greater&lt;&gt;&gt; pq;\n    dist[src] = 0;\n    pq.push({0, src});\n    while (!pq.empty()) {\n        auto [d, u] = pq.top(); pq.pop();\n        if (d &gt; dist[u]) continue; // skip outdated\n        for (auto [v, w] : adj[u]) {\n            if (dist[u] + w &lt; dist[v]) {\n                dist[v] = dist[u] + w;\n                pq.push({dist[v], v});\n            }\n        }\n    }\n    return dist;\n}</div><p class="learn-p">Time: <span class="learn-complexity">O((V + E) log V)</span> with a binary heap.</p><div class="learn-warn"><b>Warning:</b> Dijkstra\'s does NOT work with negative edge weights. Use Bellman-Ford for graphs with negative edges.</div></div>',
           code: `#include <iostream>
@@ -5160,7 +5433,8 @@ int main() {
           problems: [
             ['Cheapest Flights Within K Stops', 'https://leetcode.com/problems/cheapest-flights-within-k-stops/', 'Medium'],
             ['Network Delay Time', 'https://leetcode.com/problems/network-delay-time/', 'Medium'],
-            ['Cheapest Flights K Stops (Bellman-Ford)', 'https://leetcode.com/problems/cheapest-flights-within-k-stops/', 'Medium']
+            ['Find Negative Cycle in Graph', 'https://www.geeksforgeeks.org/detect-negative-cycle-graph-bellman-ford/', 'Medium'],
+            ['Path With Minimum Effort', 'https://leetcode.com/problems/path-with-minimum-effort/', 'Medium']
           ],
           mcqs: [
             {q: 'How many times does Bellman-Ford relax all edges?', o: ['V times', 'V - 1 times', 'E times', 'E - 1 times'], a: 1},
@@ -5168,7 +5442,89 @@ int main() {
             {q: 'What is the time complexity of Bellman-Ford?', o: ['O(V + E)', 'O(V log V)', 'O(V * E)', 'O(E log V)'], a: 2}
           ]
         },
+
         {
+          t: 'Union-Find / DSU',
+          learn: '<div class="learn-section"><div class="learn-h">Disjoint Set Union (DSU)</div><p class="learn-p"><b>Union-Find</b> (DSU) maintains a collection of disjoint sets with two operations:</p><ul class="learn-list"><li><b>Find(x):</b> Find the representative (root) of the set containing x</li><li><b>Union(x, y):</b> Merge the sets containing x and y</li></ul><p class="learn-p">With <b>path compression</b> and <b>union by rank</b>, both operations are nearly <span class="learn-complexity">O(1)</span> (amortized, technically O(alpha(n)) where alpha is the inverse Ackermann function).</p><div class="learn-code">class DSU {\n    vector&lt;int&gt; parent, rank_;\npublic:\n    DSU(int n) : parent(n), rank_(n, 0) {\n        iota(parent.begin(), parent.end(), 0);\n    }\n    int find(int x) {\n        if (parent[x] != x) parent[x] = find(parent[x]); // path compression\n        return parent[x];\n    }\n    bool unite(int x, int y) {\n        int px = find(x), py = find(y);\n        if (px == py) return false;\n        if (rank_[px] &lt; rank_[py]) swap(px, py);\n        parent[py] = px;\n        if (rank_[px] == rank_[py]) rank_[px]++;\n        return true;\n    }\n};</div></div><div class="learn-section"><div class="learn-h">Applications</div><ul class="learn-list"><li>Kruskal\'s MST algorithm</li><li>Detecting cycles in undirected graphs</li><li>Connected components</li><li>Number of Islands (union adjacent land cells)</li></ul><div class="learn-tip"><b>Tip:</b> Union-Find is the go-to for dynamic connectivity problems where you need to efficiently merge groups and check if two elements belong to the same group.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+#include <numeric>
+using namespace std;
+
+class DSU {
+    vector<int> parent, rank_;
+    int components;
+public:
+    DSU(int n) : parent(n), rank_(n, 0), components(n) {
+        iota(parent.begin(), parent.end(), 0);
+    }
+    int find(int x) {
+        if (parent[x] != x) parent[x] = find(parent[x]);
+        return parent[x];
+    }
+    bool unite(int x, int y) {
+        int px = find(x), py = find(y);
+        if (px == py) return false;
+        if (rank_[px] < rank_[py]) swap(px, py);
+        parent[py] = px;
+        if (rank_[px] == rank_[py]) rank_[px]++;
+        components--;
+        return true;
+    }
+    bool connected(int x, int y) { return find(x) == find(y); }
+    int getComponents() { return components; }
+};
+
+// Number of connected components
+int countComponents(int n, vector<vector<int>>& edges) {
+    DSU dsu(n);
+    for (auto& e : edges) dsu.unite(e[0], e[1]);
+    return dsu.getComponents();
+}
+
+// Redundant Connection: find the edge that creates a cycle
+vector<int> findRedundantConnection(vector<vector<int>>& edges) {
+    int n = edges.size();
+    DSU dsu(n + 1);
+    for (auto& e : edges) {
+        if (!dsu.unite(e[0], e[1]))
+            return e;  // this edge creates a cycle
+    }
+    return {};
+}
+
+int main() {
+    int n = 5;
+    vector<vector<int>> edges = {{0,1},{1,2},{3,4}};
+    cout << "Components: " << countComponents(n, edges) << endl; // 2
+
+    DSU dsu(5);
+    dsu.unite(0, 1);
+    dsu.unite(2, 3);
+    cout << "0-1 connected: " << dsu.connected(0, 1) << endl; // 1
+    cout << "0-2 connected: " << dsu.connected(0, 2) << endl; // 0
+    dsu.unite(1, 3);
+    cout << "0-2 connected: " << dsu.connected(0, 2) << endl; // 1
+
+    vector<vector<int>> redEdges = {{1,2},{1,3},{2,3}};
+    auto redundant = findRedundantConnection(redEdges);
+    cout << "Redundant: " << redundant[0] << "-" << redundant[1] << endl;
+
+    return 0;
+}`,
+          problems: [
+            ['Number of Connected Components in an Undirected Graph', 'https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/', 'Medium'],
+            ['Redundant Connection', 'https://leetcode.com/problems/redundant-connection/', 'Medium'],
+            ['Accounts Merge', 'https://leetcode.com/problems/accounts-merge/', 'Medium'],
+            ['Most Stones Removed with Same Row or Column', 'https://leetcode.com/problems/most-stones-removed-with-same-row-or-column/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'What are the two optimizations in Union-Find?', o: ['BFS and DFS', 'Path compression and union by rank', 'Sorting and hashing', 'Memoization and tabulation'], a: 1},
+            {q: 'What is the amortized time complexity of find() with both optimizations?', o: ['O(n)', 'O(log n)', 'O(1) (practically, O(alpha(n)))', 'O(sqrt(n))'], a: 2},
+            {q: 'How does path compression work?', o: ['Sorts the tree', 'Points all nodes on the find path directly to the root', 'Balances the tree', 'Removes duplicate edges'], a: 1}
+          ]
+        },
+                {
           t: 'MST - Prim & Kruskal',
           learn: '<div class="learn-section"><div class="learn-h">Minimum Spanning Tree</div><p class="learn-p">An MST is a subset of edges that connects all vertices with the minimum total edge weight, without cycles.</p></div><div class="learn-section"><div class="learn-h">Kruskal\'s Algorithm</div><p class="learn-p">Sort edges by weight, add each edge if it doesn\'t form a cycle (checked using Union-Find). Time: <span class="learn-complexity">O(E log E)</span>.</p></div><div class="learn-section"><div class="learn-h">Prim\'s Algorithm</div><p class="learn-p">Start from any vertex, greedily add the cheapest edge connecting a visited vertex to an unvisited one. Use a min-heap. Time: <span class="learn-complexity">O(E log V)</span>.</p><div class="learn-code">int primMST(int n, vector&lt;vector&lt;pair&lt;int,int&gt;&gt;&gt;&amp; adj) {\n    vector&lt;bool&gt; inMST(n, false);\n    priority_queue&lt;pair&lt;int,int&gt;, vector&lt;pair&lt;int,int&gt;&gt;, greater&lt;&gt;&gt; pq;\n    pq.push({0, 0}); // {weight, node}\n    int totalWeight = 0;\n    while (!pq.empty()) {\n        auto [w, u] = pq.top(); pq.pop();\n        if (inMST[u]) continue;\n        inMST[u] = true;\n        totalWeight += w;\n        for (auto [v, wt] : adj[u])\n            if (!inMST[v]) pq.push({wt, v});\n    }\n    return totalWeight;\n}</div><div class="learn-tip"><b>Tip:</b> Use Kruskal\'s when you have an edge list. Use Prim\'s when you have an adjacency list and the graph is dense.</div></div>',
           code: `#include <iostream>
@@ -5330,89 +5686,7 @@ int main() {
             {q: 'In Kahn\'s algorithm, which nodes are processed first?', o: ['Nodes with highest indegree', 'Nodes with indegree 0', 'Random nodes', 'The source node'], a: 1},
             {q: 'What is the time complexity of topological sort?', o: ['O(V^2)', 'O(V + E)', 'O(V * E)', 'O(E log V)'], a: 1}
           ]
-        },
-        {
-          t: 'Union-Find / DSU',
-          learn: '<div class="learn-section"><div class="learn-h">Disjoint Set Union (DSU)</div><p class="learn-p"><b>Union-Find</b> (DSU) maintains a collection of disjoint sets with two operations:</p><ul class="learn-list"><li><b>Find(x):</b> Find the representative (root) of the set containing x</li><li><b>Union(x, y):</b> Merge the sets containing x and y</li></ul><p class="learn-p">With <b>path compression</b> and <b>union by rank</b>, both operations are nearly <span class="learn-complexity">O(1)</span> (amortized, technically O(alpha(n)) where alpha is the inverse Ackermann function).</p><div class="learn-code">class DSU {\n    vector&lt;int&gt; parent, rank_;\npublic:\n    DSU(int n) : parent(n), rank_(n, 0) {\n        iota(parent.begin(), parent.end(), 0);\n    }\n    int find(int x) {\n        if (parent[x] != x) parent[x] = find(parent[x]); // path compression\n        return parent[x];\n    }\n    bool unite(int x, int y) {\n        int px = find(x), py = find(y);\n        if (px == py) return false;\n        if (rank_[px] &lt; rank_[py]) swap(px, py);\n        parent[py] = px;\n        if (rank_[px] == rank_[py]) rank_[px]++;\n        return true;\n    }\n};</div></div><div class="learn-section"><div class="learn-h">Applications</div><ul class="learn-list"><li>Kruskal\'s MST algorithm</li><li>Detecting cycles in undirected graphs</li><li>Connected components</li><li>Number of Islands (union adjacent land cells)</li></ul><div class="learn-tip"><b>Tip:</b> Union-Find is the go-to for dynamic connectivity problems where you need to efficiently merge groups and check if two elements belong to the same group.</div></div>',
-          code: `#include <iostream>
-#include <vector>
-#include <numeric>
-using namespace std;
-
-class DSU {
-    vector<int> parent, rank_;
-    int components;
-public:
-    DSU(int n) : parent(n), rank_(n, 0), components(n) {
-        iota(parent.begin(), parent.end(), 0);
-    }
-    int find(int x) {
-        if (parent[x] != x) parent[x] = find(parent[x]);
-        return parent[x];
-    }
-    bool unite(int x, int y) {
-        int px = find(x), py = find(y);
-        if (px == py) return false;
-        if (rank_[px] < rank_[py]) swap(px, py);
-        parent[py] = px;
-        if (rank_[px] == rank_[py]) rank_[px]++;
-        components--;
-        return true;
-    }
-    bool connected(int x, int y) { return find(x) == find(y); }
-    int getComponents() { return components; }
-};
-
-// Number of connected components
-int countComponents(int n, vector<vector<int>>& edges) {
-    DSU dsu(n);
-    for (auto& e : edges) dsu.unite(e[0], e[1]);
-    return dsu.getComponents();
-}
-
-// Redundant Connection: find the edge that creates a cycle
-vector<int> findRedundantConnection(vector<vector<int>>& edges) {
-    int n = edges.size();
-    DSU dsu(n + 1);
-    for (auto& e : edges) {
-        if (!dsu.unite(e[0], e[1]))
-            return e;  // this edge creates a cycle
-    }
-    return {};
-}
-
-int main() {
-    int n = 5;
-    vector<vector<int>> edges = {{0,1},{1,2},{3,4}};
-    cout << "Components: " << countComponents(n, edges) << endl; // 2
-
-    DSU dsu(5);
-    dsu.unite(0, 1);
-    dsu.unite(2, 3);
-    cout << "0-1 connected: " << dsu.connected(0, 1) << endl; // 1
-    cout << "0-2 connected: " << dsu.connected(0, 2) << endl; // 0
-    dsu.unite(1, 3);
-    cout << "0-2 connected: " << dsu.connected(0, 2) << endl; // 1
-
-    vector<vector<int>> redEdges = {{1,2},{1,3},{2,3}};
-    auto redundant = findRedundantConnection(redEdges);
-    cout << "Redundant: " << redundant[0] << "-" << redundant[1] << endl;
-
-    return 0;
-}`,
-          problems: [
-            ['Number of Connected Components in an Undirected Graph', 'https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/', 'Medium'],
-            ['Redundant Connection', 'https://leetcode.com/problems/redundant-connection/', 'Medium'],
-            ['Accounts Merge', 'https://leetcode.com/problems/accounts-merge/', 'Medium'],
-            ['Most Stones Removed with Same Row or Column', 'https://leetcode.com/problems/most-stones-removed-with-same-row-or-column/', 'Medium']
-          ],
-          mcqs: [
-            {q: 'What are the two optimizations in Union-Find?', o: ['BFS and DFS', 'Path compression and union by rank', 'Sorting and hashing', 'Memoization and tabulation'], a: 1},
-            {q: 'What is the amortized time complexity of find() with both optimizations?', o: ['O(n)', 'O(log n)', 'O(1) (practically, O(alpha(n)))', 'O(sqrt(n))'], a: 2},
-            {q: 'How does path compression work?', o: ['Sorts the tree', 'Points all nodes on the find path directly to the root', 'Balances the tree', 'Removes duplicate edges'], a: 1}
-          ]
-        },
-        {
+        },        {
           t: 'Floyd-Warshall All-Pairs Shortest Path',
           learn: '<div class="learn-section"><div class="learn-h">All-Pairs Shortest Path</div><p class="learn-p"><b>Floyd-Warshall</b> finds shortest paths between <b>all pairs</b> of vertices in <span class="learn-complexity">O(V^3)</span> time and <span class="learn-complexity">O(V^2)</span> space. Unlike Dijkstra (single-source), it computes the entire distance matrix at once.</p></div><div class="learn-section"><div class="learn-h">Core Idea</div><p class="learn-p">For each intermediate vertex k (0 to V-1), check whether the path from i to j through k is shorter than the current best:</p><div class="learn-code">// The key recurrence:\ndist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])\n\n// k MUST be the outermost loop\nfor (int k = 0; k &lt; V; k++)\n    for (int i = 0; i &lt; V; i++)\n        for (int j = 0; j &lt; V; j++)\n            dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);</div><p class="learn-p"><b>Why k is outermost:</b> When we consider vertex k as an intermediate, we need all pairs\' shortest paths using vertices {0, ..., k-1} already computed. If k were an inner loop, this invariant breaks.</p></div><div class="learn-section"><div class="learn-h">Initialization</div><div class="learn-code">dist[i][j] = weight(i, j)  if edge exists\ndist[i][j] = INF            if no edge\ndist[i][i] = 0              diagonal</div></div><div class="learn-section"><div class="learn-h">Negative Cycle Detection</div><p class="learn-p">After running Floyd-Warshall, if <code>dist[i][i] &lt; 0</code> for any vertex i, the graph contains a negative-weight cycle reachable from i.</p></div><div class="learn-section"><div class="learn-h">Path Reconstruction</div><p class="learn-p">Maintain a <code>next[i][j]</code> matrix. Initialize <code>next[i][j] = j</code> for each edge. When updating <code>dist[i][j]</code> through k, set <code>next[i][j] = next[i][k]</code>. To reconstruct path i→j: follow next[i][j], next[next[i][j]][j], ... until reaching j.</p></div><div class="learn-section"><div class="learn-h">When to Use</div><table class="learn-table"><tr><th>Algorithm</th><th>Use Case</th><th>Negative Edges</th><th>Time</th></tr><tr><td>Dijkstra</td><td>Single source, sparse graph</td><td>No</td><td><span class="learn-complexity">O((V+E) log V)</span></td></tr><tr><td>Bellman-Ford</td><td>Single source, negative edges</td><td>Yes</td><td><span class="learn-complexity">O(VE)</span></td></tr><tr><td>Floyd-Warshall</td><td>All pairs, dense graph, V ≤ 500</td><td>Yes</td><td><span class="learn-complexity">O(V^3)</span></td></tr></table><div class="learn-tip"><b>Tip:</b> Floyd-Warshall is ideal when V is small (≤400-500) and you need all-pairs distances. For sparse graphs with larger V, run Dijkstra from each vertex instead.</div></div>',
           code: `#include <iostream>
@@ -5492,6 +5766,111 @@ int main() {
             {q: 'What is the time complexity of Floyd-Warshall?', o: ['O(V^2)', 'O(V^3)', 'O(V * E)', 'O(E log V)'], a: 1},
             {q: 'How does Floyd-Warshall detect negative cycles?', o: ['By checking if any edge relaxation occurs in Vth iteration', 'By checking if dist[i][i] < 0 for any vertex i', 'By running BFS after the algorithm', 'It cannot detect negative cycles'], a: 1},
             {q: 'Why must k be the outermost loop?', o: ['For cache efficiency', 'We need all pairs with 0..k-1 intermediates computed before considering k', 'To avoid negative cycles', 'Any loop order works'], a: 1}
+          ]
+        },
+        {
+          t: 'Strongly Connected Components (SCC)',
+          learn: '<div class="learn-section"><div class="learn-h">What are SCCs?</div><p class="learn-p">A <b>Strongly Connected Component</b> of a directed graph is a maximal set of vertices such that there is a path from every vertex to every other vertex in the set. Every directed graph can be decomposed into SCCs.</p><div class="learn-code">Original graph:         SCCs:\n0 → 1 → 2 → 0          {0, 1, 2} — one SCC\n2 → 3 → 4 → 3          {3, 4} — another SCC\n\nCondensation (DAG of SCCs):\n[0,1,2] → [3,4]</div></div><div class="learn-section"><div class="learn-h">Kosaraju\'s Algorithm</div><p class="learn-p"><b>Two-pass DFS</b> algorithm. O(V + E) time.</p><ol class="learn-list"><li>Run DFS on original graph, push nodes onto stack in <b>finish order</b></li><li><b>Transpose</b> the graph (reverse all edges)</li><li>Pop nodes from stack, run DFS on transposed graph — each DFS tree is an SCC</li></ol><div class="learn-code">// Step 1: Fill stack with finish order\nvoid dfs1(int u, vector&lt;vector&lt;int&gt;&gt;&amp; adj, vector&lt;bool&gt;&amp; visited, stack&lt;int&gt;&amp; stk) {\n    visited[u] = true;\n    for (int v : adj[u]) if (!visited[v]) dfs1(v, adj, visited, stk);\n    stk.push(u);  // push on finish\n}\n\n// Step 3: DFS on transpose to collect SCCs\nvoid dfs2(int u, vector&lt;vector&lt;int&gt;&gt;&amp; radj, vector&lt;bool&gt;&amp; visited, vector&lt;int&gt;&amp; comp) {\n    visited[u] = true;\n    comp.push_back(u);\n    for (int v : radj[u]) if (!visited[v]) dfs2(v, radj, visited, comp);\n}</div></div><div class="learn-section"><div class="learn-h">Tarjan\'s Algorithm</div><p class="learn-p"><b>Single-pass DFS</b> using low-link values. Also O(V + E) but uses less space (no transpose graph needed).</p><p class="learn-p">Each node u gets a <b>disc[u]</b> (discovery time) and <b>low[u]</b> (lowest disc reachable via DFS subtree + back edges). If <code>disc[u] == low[u]</code>, u is the root of an SCC — pop from stack until u is popped.</p><div class="learn-code">int timer = 0;\nvoid tarjan(int u, vector&lt;vector&lt;int&gt;&gt;&amp; adj, vector&lt;int&gt;&amp; disc,\n           vector&lt;int&gt;&amp; low, vector&lt;bool&gt;&amp; onStack, stack&lt;int&gt;&amp; stk) {\n    disc[u] = low[u] = timer++;\n    stk.push(u); onStack[u] = true;\n    for (int v : adj[u]) {\n        if (disc[v] == -1) {\n            tarjan(v, adj, disc, low, onStack, stk);\n            low[u] = min(low[u], low[v]);\n        } else if (onStack[v])\n            low[u] = min(low[u], disc[v]);\n    }\n    if (disc[u] == low[u]) { // root of SCC\n        while (true) {\n            int v = stk.top(); stk.pop(); onStack[v] = false;\n            // v belongs to this SCC\n            if (v == u) break;\n        }\n    }\n}</div></div><div class="learn-section"><div class="learn-h">Kosaraju vs Tarjan</div><table class="learn-table"><tr><th>Feature</th><th>Kosaraju</th><th>Tarjan</th></tr><tr><td>DFS passes</td><td>2 passes</td><td>1 pass</td></tr><tr><td>Extra space</td><td>Transpose graph O(V+E)</td><td>Stack + arrays O(V)</td></tr><tr><td>Ease of implementation</td><td>Simpler to understand</td><td>More compact but tricky</td></tr><tr><td>Output order</td><td>Reverse topological order of SCCs</td><td>Also reverse topological</td></tr></table><div class="learn-tip"><b>Applications:</b> 2-SAT problem, detecting deadlocks, analyzing reachability in directed graphs, condensation graph for DAG problems.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+#include <stack>
+using namespace std;
+
+// ===== Kosaraju's Algorithm =====
+class Kosaraju {
+    int n;
+    vector<vector<int>> adj, radj;
+    vector<bool> visited;
+    stack<int> order;
+
+    void dfs1(int u) {
+        visited[u] = true;
+        for (int v : adj[u]) if (!visited[v]) dfs1(v);
+        order.push(u);
+    }
+    void dfs2(int u, vector<int>& comp) {
+        visited[u] = true;
+        comp.push_back(u);
+        for (int v : radj[u]) if (!visited[v]) dfs2(v, comp);
+    }
+public:
+    Kosaraju(int n) : n(n), adj(n), radj(n), visited(n) {}
+    void addEdge(int u, int v) { adj[u].push_back(v); radj[v].push_back(u); }
+
+    vector<vector<int>> findSCCs() {
+        fill(visited.begin(), visited.end(), false);
+        for (int i = 0; i < n; i++) if (!visited[i]) dfs1(i);
+
+        fill(visited.begin(), visited.end(), false);
+        vector<vector<int>> sccs;
+        while (!order.empty()) {
+            int u = order.top(); order.pop();
+            if (!visited[u]) {
+                vector<int> comp;
+                dfs2(u, comp);
+                sccs.push_back(comp);
+            }
+        }
+        return sccs;
+    }
+};
+
+// ===== Tarjan's Algorithm =====
+class Tarjan {
+    int n, timer = 0;
+    vector<vector<int>> adj;
+    vector<int> disc, low;
+    vector<bool> onStack;
+    stack<int> stk;
+    vector<vector<int>> sccs;
+
+    void dfs(int u) {
+        disc[u] = low[u] = timer++;
+        stk.push(u); onStack[u] = true;
+        for (int v : adj[u]) {
+            if (disc[v] == -1) { dfs(v); low[u] = min(low[u], low[v]); }
+            else if (onStack[v]) low[u] = min(low[u], disc[v]);
+        }
+        if (disc[u] == low[u]) {
+            vector<int> comp;
+            while (true) {
+                int v = stk.top(); stk.pop(); onStack[v] = false;
+                comp.push_back(v);
+                if (v == u) break;
+            }
+            sccs.push_back(comp);
+        }
+    }
+public:
+    Tarjan(int n) : n(n), adj(n), disc(n, -1), low(n), onStack(n, false) {}
+    void addEdge(int u, int v) { adj[u].push_back(v); }
+    vector<vector<int>> findSCCs() {
+        for (int i = 0; i < n; i++) if (disc[i] == -1) dfs(i);
+        return sccs;
+    }
+};
+
+int main() {
+    Kosaraju k(5);
+    k.addEdge(0,1); k.addEdge(1,2); k.addEdge(2,0);
+    k.addEdge(2,3); k.addEdge(3,4); k.addEdge(4,3);
+    auto sccs = k.findSCCs();
+    cout << "SCCs (Kosaraju):" << endl;
+    for (auto& comp : sccs) {
+        for (int v : comp) cout << v << " ";
+        cout << endl;
+    }
+    return 0;
+}`,
+          problems: [
+            ['Kosaraju\'s Algorithm', 'https://www.geeksforgeeks.org/strongly-connected-components/', 'Hard'],
+            ['Critical Connections', 'https://leetcode.com/problems/critical-connections-in-a-network/', 'Hard'],
+            ['2-SAT Problem', 'https://www.geeksforgeeks.org/2-satisfiability-2-sat-problem/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'How many DFS passes does Kosaraju\'s algorithm need?', o: ['1', '2', '3', 'V'], a: 1},
+            {q: 'In Tarjan\'s algorithm, a node u is the root of an SCC when:', o: ['disc[u] == 0', 'low[u] == disc[u]', 'low[u] == 0', 'u has no outgoing edges'], a: 1},
+            {q: 'The condensation of a directed graph (collapsing each SCC to a node) always produces:', o: ['A tree', 'A DAG', 'A complete graph', 'A bipartite graph'], a: 1}
           ]
         }
       ]
@@ -5724,6 +6103,62 @@ int main() {
             {q: 'Why are Huffman codes called prefix-free?', o: ['All codes share a common prefix', 'No code is a prefix of another code', 'Codes start with a fixed prefix', 'The prefix bits are stripped'], a: 1},
             {q: 'What is the time complexity of building a Huffman tree for n characters?', o: ['O(n)', 'O(n log n)', 'O(n^2)', 'O(2^n)'], a: 1}
           ]
+        },
+        {
+          t: 'Fractional Knapsack & Job Sequencing',
+          learn: '<div class="learn-section"><div class="learn-h">Fractional Knapsack</div><p class="learn-p">Given items with weights and values, and a knapsack capacity W, maximize total value. Unlike 0/1 Knapsack (DP), here we can take <b>fractions</b> of items. <b>Greedy strategy:</b> sort by value/weight ratio (descending), take as much of the highest-ratio item as possible.</p><div class="learn-code">double fractionalKnapsack(vector&lt;pair&lt;int,int&gt;&gt;&amp; items, int W) {\n    // items[i] = {value, weight}\n    sort(items.begin(), items.end(), [](auto&amp; a, auto&amp; b) {\n        return (double)a.first / a.second &gt; (double)b.first / b.second;\n    });\n    double totalValue = 0;\n    for (auto&amp; [v, w] : items) {\n        if (W &gt;= w) {\n            totalValue += v; W -= w;  // take full item\n        } else {\n            totalValue += (double)v * W / w;  // take fraction\n            break;\n        }\n    }\n    return totalValue;\n}</div><p class="learn-p">Time: <span class="learn-complexity">O(n log n)</span> for sorting.</p><div class="learn-warn"><b>Key difference:</b> Fractional Knapsack → Greedy (O(n log n)). 0/1 Knapsack → DP (O(nW)). The greedy approach does NOT work for 0/1 because taking high-ratio items first may prevent taking optimal combinations.</div></div><div class="learn-section"><div class="learn-h">Job Sequencing with Deadlines</div><p class="learn-p">Given jobs with deadlines and profits, schedule jobs to maximize profit. Each job takes 1 unit of time. At most one job can be scheduled per time slot.</p><p class="learn-p"><b>Greedy strategy:</b> Sort by profit (descending). For each job, find the latest available slot before its deadline.</p><div class="learn-code">int jobSequencing(vector&lt;tuple&lt;int,int,int&gt;&gt;&amp; jobs) {\n    // jobs[i] = {id, deadline, profit}\n    sort(jobs.begin(), jobs.end(), [](auto&amp; a, auto&amp; b) {\n        return get&lt;2&gt;(a) &gt; get&lt;2&gt;(b);  // sort by profit desc\n    });\n    int maxDeadline = 0;\n    for (auto&amp; [id, d, p] : jobs) maxDeadline = max(maxDeadline, d);\n    \n    vector&lt;int&gt; slot(maxDeadline + 1, -1); // -1 = free\n    int totalProfit = 0, count = 0;\n    for (auto&amp; [id, d, p] : jobs) {\n        for (int t = d; t &gt;= 1; t--) { // find latest free slot\n            if (slot[t] == -1) {\n                slot[t] = id; totalProfit += p; count++;\n                break;\n            }\n        }\n    }\n    return totalProfit;\n}</div><p class="learn-p">Time: <span class="learn-complexity">O(n²)</span> naive, <span class="learn-complexity">O(n log n)</span> with Union-Find for slot finding.</p><div class="learn-tip"><b>Tip:</b> Job Sequencing can be optimized with DSU: initialize each deadline as its own parent. When slot t is used, union(t, t-1). findParent(t) gives the latest available slot ≤ t in O(α(n)).</div></div>',
+          code: `#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <tuple>
+using namespace std;
+
+double fractionalKnapsack(vector<pair<int,int>>& items, int W) {
+    sort(items.begin(), items.end(), [](auto& a, auto& b) {
+        return (double)a.first / a.second > (double)b.first / b.second;
+    });
+    double totalValue = 0;
+    for (auto& [v, w] : items) {
+        if (W >= w) { totalValue += v; W -= w; }
+        else { totalValue += (double)v * W / w; break; }
+    }
+    return totalValue;
+}
+
+int jobSequencing(vector<tuple<int,int,int>>& jobs) {
+    sort(jobs.begin(), jobs.end(), [](auto& a, auto& b) {
+        return get<2>(a) > get<2>(b);
+    });
+    int maxD = 0;
+    for (auto& [id, d, p] : jobs) maxD = max(maxD, d);
+    vector<int> slot(maxD + 1, -1);
+    int profit = 0;
+    for (auto& [id, d, p] : jobs) {
+        for (int t = d; t >= 1; t--) {
+            if (slot[t] == -1) { slot[t] = id; profit += p; break; }
+        }
+    }
+    return profit;
+}
+
+int main() {
+    vector<pair<int,int>> items = {{60,10},{100,20},{120,30}};
+    cout << "Fractional Knapsack: " << fractionalKnapsack(items, 50) << endl;
+
+    vector<tuple<int,int,int>> jobs = {{1,2,100},{2,1,19},{3,2,27},{4,1,25},{5,3,15}};
+    cout << "Job Sequencing Profit: " << jobSequencing(jobs) << endl;
+    return 0;
+}`,
+          problems: [
+            ['Fractional Knapsack', 'https://www.geeksforgeeks.org/fractional-knapsack-problem/', 'Easy'],
+            ['Job Sequencing Problem', 'https://www.geeksforgeeks.org/job-sequencing-problem/', 'Medium'],
+            ['Minimum Platforms', 'https://www.geeksforgeeks.org/minimum-number-platforms-required-railwaybus-station/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'Fractional Knapsack uses which sorting criteria?', o: ['Sort by weight ascending', 'Sort by value descending', 'Sort by value/weight ratio descending', 'Sort by deadline'], a: 2},
+            {q: 'Why doesn\'t the greedy approach work for 0/1 Knapsack?', o: ['Greedy is always suboptimal', 'Taking high-ratio items may prevent optimal combinations', 'Items cannot be compared', '0/1 Knapsack has no optimal solution'], a: 1},
+            {q: 'In Job Sequencing, what is the greedy criterion?', o: ['Shortest deadline first', 'Highest profit first', 'Longest job first', 'Random selection'], a: 1}
+          ]
         }
       ]
     },
@@ -5839,6 +6274,151 @@ int main() {
             {q: 'What is the time complexity of searching a word of length m in a Trie?', o: ['O(n) where n is number of words', 'O(m) where m is word length', 'O(m * 26)', 'O(log n)'], a: 1},
             {q: 'What is the main advantage of a Trie over a hash set?', o: ['Less memory usage', 'Faster insertion', 'Prefix-based operations (autocomplete, prefix search)', 'Better worst-case performance'], a: 2},
             {q: 'How many children can each Trie node have (for lowercase English)?', o: ['2', '52', '26', '128'], a: 2}
+          ]
+        }
+      ]
+    },
+    {
+      id: 'segtree', t: 'Segment & Fenwick Trees',
+      topics: [
+        {
+          t: 'Segment Tree (Range Query & Update)',
+          learn: '<div class="learn-section"><div class="learn-h">What is a Segment Tree?</div><p class="learn-p">A <b>Segment Tree</b> is a binary tree data structure for answering <b>range queries</b> (sum, min, max, GCD, etc.) and performing <b>point or range updates</b> efficiently on an array.</p><table class="learn-table"><tr><th>Operation</th><th>Array (naive)</th><th>Prefix Sum</th><th>Segment Tree</th></tr><tr><td>Range query</td><td>O(n)</td><td>O(1)</td><td><span class="learn-complexity">O(log n)</span></td></tr><tr><td>Point update</td><td>O(1)</td><td>O(n) rebuild</td><td><span class="learn-complexity">O(log n)</span></td></tr><tr><td>Range update</td><td>O(n)</td><td>O(n)</td><td><span class="learn-complexity">O(log n)</span> with lazy</td></tr></table><p class="learn-p">Use Segment Trees when you need <b>both queries and updates</b>. If only queries (no updates), prefix sums are simpler.</p></div><div class="learn-section"><div class="learn-h">Building a Segment Tree</div><p class="learn-p">The tree has 4n nodes (safe upper bound). Node i stores the answer for a range. Leaves store individual elements; internal nodes store merged results.</p><div class="learn-code">int tree[4 * MAXN];\n\nvoid build(int arr[], int node, int start, int end) {\n    if (start == end) {\n        tree[node] = arr[start];  // leaf\n    } else {\n        int mid = (start + end) / 2;\n        build(arr, 2*node, start, mid);      // left child\n        build(arr, 2*node+1, mid+1, end);    // right child\n        tree[node] = tree[2*node] + tree[2*node+1]; // merge\n    }\n}</div></div><div class="learn-section"><div class="learn-h">Range Query &amp; Point Update</div><div class="learn-code">// Range sum query [l, r]\nint query(int node, int start, int end, int l, int r) {\n    if (r &lt; start || end &lt; l) return 0;       // out of range\n    if (l &lt;= start &amp;&amp; end &lt;= r) return tree[node]; // fully inside\n    int mid = (start + end) / 2;\n    return query(2*node, start, mid, l, r) +\n           query(2*node+1, mid+1, end, l, r);\n}\n\n// Point update: arr[idx] = val\nvoid update(int node, int start, int end, int idx, int val) {\n    if (start == end) {\n        tree[node] = val;\n    } else {\n        int mid = (start + end) / 2;\n        if (idx &lt;= mid) update(2*node, start, mid, idx, val);\n        else update(2*node+1, mid+1, end, idx, val);\n        tree[node] = tree[2*node] + tree[2*node+1];\n    }\n}</div></div><div class="learn-section"><div class="learn-h">Lazy Propagation (Range Updates)</div><p class="learn-p"><b>Lazy propagation</b> defers updates to child nodes until they are needed. This allows <span class="learn-complexity">O(log n)</span> range updates instead of O(n).</p><div class="learn-code">int lazy[4 * MAXN] = {0};\n\nvoid pushDown(int node) {\n    if (lazy[node] != 0) {\n        // Propagate to children\n        tree[2*node] += lazy[node];   // adjust for range size\n        tree[2*node+1] += lazy[node];\n        lazy[2*node] += lazy[node];\n        lazy[2*node+1] += lazy[node];\n        lazy[node] = 0;\n    }\n}\n\n// Range update: add val to all elements in [l, r]\nvoid rangeUpdate(int node, int start, int end, int l, int r, int val) {\n    if (r &lt; start || end &lt; l) return;\n    if (l &lt;= start &amp;&amp; end &lt;= r) {\n        tree[node] += val * (end - start + 1);\n        lazy[node] += val;\n        return;\n    }\n    pushDown(node);\n    int mid = (start + end) / 2;\n    rangeUpdate(2*node, start, mid, l, r, val);\n    rangeUpdate(2*node+1, mid+1, end, l, r, val);\n    tree[node] = tree[2*node] + tree[2*node+1];\n}</div><div class="learn-tip"><b>Tip:</b> Lazy propagation is needed for problems like "add X to all elements in range [l, r]" or "set all elements in [l, r] to X". Without it, range updates are O(n log n).</div></div>',
+          code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+class SegTree {
+    vector<int> tree;
+    int n;
+
+    void build(vector<int>& arr, int node, int start, int end) {
+        if (start == end) { tree[node] = arr[start]; return; }
+        int mid = (start + end) / 2;
+        build(arr, 2*node, start, mid);
+        build(arr, 2*node+1, mid+1, end);
+        tree[node] = tree[2*node] + tree[2*node+1];
+    }
+
+    int query(int node, int start, int end, int l, int r) {
+        if (r < start || end < l) return 0;
+        if (l <= start && end <= r) return tree[node];
+        int mid = (start + end) / 2;
+        return query(2*node, start, mid, l, r) + query(2*node+1, mid+1, end, l, r);
+    }
+
+    void update(int node, int start, int end, int idx, int val) {
+        if (start == end) { tree[node] = val; return; }
+        int mid = (start + end) / 2;
+        if (idx <= mid) update(2*node, start, mid, idx, val);
+        else update(2*node+1, mid+1, end, idx, val);
+        tree[node] = tree[2*node] + tree[2*node+1];
+    }
+
+public:
+    SegTree(vector<int>& arr) : n(arr.size()), tree(4 * arr.size()) {
+        build(arr, 1, 0, n - 1);
+    }
+    int query(int l, int r) { return query(1, 0, n-1, l, r); }
+    void update(int idx, int val) { update(1, 0, n-1, idx, val); }
+};
+
+int main() {
+    vector<int> arr = {1, 3, 5, 7, 9, 11};
+    SegTree st(arr);
+
+    cout << "Sum [1,3]: " << st.query(1, 3) << endl; // 3+5+7 = 15
+    st.update(2, 10); // arr[2] = 10
+    cout << "Sum [1,3] after update: " << st.query(1, 3) << endl; // 3+10+7 = 20
+    cout << "Sum [0,5]: " << st.query(0, 5) << endl;
+
+    return 0;
+}`,
+          problems: [
+            ['Range Sum Query - Mutable', 'https://leetcode.com/problems/range-sum-query-mutable/', 'Medium'],
+            ['Count of Smaller Numbers After Self', 'https://leetcode.com/problems/count-of-smaller-numbers-after-self/', 'Hard'],
+            ['Range Module', 'https://leetcode.com/problems/range-module/', 'Hard'],
+            ['Falling Squares', 'https://leetcode.com/problems/falling-squares/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'What is the time complexity of a range query in a Segment Tree?', o: ['O(1)', 'O(n)', 'O(log n)', 'O(n log n)'], a: 2},
+            {q: 'When is lazy propagation needed?', o: ['For point queries', 'For range updates (updating a range of elements)', 'For building the tree', 'For finding the minimum'], a: 1},
+            {q: 'How much memory does a Segment Tree need for an array of size n?', o: ['O(n)', 'O(n log n)', 'O(4n)', 'O(n^2)'], a: 2}
+          ]
+        },
+        {
+          t: 'Fenwick Tree (Binary Indexed Tree)',
+          learn: '<div class="learn-section"><div class="learn-h">Binary Indexed Tree (BIT / Fenwick Tree)</div><p class="learn-p">A <b>Fenwick Tree</b> (BIT) supports <b>prefix sum queries</b> and <b>point updates</b> in <span class="learn-complexity">O(log n)</span>, using only <span class="learn-complexity">O(n)</span> space. It\'s simpler and faster in practice than a Segment Tree, but less flexible (no lazy propagation, harder to adapt for min/max).</p><table class="learn-table"><tr><th></th><th>Fenwick Tree</th><th>Segment Tree</th></tr><tr><td>Space</td><td>O(n)</td><td>O(4n)</td></tr><tr><td>Implementation</td><td>~15 lines</td><td>~40 lines</td></tr><tr><td>Range query</td><td>Sum only (via prefix difference)</td><td>Any associative operation</td></tr><tr><td>Range update</td><td>With tricks</td><td>With lazy propagation</td></tr><tr><td>Constant factor</td><td>Faster</td><td>Slower</td></tr></table></div><div class="learn-section"><div class="learn-h">Core Operations</div><p class="learn-p">The key insight: index <code>i</code> in the BIT stores the sum of a range whose length equals the <b>lowest set bit</b> of <code>i</code>. This is computed as <code>i &amp; (-i)</code>.</p><div class="learn-code">class BIT {\n    vector&lt;int&gt; tree;\n    int n;\npublic:\n    BIT(int n) : n(n), tree(n + 1, 0) {}\n\n    // Add val to index i (1-indexed)\n    void update(int i, int val) {\n        for (; i &lt;= n; i += i &amp; (-i))\n            tree[i] += val;\n    }\n\n    // Prefix sum [1, i]\n    int query(int i) {\n        int sum = 0;\n        for (; i &gt; 0; i -= i &amp; (-i))\n            sum += tree[i];\n        return sum;\n    }\n\n    // Range sum [l, r] (1-indexed)\n    int query(int l, int r) {\n        return query(r) - query(l - 1);\n    }\n};</div></div><div class="learn-section"><div class="learn-h">How i &amp; (-i) Works</div><p class="learn-p"><code>i &amp; (-i)</code> isolates the <b>lowest set bit</b> of i. This determines how many elements each BIT node is responsible for:</p><div class="learn-code">i = 12 = 1100₂  →  i &amp; (-i) = 0100₂ = 4  → BIT[12] covers 4 elements\ni = 6  = 0110₂  →  i &amp; (-i) = 0010₂ = 2  → BIT[6] covers 2 elements\ni = 7  = 0111₂  →  i &amp; (-i) = 0001₂ = 1  → BIT[7] covers 1 element\n\nUpdate traversal (add lowest bit): 3 → 4 → 8 → 16\nQuery traversal (remove lowest bit): 7 → 6 → 4 → 0</div></div><div class="learn-section"><div class="learn-h">When to Use BIT vs Segment Tree</div><ul class="learn-list"><li><b>BIT:</b> Range sum queries + point updates. Simpler code, faster constant. Use as default for sum problems.</li><li><b>Segment Tree:</b> Range min/max, range updates (lazy), or complex merge operations. More versatile but heavier.</li></ul><div class="learn-tip"><b>Tip:</b> In competitive programming, BIT is preferred for sum queries due to its simplicity. For interviews, know both — interviewers may ask you to compare them.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+class BIT {
+    vector<int> tree;
+    int n;
+public:
+    BIT(int n) : n(n), tree(n + 1, 0) {}
+
+    void update(int i, int val) {
+        for (; i <= n; i += i & (-i))
+            tree[i] += val;
+    }
+
+    int query(int i) {
+        int sum = 0;
+        for (; i > 0; i -= i & (-i))
+            sum += tree[i];
+        return sum;
+    }
+
+    int query(int l, int r) {
+        return query(r) - query(l - 1);
+    }
+};
+
+// Count inversions using BIT
+long long countInversions(vector<int>& arr) {
+    int n = arr.size();
+    BIT bit(n);
+    long long inv = 0;
+    // Coordinate compress
+    vector<int> sorted_arr = arr;
+    sort(sorted_arr.begin(), sorted_arr.end());
+    sorted_arr.erase(unique(sorted_arr.begin(), sorted_arr.end()), sorted_arr.end());
+    for (int i = n - 1; i >= 0; i--) {
+        int rank = lower_bound(sorted_arr.begin(), sorted_arr.end(), arr[i]) - sorted_arr.begin();
+        inv += bit.query(rank); // count elements smaller than arr[i] to the right
+        bit.update(rank + 1, 1);
+    }
+    return inv;
+}
+
+int main() {
+    // Basic BIT usage
+    BIT bit(6);
+    vector<int> arr = {1, 3, 5, 7, 9, 11};
+    for (int i = 0; i < 6; i++) bit.update(i + 1, arr[i]);
+
+    cout << "Sum [2,4]: " << bit.query(2, 4) << endl; // 3+5+7 = 15
+    bit.update(3, 5); // add 5 to index 3
+    cout << "Sum [2,4] after: " << bit.query(2, 4) << endl; // 3+10+7 = 20
+
+    // Count inversions
+    vector<int> inv_arr = {5, 3, 2, 4, 1};
+    cout << "Inversions: " << countInversions(inv_arr) << endl; // 8
+
+    return 0;
+}`,
+          problems: [
+            ['Range Sum Query - Mutable', 'https://leetcode.com/problems/range-sum-query-mutable/', 'Medium'],
+            ['Count of Smaller Numbers After Self', 'https://leetcode.com/problems/count-of-smaller-numbers-after-self/', 'Hard'],
+            ['Reverse Pairs', 'https://leetcode.com/problems/reverse-pairs/', 'Hard'],
+            ['Create Sorted Array through Instructions', 'https://leetcode.com/problems/create-sorted-array-through-instructions/', 'Hard']
+          ],
+          mcqs: [
+            {q: 'What does i & (-i) compute?', o: ['The highest set bit', 'The lowest set bit', 'The number of set bits', 'The complement of i'], a: 1},
+            {q: 'Fenwick Tree is best suited for:', o: ['Range minimum queries', 'Prefix sum queries with point updates', 'Finding median in a stream', 'Graph traversal'], a: 1},
+            {q: 'What is the space complexity of a Fenwick Tree?', o: ['O(4n)', 'O(n log n)', 'O(n)', 'O(n^2)'], a: 2}
           ]
         }
       ]
@@ -6003,6 +6583,190 @@ int main() {
             {q: 'What does the expression x & (-x) isolate?', o: ['The highest set bit', 'The lowest set bit', 'All even-positioned bits', 'The sign bit'], a: 1},
             {q: 'How many subsets does a set of n elements have?', o: ['n', 'n^2', '2^n', 'n!'], a: 2},
             {q: 'To iterate all subsets of mask m, the loop is:', o: ['for(s=m; s>=0; s--)', 'for(s=m; s>0; s=(s-1)&m)', 'for(s=0; s<=m; s++)', 'for(s=1; s<m; s<<=1)'], a: 1}
+          ]
+        }
+      ]
+    },
+    {
+      id: 'numtheory', t: 'Number Theory',
+      topics: [
+        {
+          t: 'Modular Arithmetic',
+          learn: '<div class="learn-section"><div class="learn-h">Why Modular Arithmetic?</div><p class="learn-p">In competitive programming, answers often overflow even <code>long long</code>. We compute results <b>modulo a prime</b> (usually <code>10^9 + 7 = 1000000007</code>). Modular arithmetic preserves addition and multiplication: <code>(a+b) % m = ((a%m) + (b%m)) % m</code> and <code>(a*b) % m = ((a%m) * (b%m)) % m</code>.</p><div class="learn-warn"><b>Warning:</b> Subtraction and division need special handling. <code>(a-b) % m</code> may be negative — use <code>((a-b) % m + m) % m</code>. Division requires <b>modular inverse</b>.</div></div><div class="learn-section"><div class="learn-h">Modular Exponentiation (Binary Exponentiation)</div><p class="learn-p">Compute <code>a^b mod m</code> in <span class="learn-complexity">O(log b)</span> by squaring:</p><div class="learn-code">long long power(long long a, long long b, long long m) {\n    long long res = 1;\n    a %= m;\n    while (b &gt; 0) {\n        if (b &amp; 1) res = res * a % m;\n        a = a * a % m;\n        b &gt;&gt;= 1;\n    }\n    return res;\n}</div></div><div class="learn-section"><div class="learn-h">Modular Inverse</div><p class="learn-p"><code>a^(-1) mod m</code> exists only when <code>gcd(a, m) = 1</code>. Two methods:</p><ul class="learn-list"><li><b>Fermat\'s little theorem</b> (when m is prime): <code>a^(-1) ≡ a^(m-2) mod m</code></li><li><b>Extended Euclidean</b>: works for any coprime a, m</li></ul><div class="learn-code">// Modular inverse using Fermat\'s little theorem\nlong long modInverse(long long a, long long m) {\n    return power(a, m - 2, m); // m must be prime\n}\n\n// Division under mod: (a / b) % m = (a * b^(-1)) % m\nlong long modDiv(long long a, long long b, long long m) {\n    return a % m * modInverse(b, m) % m;\n}</div></div>',
+          code: `#include <iostream>
+using namespace std;
+const long long MOD = 1e9 + 7;
+
+long long power(long long a, long long b, long long m = MOD) {
+    long long res = 1; a %= m;
+    while (b > 0) {
+        if (b & 1) res = res * a % m;
+        a = a * a % m; b >>= 1;
+    }
+    return res;
+}
+
+long long modInverse(long long a, long long m = MOD) {
+    return power(a, m - 2, m);
+}
+
+// Compute nCr mod p
+long long fact[200001], inv_fact[200001];
+void precompute(int n) {
+    fact[0] = 1;
+    for (int i = 1; i <= n; i++) fact[i] = fact[i-1] * i % MOD;
+    inv_fact[n] = modInverse(fact[n]);
+    for (int i = n-1; i >= 0; i--) inv_fact[i] = inv_fact[i+1] * (i+1) % MOD;
+}
+long long nCr(int n, int r) {
+    if (r < 0 || r > n) return 0;
+    return fact[n] % MOD * inv_fact[r] % MOD * inv_fact[n-r] % MOD;
+}
+
+int main() {
+    cout << "2^10 mod 1e9+7 = " << power(2, 10) << endl;
+    cout << "Inverse of 3 = " << modInverse(3) << endl;
+    precompute(200000);
+    cout << "C(10,3) = " << nCr(10, 3) << endl; // 120
+    return 0;
+}`,
+          problems: [
+            ['Modular Exponentiation', 'https://www.geeksforgeeks.org/modular-exponentiation-power-in-modular-arithmetic/', 'Easy'],
+            ['Modular Inverse', 'https://www.geeksforgeeks.org/multiplicative-inverse-under-modulo-m/', 'Medium'],
+            ['nCr mod p', 'https://www.geeksforgeeks.org/compute-ncr-p-set-3-using-fermat-little-theorem/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'To compute a^(-1) mod p when p is prime, we use:', o: ['a^(p-1) mod p', 'a^(p-2) mod p', 'a^(p+1) mod p', 'p/a'], a: 1},
+            {q: 'Binary exponentiation computes a^b mod m in:', o: ['O(b)', 'O(log b)', 'O(sqrt(b))', 'O(1)'], a: 1}
+          ]
+        },
+        {
+          t: 'Sieve of Eratosthenes & Primes',
+          learn: '<div class="learn-section"><div class="learn-h">Primality Testing</div><p class="learn-p">A number n is prime if it has no divisors other than 1 and n. Trial division up to <code>√n</code> is <span class="learn-complexity">O(√n)</span>.</p><div class="learn-code">bool isPrime(int n) {\n    if (n &lt; 2) return false;\n    if (n &lt; 4) return true;\n    if (n % 2 == 0 || n % 3 == 0) return false;\n    for (int i = 5; i * i &lt;= n; i += 6)\n        if (n % i == 0 || n % (i + 2) == 0) return false;\n    return true;\n}</div></div><div class="learn-section"><div class="learn-h">Sieve of Eratosthenes</div><p class="learn-p">Find all primes up to N in <span class="learn-complexity">O(N log log N)</span>. Mark multiples of each prime as composite.</p><div class="learn-code">vector&lt;bool&gt; sieve(int n) {\n    vector&lt;bool&gt; is_prime(n + 1, true);\n    is_prime[0] = is_prime[1] = false;\n    for (int i = 2; i * i &lt;= n; i++) {\n        if (is_prime[i]) {\n            for (int j = i * i; j &lt;= n; j += i)\n                is_prime[j] = false;\n        }\n    }\n    return is_prime;\n}</div></div><div class="learn-section"><div class="learn-h">Prime Factorization</div><p class="learn-p"><b>Single number:</b> Trial division O(√n). <b>Multiple numbers:</b> Precompute smallest prime factor (SPF) using modified sieve, then factorize in O(log n).</p><div class="learn-code">// SPF sieve for fast factorization\nvector&lt;int&gt; spf(n + 1);\niota(spf.begin(), spf.end(), 0); // spf[i] = i initially\nfor (int i = 2; i * i &lt;= n; i++) {\n    if (spf[i] == i) { // i is prime\n        for (int j = i * i; j &lt;= n; j += i)\n            if (spf[j] == j) spf[j] = i;\n    }\n}\n\n// Factorize x in O(log x)\nmap&lt;int,int&gt; factorize(int x) {\n    map&lt;int,int&gt; factors;\n    while (x &gt; 1) {\n        factors[spf[x]]++;\n        x /= spf[x];\n    }\n    return factors;\n}</div><div class="learn-tip"><b>Tip:</b> The number of divisors of n = p1^a1 × p2^a2 × ... is (a1+1)(a2+1).... The sum of divisors formula involves geometric series of each prime power.</div></div>',
+          code: `#include <iostream>
+#include <vector>
+#include <numeric>
+using namespace std;
+
+vector<bool> sieve(int n) {
+    vector<bool> is_prime(n + 1, true);
+    is_prime[0] = is_prime[1] = false;
+    for (int i = 2; i * i <= n; i++)
+        if (is_prime[i])
+            for (int j = i * i; j <= n; j += i)
+                is_prime[j] = false;
+    return is_prime;
+}
+
+// SPF sieve for O(log n) factorization
+vector<int> spf_sieve(int n) {
+    vector<int> spf(n + 1);
+    iota(spf.begin(), spf.end(), 0);
+    for (int i = 2; i * i <= n; i++)
+        if (spf[i] == i)
+            for (int j = i * i; j <= n; j += i)
+                if (spf[j] == j) spf[j] = i;
+    return spf;
+}
+
+// Euler's Totient: count numbers 1..n coprime with n
+int phi(int n) {
+    int result = n;
+    for (int p = 2; p * p <= n; p++) {
+        if (n % p == 0) {
+            while (n % p == 0) n /= p;
+            result -= result / p;
+        }
+    }
+    if (n > 1) result -= result / n;
+    return result;
+}
+
+int main() {
+    auto primes = sieve(100);
+    cout << "Primes up to 30: ";
+    for (int i = 2; i <= 30; i++) if (primes[i]) cout << i << " ";
+    cout << endl;
+
+    auto spf = spf_sieve(100);
+    int x = 60;
+    cout << "Factorization of " << x << ": ";
+    while (x > 1) { cout << spf[x] << " "; x /= spf[x]; }
+    cout << endl;
+
+    cout << "phi(12) = " << phi(12) << endl; // 4
+    return 0;
+}`,
+          problems: [
+            ['Sieve of Eratosthenes', 'https://www.geeksforgeeks.org/sieve-of-eratosthenes/', 'Easy'],
+            ['Count Primes (LeetCode)', 'https://leetcode.com/problems/count-primes/', 'Medium'],
+            ['Prime Factorization using Sieve', 'https://www.geeksforgeeks.org/prime-factorization-using-sieve-olog-n-multiple-queries/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'Time complexity of Sieve of Eratosthenes for finding primes up to N:', o: ['O(N)', 'O(N log N)', 'O(N log log N)', 'O(N√N)'], a: 2},
+            {q: 'In the optimized sieve, we start marking multiples of prime p from:', o: ['2p', 'p+1', 'p²', 'p'], a: 2},
+            {q: 'Euler\'s Totient φ(12) equals:', o: ['6', '4', '3', '5'], a: 1}
+          ]
+        },
+        {
+          t: 'GCD, LCM & Combinatorics',
+          learn: '<div class="learn-section"><div class="learn-h">GCD — Euclidean Algorithm</div><p class="learn-p"><code>gcd(a, b) = gcd(b, a % b)</code> with base case <code>gcd(a, 0) = a</code>. Time: <span class="learn-complexity">O(log(min(a,b)))</span>. C++ has <code>__gcd(a, b)</code> or <code>gcd(a, b)</code> in &lt;numeric&gt; (C++17).</p><div class="learn-code">int gcd(int a, int b) { return b ? gcd(b, a % b) : a; }\nint lcm(int a, int b) { return a / gcd(a, b) * b; } // avoid overflow</div></div><div class="learn-section"><div class="learn-h">Extended Euclidean Algorithm</div><p class="learn-p">Finds integers x, y such that <code>ax + by = gcd(a, b)</code>. Used for modular inverse when m is not prime.</p><div class="learn-code">int extgcd(int a, int b, int&amp; x, int&amp; y) {\n    if (b == 0) { x = 1; y = 0; return a; }\n    int x1, y1;\n    int g = extgcd(b, a % b, x1, y1);\n    x = y1;\n    y = x1 - (a / b) * y1;\n    return g;\n}</div></div><div class="learn-section"><div class="learn-h">Combinatorics Essentials</div><table class="learn-table"><tr><th>Formula</th><th>Expression</th><th>Use Case</th></tr><tr><td>Permutations</td><td>nPr = n!/(n-r)!</td><td>Ordered arrangements</td></tr><tr><td>Combinations</td><td>nCr = n!/(r!(n-r)!)</td><td>Unordered selections</td></tr><tr><td>Stars & Bars</td><td>C(n+k-1, k-1)</td><td>Distribute n identical items into k bins</td></tr><tr><td>Catalan number</td><td>C(2n,n)/(n+1)</td><td>Valid parentheses, BSTs, paths</td></tr><tr><td>Derangements</td><td>D(n) = (n-1)(D(n-1)+D(n-2))</td><td>Permutations with no fixed point</td></tr></table><div class="learn-code">// Catalan numbers: 1, 1, 2, 5, 14, 42, 132, ...\n// C(0)=1, C(n) = C(2n,n)/(n+1)\n// Or: C(n) = sum(C(i)*C(n-1-i)) for i=0..n-1\n\n// Applications of nth Catalan number:\n// - Number of valid parentheses with n pairs\n// - Number of distinct BSTs with n nodes\n// - Number of monotonic lattice paths in n×n grid\n// - Number of ways to triangulate a polygon with n+2 sides</div><div class="learn-tip"><b>DE Shaw favorite:</b> Combinatorics problems appear frequently. Know nCr mod p (using factorial + inverse), Catalan numbers, and inclusion-exclusion principle.</div></div>',
+          code: `#include <iostream>
+#include <numeric>
+using namespace std;
+const long long MOD = 1e9 + 7;
+
+long long power(long long a, long long b, long long m = MOD) {
+    long long r = 1; a %= m;
+    while (b > 0) { if (b & 1) r = r * a % m; a = a * a % m; b >>= 1; }
+    return r;
+}
+
+// nCr mod p using precomputed factorials
+long long F[200001], IF[200001];
+void init(int n) {
+    F[0] = 1;
+    for (int i = 1; i <= n; i++) F[i] = F[i-1] * i % MOD;
+    IF[n] = power(F[n], MOD - 2);
+    for (int i = n - 1; i >= 0; i--) IF[i] = IF[i+1] * (i+1) % MOD;
+}
+long long C(int n, int r) {
+    if (r < 0 || r > n) return 0;
+    return F[n] % MOD * IF[r] % MOD * IF[n-r] % MOD;
+}
+
+// Catalan number
+long long catalan(int n) { return C(2*n, n) % MOD * power(n + 1, MOD - 2) % MOD; }
+
+// Stars and Bars: ways to distribute n identical items into k bins
+long long starsAndBars(int n, int k) { return C(n + k - 1, k - 1); }
+
+// Extended GCD
+int extgcd(int a, int b, int& x, int& y) {
+    if (b == 0) { x = 1; y = 0; return a; }
+    int x1, y1;
+    int g = extgcd(b, a % b, x1, y1);
+    x = y1; y = x1 - (a / b) * y1;
+    return g;
+}
+
+int main() {
+    init(200000);
+    cout << "C(10,3) = " << C(10, 3) << endl;         // 120
+    cout << "Catalan(5) = " << catalan(5) << endl;     // 42
+    cout << "Stars&Bars(5,3) = " << starsAndBars(5, 3) << endl; // 21
+    cout << "GCD(48,18) = " << __gcd(48, 18) << endl;  // 6
+    return 0;
+}`,
+          problems: [
+            ['Unique Binary Search Trees', 'https://leetcode.com/problems/unique-binary-search-trees/', 'Medium'],
+            ['Unique Paths', 'https://leetcode.com/problems/unique-paths/', 'Medium'],
+            ['Nth Catalan Number', 'https://www.geeksforgeeks.org/program-nth-catalan-number/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'The time complexity of the Euclidean GCD algorithm is:', o: ['O(n)', 'O(log(min(a,b)))', 'O(sqrt(n))', 'O(n^2)'], a: 1},
+            {q: 'The 5th Catalan number C(5) equals:', o: ['14', '42', '132', '5'], a: 1},
+            {q: 'Stars and Bars gives the number of ways to distribute n identical objects into k distinct bins as:', o: ['C(n, k)', 'C(n+k-1, k-1)', 'C(n+k, k)', 'k^n'], a: 1}
           ]
         }
       ]

@@ -1119,6 +1119,154 @@ int main() {
           ],
         },
         {
+          t: 'State, Proxy & Chain of Responsibility',
+          learn: '<div class="learn-section"><div class="learn-h">Three Essential GoF Patterns</div><p class="learn-p"><b>State</b> and <b>Chain of Responsibility</b> are behavioural; <b>Proxy</b> is structural. Together they cover state machines, access control, and request pipelines.</p></div><div class="learn-section"><div class="learn-h">State Pattern</div><p class="learn-p">Allows an object to <b>alter its behaviour when its internal state changes</b>. Eliminates large if-else/switch blocks by encapsulating each state in its own class.</p><table class="learn-table"><tr><th>Participant</th><th>Role</th></tr><tr><td>Context</td><td>Object whose behaviour varies (e.g., VendingMachine). Holds a pointer to current State.</td></tr><tr><td>State (interface)</td><td>Declares methods all concrete states must implement.</td></tr><tr><td>Concrete States</td><td>IdleState, HasCoinState, DispensingState, OutOfStockState — each handles transitions.</td></tr></table><div class="learn-code">Vending Machine State Transitions:\n\n  Idle ──insertCoin──► HasCoin ──selectProduct──► Dispensing\n   ▲                                                │\n   └────────── (stock > 0) ◄── dispense() ──────────┘\n                                    │\n                              (stock == 0)\n                                    │\n                                    ▼\n                              OutOfStock</div><div class="learn-tip"><b>Tip:</b> If methods are full of <code>if (state == X) ... else if (state == Y)</code>, refactor to the State pattern. OCP satisfied — adding MaintenanceMode only requires a new class.</div></div><div class="learn-section"><div class="learn-h">Proxy Pattern</div><p class="learn-p">Provides a <b>surrogate or placeholder</b> to control access. Has the same interface as the real object.</p><ul class="learn-list"><li><b>Caching Proxy</b> — caches expensive operation results</li><li><b>Protection Proxy</b> — checks permissions before forwarding</li><li><b>Remote Proxy</b> — represents object in different address space (RPC stub)</li><li><b>Virtual Proxy</b> — lazy initialization of expensive objects</li><li><b>Logging Proxy</b> — logs all calls before forwarding</li></ul><div class="learn-warn"><b>Proxy vs Decorator:</b> Structurally identical (both wrap same interface). Difference is intent: Proxy controls <b>access</b>; Decorator adds <b>new behaviour</b>.</div></div><div class="learn-section"><div class="learn-h">Chain of Responsibility (CoR)</div><p class="learn-p">Passes a request along a <b>chain of handlers</b>. Each handler either processes the request or passes it to the next.</p><ul class="learn-list"><li><b>Middleware in Express/Koa</b> — each calls <code>next()</code></li><li><b>Logging levels</b> — DEBUG → INFO → ERROR handlers</li><li><b>DOM event bubbling</b> — propagates until handled</li><li><b>Approval workflows</b> — Manager → Director → VP by amount</li></ul></div><div class="learn-section"><div class="learn-h">When to Use Each</div><table class="learn-table"><tr><th>Pattern</th><th>Use When</th><th>Key Benefit</th><th>Example</th></tr><tr><td>State</td><td>Behaviour depends on internal state</td><td>Eliminates conditionals</td><td>Vending machine, TCP connection</td></tr><tr><td>Proxy</td><td>Control access / caching / lazy init</td><td>Transparent access control</td><td>Caching proxy, image placeholder</td></tr><tr><td>CoR</td><td>Multiple handlers, unknown a priori</td><td>Dynamic request processing</td><td>Middleware, approval chain</td></tr></table></div>',
+          code: `// ===== State, Proxy & Chain of Responsibility =====
+#include <iostream>
+#include <string>
+#include <memory>
+#include <unordered_map>
+using namespace std;
+
+// ========== STATE PATTERN — Vending Machine ==========
+class VendingMachine;
+class IState {
+public:
+    virtual void insertCoin(VendingMachine& vm) = 0;
+    virtual void selectProduct(VendingMachine& vm) = 0;
+    virtual void dispense(VendingMachine& vm) = 0;
+    virtual string name() const = 0;
+    virtual ~IState() = default;
+};
+class IdleState : public IState {
+public:
+    void insertCoin(VendingMachine& vm) override;
+    void selectProduct(VendingMachine&) override { cout << "[Idle] Insert coin first!" << endl; }
+    void dispense(VendingMachine&) override {}
+    string name() const override { return "Idle"; }
+};
+class HasCoinState : public IState {
+public:
+    void insertCoin(VendingMachine&) override { cout << "[HasCoin] Returning extra coin." << endl; }
+    void selectProduct(VendingMachine& vm) override;
+    void dispense(VendingMachine&) override {}
+    string name() const override { return "HasCoin"; }
+};
+class DispensingState : public IState {
+public:
+    void insertCoin(VendingMachine&) override { cout << "[Dispensing] Wait..." << endl; }
+    void selectProduct(VendingMachine&) override { cout << "[Dispensing] Wait..." << endl; }
+    void dispense(VendingMachine& vm) override;
+    string name() const override { return "Dispensing"; }
+};
+class OutOfStockState : public IState {
+public:
+    void insertCoin(VendingMachine&) override { cout << "[OutOfStock] Refunding." << endl; }
+    void selectProduct(VendingMachine&) override { cout << "[OutOfStock] Empty." << endl; }
+    void dispense(VendingMachine&) override {}
+    string name() const override { return "OutOfStock"; }
+};
+class VendingMachine {
+    unique_ptr<IState> state; int stock;
+public:
+    VendingMachine(int s) : stock(s) { state = make_unique<IdleState>(); }
+    void setState(unique_ptr<IState> s) { state = move(s); }
+    int getStock() const { return stock; }
+    void decrementStock() { --stock; }
+    void insertCoin()    { state->insertCoin(*this); }
+    void selectProduct() { state->selectProduct(*this); }
+    void dispense()      { state->dispense(*this); }
+};
+void IdleState::insertCoin(VendingMachine& vm) {
+    cout << "[Idle] Coin inserted." << endl;
+    vm.setState(make_unique<HasCoinState>());
+}
+void HasCoinState::selectProduct(VendingMachine& vm) {
+    if (vm.getStock() > 0) { vm.setState(make_unique<DispensingState>()); vm.dispense(); }
+    else { vm.setState(make_unique<OutOfStockState>()); }
+}
+void DispensingState::dispense(VendingMachine& vm) {
+    vm.decrementStock(); cout << "[Dispensing] Done!" << endl;
+    vm.setState(vm.getStock() > 0
+        ? unique_ptr<IState>(make_unique<IdleState>())
+        : unique_ptr<IState>(make_unique<OutOfStockState>()));
+}
+
+// ========== PROXY — Caching Proxy ==========
+class IDataService {
+public:
+    virtual string fetch(const string& key) = 0;
+    virtual ~IDataService() = default;
+};
+class RealDB : public IDataService {
+public:
+    string fetch(const string& key) override {
+        cout << "  [DB] Query: " << key << endl; return "data_" + key;
+    }
+};
+class CachingProxy : public IDataService {
+    RealDB db; unordered_map<string, string> cache;
+public:
+    string fetch(const string& key) override {
+        auto it = cache.find(key);
+        if (it != cache.end()) { cout << "  [CACHE HIT] " << key << endl; return it->second; }
+        string v = db.fetch(key); cache[key] = v; return v;
+    }
+};
+
+// ========== CHAIN OF RESPONSIBILITY ==========
+struct Request { string user, token, body; int cnt; };
+class Handler {
+    shared_ptr<Handler> next;
+public:
+    void setNext(shared_ptr<Handler> h) { next = h; }
+    virtual bool handle(Request& r) { return next ? next->handle(r) : true; }
+    virtual ~Handler() = default;
+};
+class AuthHandler : public Handler {
+public:
+    bool handle(Request& r) override {
+        if (r.token.empty()) { cout << "[Auth] REJECTED" << endl; return false; }
+        cout << "[Auth] OK" << endl; return Handler::handle(r);
+    }
+};
+class RateLimitHandler : public Handler {
+    int lim;
+public:
+    RateLimitHandler(int l) : lim(l) {}
+    bool handle(Request& r) override {
+        if (r.cnt > lim) { cout << "[Rate] REJECTED" << endl; return false; }
+        cout << "[Rate] OK" << endl; return Handler::handle(r);
+    }
+};
+
+int main() {
+    VendingMachine vm(1);
+    vm.insertCoin(); vm.selectProduct();
+    vm.insertCoin(); // refunded — out of stock
+
+    CachingProxy proxy;
+    proxy.fetch("user1"); proxy.fetch("user1"); // HIT
+
+    auto auth = make_shared<AuthHandler>();
+    auto rate = make_shared<RateLimitHandler>(100);
+    auth->setNext(rate);
+    Request ok{"alice","t","GET /",5}; auth->handle(ok);
+    Request bad{"bob","","GET /",1};   auth->handle(bad);
+    return 0;
+}`,
+          problems: [
+            ['Design Vending Machine (State)', '#', 'Medium'],
+            ['LRU Cache (Proxy/Cache)', 'https://leetcode.com/problems/lru-cache/', 'Medium'],
+            ['Design Browser History', 'https://leetcode.com/problems/design-browser-history/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'In the State pattern, where is transition logic defined?', o: ['In the client code', 'In each concrete state class', 'In the context class only', 'In a config file'], a: 1},
+            {q: 'Which pattern provides a surrogate to control access to another object?', o: ['Decorator', 'Adapter', 'Proxy', 'Facade'], a: 2},
+            {q: 'Chain of Responsibility differs from simple if-else because:', o: ['It is faster', 'Handlers can be added/removed/reordered at runtime', 'It uses less memory', 'It only works with 3 handlers'], a: 1}
+          ]
+        },
+        {
           t: "Design Parking Lot",
           learn: '<div class="learn-section"><div class="learn-h">Problem Statement</div><p class="learn-p">Design a <b>Parking Lot system</b> that supports multiple floors, different vehicle sizes, ticketing, and payment. This is one of the most commonly asked LLD interview questions at companies like Amazon, Google, and DE Shaw.</p><p class="learn-p"><b>Key requirements to clarify in interview:</b></p><ul class="learn-list"><li>Multiple floors, each with multiple spots.</li><li>Different vehicle types: Motorcycle, Car, Truck (Bus).</li><li>Different spot sizes: Small, Medium, Large.</li><li>A motorcycle can park in any spot; a car in Medium or Large; a truck only in Large.</li><li>Ticketing system — issue a ticket on entry, calculate fee on exit.</li><li>Payment — hourly rate based on vehicle type.</li><li>Display board showing available spots per floor.</li></ul></div><div class="learn-section"><div class="learn-h">Identifying Classes &amp; Relationships</div><p class="learn-p">Think about the <b>nouns</b> in the requirements — these become classes:</p><ul class="learn-list"><li><b>ParkingLot</b> — the top-level singleton managing everything.</li><li><b>ParkingFloor</b> — a single level with spots and a display board.</li><li><b>ParkingSpot</b> — an individual spot (Small, Medium, Large).</li><li><b>Vehicle</b> — base class with subtypes (Motorcycle, Car, Truck).</li><li><b>Ticket</b> — issued on entry, records vehicle, spot, entry time.</li><li><b>Payment</b> — calculates the fee based on duration and vehicle type.</li><li><b>EntrancePanel</b> / <b>ExitPanel</b> — entry and exit gates.</li><li><b>DisplayBoard</b> — shows available spots per floor.</li></ul></div><div class="learn-section"><div class="learn-h">Design Patterns Used</div><table class="learn-table"><tr><th>Pattern</th><th>Where</th><th>Why</th></tr><tr><td>Singleton</td><td>ParkingLot</td><td>Only one parking lot instance</td></tr><tr><td>Strategy</td><td>ParkingStrategy</td><td>Different spot assignment algorithms (nearest, spread-out)</td></tr><tr><td>Factory</td><td>VehicleFactory</td><td>Create vehicle objects from type strings</td></tr><tr><td>Observer</td><td>DisplayBoard</td><td>Update available count when spots change</td></tr></table></div><div class="learn-section"><div class="learn-h">Spot Assignment Logic</div><p class="learn-p">A key design decision is <b>how to assign spots</b>. Common strategies:</p><ul class="learn-list"><li><b>Nearest to entrance</b> — minimise walk distance; use a min-heap per spot type.</li><li><b>Even distribution</b> — spread vehicles across floors for load balancing.</li><li><b>Compact packing</b> — fill one floor before moving to the next.</li></ul><div class="learn-code">class IParkingStrategy {\npublic:\n    virtual ParkingSpot* findSpot(Vehicle* v, vector&lt;ParkingFloor*&gt;&amp; floors) = 0;\n    virtual ~IParkingStrategy() = default;\n};</div><p class="learn-p">Using the Strategy pattern lets you switch algorithms without changing the ParkingLot class.</p></div><div class="learn-section"><div class="learn-h">Ticket &amp; Payment</div><p class="learn-p">When a vehicle enters:</p><ol class="learn-list"><li>EntrancePanel calls <code>ParkingLot::getTicket(vehicle)</code>.</li><li>System finds an available spot matching the vehicle size.</li><li>A <code>Ticket</code> is created with: ticket ID, vehicle info, spot, entry timestamp.</li><li>The spot is marked as occupied; the display board is updated.</li></ol><p class="learn-p">When a vehicle exits:</p><ol class="learn-list"><li>ExitPanel scans the ticket.</li><li>Duration = exit time - entry time.</li><li>Fee = duration * hourly rate (based on vehicle type).</li><li>Payment is processed (cash, card, UPI).</li><li>The spot is freed; the display board is updated.</li></ol><div class="learn-tip"><b>Tip:</b> In interviews, mention thread-safety — multiple entrance gates may try to assign the same spot simultaneously. Use a mutex or atomic CAS on spot assignment.</div></div><div class="learn-section"><div class="learn-h">Handling Concurrency</div><p class="learn-p">A parking lot is inherently concurrent — multiple cars enter/exit simultaneously. Key considerations:</p><ul class="learn-list"><li><b>Spot assignment</b> must be atomic — use a lock or concurrent data structure.</li><li><b>Ticket generation</b> — use atomic increment for ticket IDs.</li><li><b>Display board updates</b> — can be eventually consistent (slight delay is OK).</li></ul><div class="learn-warn"><b>Warning:</b> Don\'t forget to discuss thread-safety in your interview. Even if the interviewer doesn\'t ask, mentioning it shows you think about production systems.</div></div><div class="learn-section"><div class="learn-h">Extensibility</div><p class="learn-p">A good design should easily support:</p><ul class="learn-list"><li>Adding new vehicle types (EV with charging) — add a subclass of Vehicle.</li><li>Adding new spot types (EV charging spot) — add a subclass of ParkingSpot.</li><li>Adding new payment methods — Strategy pattern for payment.</li><li>Adding handicapped spots, reserved spots — boolean flags on ParkingSpot.</li><li>Variable pricing (surge pricing, weekend rates) — Strategy for pricing.</li></ul></div>',
           code: `// ===== Design Parking Lot — C++ Implementation =====
@@ -3564,6 +3712,297 @@ async function rebuildTrie() {
             {"q":"Why is debouncing (100ms delay) used for autocomplete requests?","o":["To reduce server load by not sending a request on every keystroke","To improve suggestion accuracy","Because the trie lookup takes 100ms","To encrypt the query"],"a":0},
             {"q":"For prefix length 1-2, the cache hit rate is approximately:","o":["20%","50%","80%","95-99%"],"a":3},
           ],
+        },
+        {
+          t: 'Design Stock Trading / Order Matching Engine',
+          learn: '<div class="learn-section"><div class="learn-h">Problem Statement</div><p class="learn-p">Design a <b>stock exchange order matching engine</b> — the core component of any trading platform. This is highly relevant for <b>DE Shaw</b> interviews given their quantitative trading focus.</p><p class="learn-p"><b>Key requirements:</b></p><ul class="learn-list"><li>Support <b>Limit Orders</b> (buy/sell at specific price) and <b>Market Orders</b> (buy/sell at best available price)</li><li><b>Price-time priority</b>: orders at the same price matched in FIFO order</li><li>Real-time order book management (bids and asks)</li><li>Handle cancellations and partial fills</li><li>Sub-millisecond matching latency</li></ul></div><div class="learn-section"><div class="learn-h">Core Concepts</div><table class="learn-table"><tr><th>Term</th><th>Meaning</th></tr><tr><td>Bid</td><td>Buy order — "I want to buy at this price or lower"</td></tr><tr><td>Ask (Offer)</td><td>Sell order — "I want to sell at this price or higher"</td></tr><tr><td>Spread</td><td>Difference between best ask and best bid</td></tr><tr><td>Order Book</td><td>Collection of all outstanding bids and asks for a security</td></tr><tr><td>Match</td><td>When a buy price ≥ sell price, a trade occurs</td></tr><tr><td>Partial Fill</td><td>Order partially matched, remaining quantity stays in book</td></tr></table><div class="learn-code">Order Book for AAPL:\n\nBids (Buy):              Asks (Sell):\nPrice    Qty  Time       Price    Qty  Time\n$150.10  200  09:30:01   $150.15  100  09:30:00\n$150.05  500  09:30:02   $150.20  300  09:30:01\n$150.00  100  09:29:55   $150.25  200  09:30:03\n         ↑ Best Bid              ↑ Best Ask\n         Spread = $0.05</div></div><div class="learn-section"><div class="learn-h">Matching Algorithm</div><p class="learn-p"><b>Price-time priority</b> (most common):</p><ol class="learn-list"><li>Match at the <b>best price</b> first (highest bid, lowest ask)</li><li>At the same price, match <b>oldest order first</b> (FIFO)</li><li>If incoming order is larger than the matched order, partially fill and continue matching</li><li>If no match possible, add to the order book</li></ol><div class="learn-code">Incoming: BUY 300 shares at $150.20 (limit)\n\n1. Match vs Ask $150.15 × 100 → TRADE 100 @ $150.15\n   Remaining: 200 shares\n2. Match vs Ask $150.20 × 300 → TRADE 200 @ $150.20\n   Remaining: 0 → fully filled!\n\nIncoming: BUY 500 shares at $150.10 (limit)\n1. No ask ≤ $150.10 → add to Bid side of order book</div></div><div class="learn-section"><div class="learn-h">Data Structures</div><table class="learn-table"><tr><th>Component</th><th>Data Structure</th><th>Why</th></tr><tr><td>Bids</td><td>Max-heap (or sorted map, desc)</td><td>Best bid = highest price, O(log n) insert/remove</td></tr><tr><td>Asks</td><td>Min-heap (or sorted map, asc)</td><td>Best ask = lowest price, O(log n) insert/remove</td></tr><tr><td>Orders at same price</td><td>Queue (FIFO)</td><td>Time priority — oldest first</td></tr><tr><td>Order lookup</td><td>HashMap (orderId → Order*)</td><td>O(1) cancel/modify</td></tr></table><div class="learn-tip"><b>Performance:</b> Real exchanges use lock-free data structures, memory pools, and kernel bypass (DPDK/RDMA) for nanosecond latency. In an interview, focus on the algorithmic design — sorted map + queue is the right abstraction.</div></div><div class="learn-section"><div class="learn-h">System Architecture</div><div class="learn-code">Client → Gateway → Order Validator → Matching Engine → Trade Store\n                                         ↓\n                                    Market Data Feed\n                                    (WebSocket to clients)\n\nMatching Engine (per symbol):\n  ┌─────────────────────┐\n  │  Order Book          │\n  │  ┌───────┐ ┌───────┐│\n  │  │ Bids  │ │ Asks  ││\n  │  │(max-h)│ │(min-h)││\n  │  └───────┘ └───────┘│\n  │  HashMap: id→Order   │\n  └─────────────────────┘</div></div><div class="learn-section"><div class="learn-h">Key Design Decisions</div><ul class="learn-list"><li><b>One matching engine per symbol</b> — allows parallelism across stocks</li><li><b>Event sourcing</b> — log every order/trade event for audit and replay</li><li><b>Sequencer</b> — assign global sequence numbers for deterministic replay</li><li><b>Risk checks</b> — pre-trade (margin, position limits) before matching</li></ul><div class="learn-warn"><b>DE Shaw focus:</b> They care about latency, throughput, and correctness. Mention lock-free queues, cache-line alignment, and why you avoid memory allocation on the hot path.</div></div>',
+          code: `// ===== Stock Trading Order Matching Engine =====
+#include <iostream>
+#include <map>
+#include <queue>
+#include <unordered_map>
+#include <string>
+using namespace std;
+
+enum class Side { BUY, SELL };
+enum class OrderType { LIMIT, MARKET };
+
+struct Order {
+    int id;
+    string symbol;
+    Side side;
+    OrderType type;
+    double price;
+    int quantity;
+    int remaining;
+    long long timestamp;
+
+    Order(int id, string sym, Side s, OrderType t, double p, int q, long long ts)
+        : id(id), symbol(sym), side(s), type(t), price(p),
+          quantity(q), remaining(q), timestamp(ts) {}
+};
+
+struct Trade {
+    int buyOrderId, sellOrderId;
+    double price;
+    int quantity;
+};
+
+class OrderBook {
+    // Bids: highest price first (descending)
+    map<double, queue<Order*>, greater<double>> bids;
+    // Asks: lowest price first (ascending)
+    map<double, queue<Order*>> asks;
+    // Fast lookup for cancellations
+    unordered_map<int, Order*> orderMap;
+    vector<Trade> trades;
+
+public:
+    void addOrder(Order* order) {
+        orderMap[order->id] = order;
+
+        if (order->side == Side::BUY) {
+            matchBuy(order);
+            if (order->remaining > 0 && order->type == OrderType::LIMIT)
+                bids[order->price].push(order);
+        } else {
+            matchSell(order);
+            if (order->remaining > 0 && order->type == OrderType::LIMIT)
+                asks[order->price].push(order);
+        }
+    }
+
+    void matchBuy(Order* buy) {
+        while (buy->remaining > 0 && !asks.empty()) {
+            auto it = asks.begin();
+            if (buy->type == OrderType::LIMIT && it->first > buy->price) break;
+
+            auto& q = it->second;
+            Order* sell = q.front();
+            int matched = min(buy->remaining, sell->remaining);
+            trades.push_back({buy->id, sell->id, it->first, matched});
+            cout << "TRADE: " << matched << " @ $" << it->first << endl;
+
+            buy->remaining -= matched;
+            sell->remaining -= matched;
+            if (sell->remaining == 0) { q.pop(); orderMap.erase(sell->id); }
+            if (q.empty()) asks.erase(it);
+        }
+    }
+
+    void matchSell(Order* sell) {
+        while (sell->remaining > 0 && !bids.empty()) {
+            auto it = bids.begin();
+            if (sell->type == OrderType::LIMIT && it->first < sell->price) break;
+
+            auto& q = it->second;
+            Order* buy = q.front();
+            int matched = min(sell->remaining, buy->remaining);
+            trades.push_back({buy->id, sell->id, it->first, matched});
+            cout << "TRADE: " << matched << " @ $" << it->first << endl;
+
+            sell->remaining -= matched;
+            buy->remaining -= matched;
+            if (buy->remaining == 0) { q.pop(); orderMap.erase(buy->id); }
+            if (q.empty()) bids.erase(it);
+        }
+    }
+
+    bool cancelOrder(int orderId) {
+        auto it = orderMap.find(orderId);
+        if (it == orderMap.end()) return false;
+        it->second->remaining = 0;
+        orderMap.erase(it);
+        cout << "CANCELLED order " << orderId << endl;
+        return true;
+    }
+
+    void printBook() {
+        cout << "\\n--- ORDER BOOK ---" << endl;
+        cout << "ASKS:" << endl;
+        for (auto it = asks.rbegin(); it != asks.rend(); ++it)
+            cout << "  $" << it->first << " x " << it->second.front()->remaining << endl;
+        cout << "BIDS:" << endl;
+        for (auto& [price, q] : bids)
+            cout << "  $" << price << " x " << q.front()->remaining << endl;
+    }
+};
+
+int main() {
+    OrderBook book;
+    long long ts = 1;
+
+    auto* o1 = new Order(1, "AAPL", Side::SELL, OrderType::LIMIT, 150.15, 100, ts++);
+    auto* o2 = new Order(2, "AAPL", Side::SELL, OrderType::LIMIT, 150.20, 300, ts++);
+    auto* o3 = new Order(3, "AAPL", Side::BUY,  OrderType::LIMIT, 150.10, 200, ts++);
+    book.addOrder(o1); book.addOrder(o2); book.addOrder(o3);
+    book.printBook();
+
+    // Incoming buy that crosses the spread
+    auto* o4 = new Order(4, "AAPL", Side::BUY, OrderType::LIMIT, 150.20, 250, ts++);
+    book.addOrder(o4); // matches 100@150.15 + 150@150.20
+    book.printBook();
+
+    return 0;
+}`,
+          problems: [
+            ['Stock Price Fluctuation', 'https://leetcode.com/problems/stock-price-fluctuation/', 'Medium'],
+            ['Design an Order Matching Engine', 'https://www.geeksforgeeks.org/order-matching-engine-in-stock-exchange/', 'Hard'],
+            ['Time Based Key-Value Store', 'https://leetcode.com/problems/time-based-key-value-store/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'In price-time priority matching, orders at the same price are matched:', o: ['Randomly', 'Largest first', 'FIFO (oldest first)', 'LIFO (newest first)'], a: 2},
+            {q: 'The bid side of an order book is organized as:', o: ['Min-heap (lowest price first)', 'Max-heap (highest price first)', 'FIFO queue', 'Hash map'], a: 1},
+            {q: 'A market order differs from a limit order because:', o: ['It has no price — executes at the best available price', 'It can only buy, not sell', 'It is always partially filled', 'It stays in the order book indefinitely'], a: 0}
+          ]
+        },
+        {
+          t: 'Design Payment System',
+          learn: '<div class="learn-section"><div class="learn-h">Problem Statement</div><p class="learn-p">Design a <b>payment processing system</b> (like Stripe, Razorpay, or PayPal) that handles transactions reliably at scale.</p><p class="learn-p"><b>Key requirements:</b></p><ul class="learn-list"><li>Support multiple payment methods (credit card, debit card, UPI, net banking, wallet)</li><li><b>Exactly-once processing</b> — no duplicate charges</li><li>Handle payment failures, retries, and refunds</li><li>PCI DSS compliance for card data</li><li>High availability and low latency</li></ul></div><div class="learn-section"><div class="learn-h">Payment Flow</div><div class="learn-code">1. User clicks "Pay $100"\n2. Client → Payment Service: POST /payments\n   { amount: 100, currency: "USD", method: "card", token: "tok_xxx" }\n3. Payment Service:\n   a. Generate idempotency key (UUID)\n   b. Create payment record (status: PENDING)\n   c. Call Payment Gateway (Stripe/Razorpay)\n   d. Gateway contacts Card Network → Issuing Bank\n   e. Bank approves/declines\n   f. Update payment record (status: SUCCESS/FAILED)\n4. Return result to client\n5. Async: Send receipt email, update ledger</div></div><div class="learn-section"><div class="learn-h">Idempotency — The Critical Requirement</div><p class="learn-p">Network failures can cause the client to retry a payment. Without idempotency, the user could be charged twice. Solution: <b>idempotency key</b>.</p><div class="learn-code">POST /payments\nIdempotency-Key: "abc-123-def"\n\nServer logic:\n1. Check if idempotency_key "abc-123-def" exists in DB\n2. If YES → return cached result (no duplicate charge)\n3. If NO → process payment, store result with key\n\nThis guarantees exactly-once semantics from the client\'s perspective.</div><div class="learn-warn"><b>Critical:</b> The idempotency key + result must be stored atomically with the payment record. Use a database transaction or a unique constraint on the key.</div></div><div class="learn-section"><div class="learn-h">Double-Entry Ledger</div><p class="learn-p">Every payment creates two ledger entries (accounting 101). This ensures the books always balance.</p><div class="learn-code">-- User pays $100 for an order:\nINSERT INTO ledger (account, type, amount) VALUES\n  (\'user_wallet\',    \'DEBIT\',  100.00),  -- money leaves user\n  (\'merchant_wallet\', \'CREDIT\', 100.00); -- money enters merchant\n\n-- Refund $100:\nINSERT INTO ledger (account, type, amount) VALUES\n  (\'merchant_wallet\', \'DEBIT\',  100.00),\n  (\'user_wallet\',     \'CREDIT\', 100.00);\n\n-- Invariant: SUM(credits) == SUM(debits) ALWAYS</div></div><div class="learn-section"><div class="learn-h">Payment State Machine</div><div class="learn-code">PENDING → PROCESSING → SUCCESS\n                    ↘ FAILED → RETRY → PROCESSING\n                                     ↘ ABANDONED\nSUCCESS → REFUND_PENDING → REFUNDED</div><p class="learn-p">Model payment status as a state machine. Transitions are persisted to the database with timestamps for audit trail.</p></div><div class="learn-section"><div class="learn-h">Architecture</div><table class="learn-table"><tr><th>Component</th><th>Responsibility</th></tr><tr><td>API Gateway</td><td>Rate limiting, auth, route to payment service</td></tr><tr><td>Payment Service</td><td>Orchestrates payment flow, idempotency</td></tr><tr><td>Payment Gateway Adapter</td><td>Abstracts Stripe/Razorpay/PayPal (Strategy pattern)</td></tr><tr><td>Ledger Service</td><td>Double-entry bookkeeping</td></tr><tr><td>Notification Service</td><td>Email/SMS receipts (async via message queue)</td></tr><tr><td>Reconciliation Worker</td><td>Daily comparison of our records vs gateway records</td></tr></table><div class="learn-tip"><b>Key patterns:</b> Strategy pattern for payment gateways, State pattern for payment status, Saga pattern for distributed transactions (order service + payment service + inventory service).</div></div>',
+          code: `// ===== Payment System — Core Components =====
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <chrono>
+using namespace std;
+
+enum class PaymentStatus { PENDING, PROCESSING, SUCCESS, FAILED, REFUNDED };
+enum class PaymentMethod { CARD, UPI, NET_BANKING, WALLET };
+
+struct Payment {
+    string id;
+    string idempotencyKey;
+    double amount;
+    string currency;
+    PaymentMethod method;
+    PaymentStatus status;
+    string gatewayTxnId;
+    long long createdAt;
+    long long updatedAt;
+};
+
+// Strategy pattern for payment gateways
+class IPaymentGateway {
+public:
+    virtual pair<bool, string> charge(double amount, const string& token) = 0;
+    virtual bool refund(const string& txnId, double amount) = 0;
+    virtual ~IPaymentGateway() = default;
+};
+
+class StripeGateway : public IPaymentGateway {
+public:
+    pair<bool, string> charge(double amount, const string& token) override {
+        cout << "[Stripe] Charging $" << amount << endl;
+        return {true, "stripe_txn_" + to_string(rand())};
+    }
+    bool refund(const string& txnId, double amount) override {
+        cout << "[Stripe] Refunding $" << amount << " for " << txnId << endl;
+        return true;
+    }
+};
+
+class RazorpayGateway : public IPaymentGateway {
+public:
+    pair<bool, string> charge(double amount, const string& token) override {
+        cout << "[Razorpay] Charging $" << amount << endl;
+        return {true, "rzp_txn_" + to_string(rand())};
+    }
+    bool refund(const string& txnId, double amount) override {
+        cout << "[Razorpay] Refunding $" << amount << endl;
+        return true;
+    }
+};
+
+// Double-entry ledger
+struct LedgerEntry {
+    string account;
+    string type; // DEBIT or CREDIT
+    double amount;
+    string paymentId;
+};
+
+class PaymentService {
+    unordered_map<string, Payment> payments;
+    unordered_map<string, string> idempotencyStore; // key → paymentId
+    vector<LedgerEntry> ledger;
+    IPaymentGateway* gateway;
+
+public:
+    PaymentService(IPaymentGateway* gw) : gateway(gw) {}
+
+    string processPayment(const string& idempKey, double amount,
+                          const string& token, PaymentMethod method) {
+        // Idempotency check
+        if (idempotencyStore.count(idempKey)) {
+            string existingId = idempotencyStore[idempKey];
+            cout << "Idempotent: returning existing payment " << existingId << endl;
+            return existingId;
+        }
+
+        string paymentId = "pay_" + to_string(payments.size() + 1);
+        Payment p{paymentId, idempKey, amount, "USD", method,
+                  PaymentStatus::PENDING, "", 0, 0};
+
+        p.status = PaymentStatus::PROCESSING;
+        auto [success, txnId] = gateway->charge(amount, token);
+
+        if (success) {
+            p.status = PaymentStatus::SUCCESS;
+            p.gatewayTxnId = txnId;
+            // Double-entry ledger
+            ledger.push_back({"user_wallet", "DEBIT", amount, paymentId});
+            ledger.push_back({"merchant_wallet", "CREDIT", amount, paymentId});
+            cout << "Payment " << paymentId << " SUCCESS" << endl;
+        } else {
+            p.status = PaymentStatus::FAILED;
+            cout << "Payment " << paymentId << " FAILED" << endl;
+        }
+
+        payments[paymentId] = p;
+        idempotencyStore[idempKey] = paymentId;
+        return paymentId;
+    }
+
+    bool refund(const string& paymentId) {
+        auto it = payments.find(paymentId);
+        if (it == payments.end() || it->second.status != PaymentStatus::SUCCESS)
+            return false;
+
+        if (gateway->refund(it->second.gatewayTxnId, it->second.amount)) {
+            it->second.status = PaymentStatus::REFUNDED;
+            ledger.push_back({"merchant_wallet", "DEBIT", it->second.amount, paymentId});
+            ledger.push_back({"user_wallet", "CREDIT", it->second.amount, paymentId});
+            return true;
+        }
+        return false;
+    }
+};
+
+int main() {
+    StripeGateway stripe;
+    PaymentService service(&stripe);
+
+    // Process payment
+    string id = service.processPayment("idem_001", 99.99, "tok_card", PaymentMethod::CARD);
+
+    // Retry with same idempotency key — no duplicate charge
+    service.processPayment("idem_001", 99.99, "tok_card", PaymentMethod::CARD);
+
+    // Refund
+    service.refund(id);
+    return 0;
+}`,
+          problems: [
+            ['Design Payment System', 'https://www.geeksforgeeks.org/design-online-payment-system/', 'Hard'],
+            ['Idempotent API Design', 'https://www.geeksforgeeks.org/idempotent-rest-apis/', 'Medium'],
+            ['Event Sourcing Patterns', 'https://www.geeksforgeeks.org/event-sourcing-pattern/', 'Medium']
+          ],
+          mcqs: [
+            {q: 'Idempotency in payment systems ensures:', o: ['Payments are faster', 'Retrying a payment request does not cause duplicate charges', 'All payments succeed', 'Payments are encrypted'], a: 1},
+            {q: 'In double-entry bookkeeping, every transaction:', o: ['Has exactly one ledger entry', 'Has a debit and credit entry that balance', 'Is stored in a blockchain', 'Requires manual approval'], a: 1},
+            {q: 'Which pattern is used to support multiple payment gateways (Stripe, Razorpay)?', o: ['Singleton', 'Observer', 'Strategy', 'Factory'], a: 2}
+          ]
         }
       ]
     },
