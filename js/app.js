@@ -361,7 +361,7 @@ function switchView(v){
 document.querySelectorAll('#mainNav a').forEach(a=>a.addEventListener('click',()=>switchView(a.dataset.v)));
 
 // ====== ROADMAP ======
-let roadCat=0,roadTab=0,openTopic=-1,innerTab='learn';
+let roadCat=st.navCat||0,roadTab=st.navTab||0,openTopic=st.navTopic!=null?st.navTopic:-1,innerTab=st.navInner||'learn';
 
 function catProg(cat){let d=0,t=0;cat.tabs.forEach(tab=>{tab.topics.forEach((_,ti)=>{t++;if(st.road[cat.id+':'+tab.id+':'+ti])d++})});return{d,t,p:t?Math.round(d/t*100):0}}
 function tabProg(cat,tab){let d=0;tab.topics.forEach((_,ti)=>{if(st.road[cat.id+':'+tab.id+':'+ti])d++});return{d,t:tab.topics.length,p:tab.topics.length?Math.round(d/tab.topics.length*100):0}}
@@ -489,10 +489,10 @@ function hlCode(raw){
   }
   return h;
 }
-function selCat(ci){roadCat=ci;roadTab=0;openTopic=-1;renderRoadSide();renderRoadTabs()}
-function selTab(ti){roadTab=ti;openTopic=-1;renderRoadTabs()}
-function toggleOpen(ti){openTopic=openTopic===ti?-1:ti;innerTab='learn';renderRoadTopics();if(openTopic>=0){setTimeout(()=>{const el=document.querySelector('.topic-body.open');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})},50)}}
-function swInner(tab){innerTab=tab;renderRoadTopics()}
+function selCat(ci){roadCat=ci;roadTab=0;openTopic=-1;st.navCat=ci;st.navTab=0;st.navTopic=-1;sv();renderRoadSide();renderRoadTabs()}
+function selTab(ti){roadTab=ti;openTopic=-1;st.navTab=ti;st.navTopic=-1;sv();renderRoadTabs()}
+function toggleOpen(ti){openTopic=openTopic===ti?-1:ti;innerTab='learn';st.navTopic=openTopic;st.navInner='learn';sv();renderRoadTopics();if(openTopic>=0){setTimeout(()=>{const el=document.querySelector('.topic-body.open');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})},50)}}
+function swInner(tab){innerTab=tab;st.navInner=tab;sv();renderRoadTopics()}
 function tgDone(key){
   st.road[key]=!st.road[key];if(!st.road[key])delete st.road[key];
   const done=!!st.road[key];
@@ -514,7 +514,7 @@ function goToRoad(roadKey){
 }
 
 // ====== CALENDAR ======
-let calM=5,calY=2026,selDate="2026-06-15";
+let _now=new Date(),calM=_now.getMonth(),calY=_now.getFullYear(),selDate=ds(_now.getFullYear(),_now.getMonth(),_now.getDate());
 function ds(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`}
 function getDay(d){return SP.find(x=>x.date===d)}
 function dayProg(d){const dy=getDay(d);if(!dy)return{dn:0,tot:0,p:0};const tot=dy.tasks.length;let dn=0;dy.tasks.forEach((_,i)=>{if(st.cal[d+'_'+i])dn++});return{dn,tot,p:tot?Math.round(dn/tot*100):0}}
