@@ -23,7 +23,8 @@ const SP=[
 {t:'Operators & Type Casting',c:'C++',road:'cpp:basics:1'},
 {t:'Control Flow (if/else, loops, switch)',c:'C++',road:'cpp:basics:2'},
 {t:'Functions & Recursion Basics',c:'C++',road:'cpp:basics:3'},
-{t:'Pointers & References',c:'C++',road:'cpp:basics:4'}
+{t:'Pointers & References',c:'C++',road:'cpp:basics:4'},
+{t:'Preprocessor, Compilation & Memory Model',c:'C++',road:'cpp:basics:5'}
 ]},
 {date:"2026-06-16",theme:"C++ STL",tasks:[
 {t:'Vectors & Dynamic Arrays',c:'C++',road:'cpp:stl:0'},
@@ -37,7 +38,8 @@ const SP=[
 {t:'Inheritance & Polymorphism',c:'C++',road:'cpp:oop:1'},
 {t:'Templates & Generic Programming',c:'C++',road:'cpp:oop:2'},
 {t:'Operator Overloading',c:'C++',road:'cpp:oop:3'},
-{t:'Exception Handling & RAII',c:'C++',road:'cpp:oop:4'}
+{t:'Exception Handling & RAII',c:'C++',road:'cpp:oop:4'},
+{t:'Const Correctness, Design Patterns & Polymorphism Deep Dive',c:'C++',road:'cpp:oop:5'}
 ]},
 {date:"2026-06-18",theme:"Arrays & Sorting",tasks:[
 {t:'Sorting Algorithms',c:'DSA',road:'dsa:arrays:0'},
@@ -69,7 +71,8 @@ const SP=[
 {t:'Monotonic Stack',c:'DSA',road:'dsa:stq:1'},
 {t:'Next Greater Element',c:'DSA',road:'dsa:stq:2'},
 {t:'Queue using Stacks',c:'DSA',road:'dsa:stq:3'},
-{t:'Deque Problems',c:'DSA',road:'dsa:stq:4'}
+{t:'Deque Problems',c:'DSA',road:'dsa:stq:4'},
+{t:'Expression Evaluation & Infix Parsing',c:'DSA',road:'dsa:stq:5'}
 ]},
 {date:"2026-06-22",theme:"Recursion & Backtracking",tasks:[
 {t:'Recursion Basics & Patterns',c:'DSA',road:'dsa:recursion:0'},
