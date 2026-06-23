@@ -414,7 +414,7 @@ function tabProg(cat,tab){let d=0;tab.topics.forEach((_,ti)=>{if(st.road[cat.id+
 function totalProg(){let d=0,t=0;ROADMAP.forEach(c=>c.tabs.forEach(tb=>tb.topics.forEach((_,ti)=>{t++;if(st.road[c.id+':'+tb.id+':'+ti])d++})));return{d,t,p:t?Math.round(d/t*100):0}}
 
 function renderRoadSide(){
-  if(!ROADMAP.length){document.getElementById('roadSide').innerHTML='<div class="empty-msg" style="font-size:13px;padding:20px">Loading...</div>';return}
+  if(!ROADMAP.length){document.getElementById('roadSide').innerHTML='<div class="empty-msg" style="font-size:14px;padding:20px">Loading...</div>';return}
   document.getElementById('roadSide').innerHTML=ROADMAP.map((cat,ci)=>{
     const p=catProg(cat),fc=p.p===100?'complete':p.p>0?'partial':'';
     return`<div class="road-cat ${ci===roadCat?'on':''}" onclick="selCat(${ci})"><div class="rc-t">${cat.t}</div><div class="rc-bar"><div class="fill ${fc}" style="width:${p.p}%"></div></div><div class="rc-pct">${p.d}/${p.t} &middot; ${p.p}%</div></div>`;
@@ -427,7 +427,7 @@ function renderRoadTabs(){
   document.getElementById('roadHead').innerHTML=`<h2>${cat.t}</h2><div class="rh-sub">${cp.d}/${cp.t} topics &middot; ${cp.p}%</div>`;
   document.getElementById('roadTabs').innerHTML=cat.tabs.map((tab,ti)=>{
     const p=tabProg(cat,tab);
-    return`<button class="road-tab ${ti===roadTab?'on':''}" onclick="selTab(${ti})">${tab.t} <span style="color:#444;font-size:11px">${p.d}/${p.t}</span></button>`;
+    return`<button class="road-tab ${ti===roadTab?'on':''}" onclick="selTab(${ti})">${tab.t} <span style="color:#444;font-size:12px">${p.d}/${p.t}</span></button>`;
   }).join('');
   renderRoadTopics();
 }
@@ -609,7 +609,7 @@ function calToday(){const t=new Date();calM=t.getMonth();calY=t.getFullYear();se
 function renderDash(){
   let rh='';
   ROADMAP.forEach(cat=>{const p=catProg(cat);const fc=p.p===100?'complete':p.p>0?'partial':'';rh+=`<div class="prog-card"><div class="pc-name">${cat.t}</div><div class="pc-bar"><div class="fill ${fc}" style="width:${p.p}%"></div></div><div class="pc-val">${p.d}/${p.t} &middot; ${p.p}%</div></div>`});
-  document.getElementById('roadProg').innerHTML=rh||'<div style="color:#666;font-size:13px">No content loaded</div>';
+  document.getElementById('roadProg').innerHTML=rh||'<div style="color:#666;font-size:14px">No content loaded</div>';
 }
 
 // ====== UTILS ======
