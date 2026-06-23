@@ -40,12 +40,15 @@ const SP=[
 {t:'Exception Handling & RAII',c:'C++',road:'cpp:oop:4'}
 ]},
 {date:"2026-06-18",theme:"Arrays & Sorting",tasks:[
-{t:'Two Pointers',c:'DSA',road:'dsa:arrays:0'},
-{t:'Sorting Algorithms',c:'DSA',road:'dsa:arrays:1'},
+{t:'Sorting Algorithms',c:'DSA',road:'dsa:arrays:0'},
+{t:'Two Pointers',c:'DSA',road:'dsa:arrays:1'},
 {t:'Merge Intervals',c:'DSA',road:'dsa:arrays:2'},
 {t:'Sliding Window',c:'DSA',road:'dsa:arrays:3'},
 {t:'Prefix Sums',c:'DSA',road:'dsa:arrays:4'},
-{t:'Kadane\'s Algorithm',c:'DSA',road:'dsa:arrays:5'}
+{t:'Kadane\'s Algorithm',c:'DSA',road:'dsa:arrays:5'},
+{t:'Rotate Array & Array Manipulation',c:'DSA',road:'dsa:arrays:6'},
+{t:'Boyer-Moore Voting & Frequency Problems',c:'DSA',road:'dsa:arrays:7'},
+{t:'Stock Buy & Sell Problems',c:'DSA',road:'dsa:arrays:8'}
 ]},
 {date:"2026-06-19",theme:"Binary Search & Strings",tasks:[
 {t:'Binary Search on 1D Arrays',c:'DSA',road:'dsa:bs:0'},
@@ -190,6 +193,7 @@ const SP=[
 ]},
 {date:"2026-07-10",theme:"OS - Threads & Sync",tasks:[
 {t:'Threads & Multithreading Models',c:'OS',road:'os:threads:0'},
+{t:'Concurrency Patterns & Thread Safety',c:'OS',road:'os:threads:1'},
 {t:'Mutex, Semaphores & Monitors',c:'OS',road:'os:sync:0'},
 {t:'Classical Synchronization Problems',c:'OS',road:'os:sync:1'},
 {t:'Read-Write Locks, Condition Variables & Barriers',c:'OS',road:'os:sync:2'}
