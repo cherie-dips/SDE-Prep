@@ -55,14 +55,20 @@ header .hstats strong{color:#eee;font-weight:600}
 .tc-problems a{color:#8bb8e0;text-decoration:none}.tc-problems a:hover{color:#fff;text-decoration:underline}
 .diff{font-size:11px;padding:1px 6px;border-radius:2px;margin-left:auto;font-weight:600;flex-shrink:0}
 .diff-Easy{background:#0f2518;color:#3a8f55}.diff-Medium{background:#2a2510;color:#b89a30}.diff-Hard{background:#2a1010;color:#c04040}
-.mcq-card{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:3px;padding:12px;margin-top:6px}
-.mcq-q{font-size:14px;color:#eee;margin-bottom:8px;line-height:1.5}
-.mcq-opts{display:flex;flex-direction:column;gap:4px}
-.mcq-opt{display:block;padding:7px 10px;border:1px solid #1e1e1e;border-radius:3px;font-size:14px;color:#ddd;cursor:pointer;transition:all .1s;background:transparent;width:100%;text-align:left;font-family:inherit;line-height:1.4}
-.mcq-opt:hover:not(.picked){background:#141414;border-color:#333;color:#fff}
-.mcq-opt.correct{background:#0f2518;border-color:#2a6b3f;color:#4a9f65;pointer-events:none}
-.mcq-opt.wrong{background:#2a1010;border-color:#6b2a2a;color:#c04040;pointer-events:none}
+.mcq-item{padding:0 0 14px 0;border-bottom:1px solid #1a1a1a}
+.mcq-item:last-child{border-bottom:none;padding-bottom:0}
+.mcq-item .learn-p{margin-bottom:6px}
+.mcq-opts{display:flex;flex-direction:column;gap:2px}
+.mcq-opt{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:14px;color:#ddd;cursor:pointer;line-height:1.4;transition:color .1s}
+.mcq-radio{width:16px;height:16px;border-radius:50%;border:2px solid #444;flex-shrink:0;box-sizing:border-box;transition:all .1s}
+.mcq-opt:hover:not(.picked) .mcq-radio{border-color:#6bb5e0}
+.mcq-opt:hover:not(.picked){color:#fff}
+.mcq-opt.correct{color:#4a9f65;pointer-events:none}
+.mcq-opt.correct .mcq-radio{border-color:#4a9f65;background:#4a9f65}
+.mcq-opt.wrong{color:#c04040;pointer-events:none}
+.mcq-opt.wrong .mcq-radio{border-color:#c04040;background:#c04040}
 .mcq-opt.picked{pointer-events:none}
+.mcq-opt.picked .mcq-radio{border-color:#333}
 .inner-tabs{display:flex;gap:0;border-bottom:1px solid #1e1e1e;margin-bottom:14px}
 .inner-tab{padding:8px 16px;border:none;background:transparent;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.3px;transition:color .15s}
 .inner-tab:hover{color:#fff}

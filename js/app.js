@@ -442,8 +442,10 @@ function renderRoadTopics(){
     const done=!!st.road[key];
     const isOpen=openTopic===ti;
     const tp=typeof topic==='object'?topic:{t:topic};
+    const split=splitSpotlight(tp.learn);
+    const mcqCount=(tp.mcqs?tp.mcqs.length:0)+split.qCount;
     let card=`<div class="topic-card"><div class="topic-hdr" onclick="toggleOpen(${ti})"><input type="checkbox" ${done?'checked':''} onclick="event.stopPropagation()" onchange="tgDone('${key}')"/><span class="th-name ${done?'done':''}">${tp.t}</span>`;
-    if(tp.mcqs&&tp.mcqs.length)card+=`<span class="th-badge">Practice &middot; ${tp.mcqs.length}</span>`;
+    if(mcqCount)card+=`<span class="th-badge">Practice &middot; ${mcqCount}</span>`;
     if(tp.problems&&tp.problems.length)card+=`<span class="th-badge">Leetcode &middot; ${tp.problems.length}</span>`;
     if(tp.code)card+=`<span class="th-badge">Code</span>`;
     card+=`<span class="th-arrow ${isOpen?'open':''}">&#9654;</span></div>`;
@@ -451,7 +453,6 @@ function renderRoadTopics(){
       const hasCode=!!tp.code;
       const hasProb=tp.problems&&tp.problems.length;
       const hasMcq=tp.mcqs&&tp.mcqs.length;
-      const split=splitSpotlight(tp.learn);
       const hasSpotlight=!!split.spotlight;
       const hasPractice=hasMcq||hasSpotlight;
       card+=`<div class="topic-body open">`;
@@ -459,7 +460,7 @@ function renderRoadTopics(){
       card+=`<button class="inner-tab ${innerTab==='learn'?'on':''}" onclick="swInner('learn')">Learn</button>`;
       if(hasCode)card+=`<button class="inner-tab ${innerTab==='code'?'on':''}" onclick="swInner('code')">Code</button>`;
       if(hasProb)card+=`<button class="inner-tab ${innerTab==='problems'?'on':''}" onclick="swInner('problems')">Leetcode (${tp.problems.length})</button>`;
-      if(hasPractice)card+=`<button class="inner-tab ${innerTab==='mcq'?'on':''}" onclick="swInner('mcq')">Practice Problems${hasMcq?' ('+tp.mcqs.length+')':''}</button>`;
+      if(hasPractice)card+=`<button class="inner-tab ${innerTab==='mcq'?'on':''}" onclick="swInner('mcq')">Practice Problems (${mcqCount})</button>`;
       card+=`</div>`;
       // Learn pane
       card+=`<div class="inner-pane ${innerTab==='learn'?'on':''}">`;
@@ -486,16 +487,19 @@ function renderRoadTopics(){
         card+=`<div class="inner-pane ${innerTab==='mcq'?'on':''}">`;
         if(hasSpotlight)card+=`<div class="tc-section"><div class="tc-text spotlight-qa">${split.spotlight}</div></div>`;
         if(hasMcq){
+          card+=`<div class="tc-section"><div class="tc-text spotlight-qa">`;
           tp.mcqs.forEach((m,mi)=>{
             const mkey=key+':'+mi;const picked=st.mcq[mkey];
-            card+=`<div class="mcq-card"><div class="mcq-q">${mi+1}. ${m.q}</div><div class="mcq-opts">`;
+            const qn=split.qCount+mi+1;
+            card+=`<div class="mcq-item"><p class="learn-p"><b>Q${qn}: ${m.q}</b></p><div class="mcq-opts">`;
             m.o.forEach((opt,oi)=>{
               let cls='mcq-opt';
               if(picked!==undefined){cls+=' picked';if(oi===m.a)cls+=' correct';else if(oi===picked)cls+=' wrong'}
-              card+=`<button class="${cls}" onclick="pickMCQ('${mkey}',${oi},${m.a})">${opt}</button>`;
+              card+=`<div class="${cls}" onclick="pickMCQ('${mkey}',${oi},${m.a})"><span class="mcq-radio"></span>${opt}</div>`;
             });
             card+=`</div></div>`;
           });
+          card+=`</div></div>`;
         }
         card+=`</div>`;
       }
@@ -508,11 +512,14 @@ function renderRoadTopics(){
 }
 
 function splitSpotlight(html){
-  if(!html)return{learn:'',spotlight:''};
+  if(!html)return{learn:'',spotlight:'',qCount:0};
   const marker='<div class="learn-section"><div class="learn-h">Interview Spotlight</div>';
   const idx=html.indexOf(marker);
-  if(idx<0)return{learn:html,spotlight:''};
-  return{learn:html.substring(0,idx),spotlight:html.substring(idx)};
+  if(idx<0)return{learn:html,spotlight:'',qCount:0};
+  const raw=html.substring(idx);
+  const qCount=(raw.match(/<b>Q\d*[:.]/g)||[]).length;
+  const spotlight=raw.replace('<div class="learn-h">Interview Spotlight</div>','');
+  return{learn:html.substring(0,idx),spotlight,qCount};
 }
 
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
