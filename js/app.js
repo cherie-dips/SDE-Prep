@@ -245,6 +245,9 @@ const SP=[
 ]},
 {date:"2026-07-17",theme:"CN - Models & Data Link",tasks:[
 {t:'OSI & TCP/IP Models',c:'CN',road:'cn:models:0'},
+{t:'Physical Layer — Transmission & Encoding',c:'CN',road:'cn:phy:0'},
+{t:'Session Layer — Session Management & RPCs',c:'CN',road:'cn:phy:1'},
+{t:'Presentation Layer — Encryption, Encoding & Compression',c:'CN',road:'cn:phy:2'},
 {t:'Error Detection & Flow Control',c:'CN',road:'cn:dl:0'},
 {t:'MAC Protocols & Ethernet',c:'CN',road:'cn:dl:1'},
 {t:'Sliding Window Protocols',c:'CN',road:'cn:dl:2'}
