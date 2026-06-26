@@ -245,9 +245,10 @@ const SP=[
 ]},
 {date:"2026-07-17",theme:"CN - Models & Data Link",tasks:[
 {t:'OSI & TCP/IP Models',c:'CN',road:'cn:models:0'},
-{t:'Physical Layer — Transmission & Encoding',c:'CN',road:'cn:phy:0'},
-{t:'Session Layer — Session Management & RPCs',c:'CN',road:'cn:phy:1'},
-{t:'Presentation Layer — Encryption, Encoding & Compression',c:'CN',road:'cn:phy:2'},
+{t:'Physical Layer — Transmission & Encoding',c:'CN',road:'cn:physical:0'},
+{t:'Transmission Media, Topologies & Switching',c:'CN',road:'cn:physical:1'},
+{t:'Session Layer — Session Management & RPCs',c:'CN',road:'cn:session:0'},
+{t:'Presentation Layer — Encryption, Encoding & Compression',c:'CN',road:'cn:presentation:0'},
 {t:'Error Detection & Flow Control',c:'CN',road:'cn:dl:0'},
 {t:'MAC Protocols & Ethernet',c:'CN',road:'cn:dl:1'},
 {t:'Sliding Window Protocols',c:'CN',road:'cn:dl:2'}
@@ -264,6 +265,7 @@ const SP=[
 {t:'HTTP/HTTPS & DNS',c:'CN',road:'cn:app:0'},
 {t:'DHCP, FTP, SMTP & WebSockets',c:'CN',road:'cn:app:1'},
 {t:'Cookies, Sessions, CORS & Authentication',c:'CN',road:'cn:app:2'},
+{t:'Cryptography Deep Dive — DH, RSA, AES & TLS',c:'CN',road:'cn:presentation:1'},
 {t:'SSL/TLS, Encryption & Firewalls',c:'CN',road:'cn:sec:0'},
 {t:'Common Attacks (DDoS, MITM, DNS Spoofing, XSS)',c:'CN',road:'cn:sec:1'}
 ]},

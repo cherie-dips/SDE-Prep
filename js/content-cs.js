@@ -2993,7 +2993,7 @@ int main() {
 };const CN_CONTENT = {
   id: 'cn', t: 'Computer Networks',
   tabs: [
-    // ==================== TAB 1: Network Models ====================
+    // ==================== TAB 0: Network Models ====================
     {
       id: 'models', t: 'Network Models',
       topics: [
@@ -3134,10 +3134,9 @@ int main() {
         },
       ]
     },
-
-    // ==================== TAB 1B: Physical, Session & Presentation Layers ====================
+    // ==================== TAB 1: Physical Layer (OSI Layer 1) ====================
     {
-      id: 'phy', t: 'Physical, Session & Presentation',
+      id: 'physical', t: 'Physical Layer',
       topics: [
         {
           t: 'Physical Layer — Transmission & Encoding',
@@ -3211,11 +3210,11 @@ int main() {
     return 0;
 }`,
           problems: [
-            {t: 'Calculate maximum data rate using Nyquist theorem for given bandwidth and signal levels', d: 'Easy', tags: ['Physical Layer']},
-            {t: 'Apply Shannon theorem to find channel capacity given bandwidth and SNR in dB', d: 'Easy', tags: ['Physical Layer']},
-            {t: 'Compare transmission delay vs propagation delay for different scenarios', d: 'Easy', tags: ['Physical Layer']},
-            {t: 'Design a TDM frame structure for N channels with given data rates', d: 'Medium', tags: ['Multiplexing']},
-            {t: 'Calculate efficiency of Stop-and-Wait vs sliding window for satellite links', d: 'Medium', tags: ['Physical Layer']},
+            ['Nyquist Theorem — Max Data Rate','https://www.geeksforgeeks.org/nyquist-theorem-maximum-data-rate/','Easy'],
+            ['Shannon Theorem — Channel Capacity','https://www.geeksforgeeks.org/shannons-theorem/','Easy'],
+            ['Transmission vs Propagation Delay','https://www.geeksforgeeks.org/difference-between-propagation-delay-and-transmission-delay/','Easy'],
+            ['Time Division Multiplexing','https://www.geeksforgeeks.org/time-division-multiplexing/','Medium'],
+            ['Manchester & Differential Manchester Encoding','https://www.geeksforgeeks.org/manchester-encoding-in-computer-network/','Medium'],
           ],
           mcqs: [
             {q: 'Nyquist theorem gives the maximum data rate for:', o: ['A noisy channel', 'A noiseless channel', 'A wireless channel only', 'A fiber optic channel only'], a: 1},
@@ -3229,311 +3228,172 @@ int main() {
           ],
         },
         {
-          t: 'Session Layer — Session Management & RPCs',
-          learn: '<div class="learn-section"><div class="learn-h">Why This Matters</div><p class="learn-p">The <b>Session Layer (Layer 5)</b> manages the establishment, maintenance, and teardown of communication sessions between applications. While the TCP/IP model merges this into the Application layer, the concepts are still vital for understanding <b>how web sessions work, RPC mechanisms, and connection management</b> — all frequently tested in SDE placement interviews. At DE Shaw, session management is critical for maintaining state in trading terminals, managing persistent WebSocket connections for real-time market data feeds, and implementing reliable RPC frameworks for distributed systems.</p></div><div class="learn-section"><div class="learn-h">What is a Session?</div><p class="learn-p">A <b>session</b> is a logical connection between two communicating entities that persists across multiple requests. Unlike a transport-layer connection (TCP), which is about delivering bytes reliably, a session is about maintaining <b>application-level state</b> and <b>dialog structure</b>.</p><div class="learn-code">Session vs Connection:\n\nTCP Connection: Reliable byte stream between two endpoints\n  └─ Handles: ordering, retransmission, flow control\n  └─ Identified by: (src_ip, src_port, dst_ip, dst_port)\n\nSession: Application-level logical association\n  └─ Handles: login state, dialog control, synchronization\n  └─ Identified by: session ID, token, cookie\n  └─ Can span multiple TCP connections (HTTP keep-alive)\n  └─ Can be resumed after a connection drops</div></div><div class="learn-section"><div class="learn-h">Session Layer Functions</div><ul class="learn-list"><li><b>Session Establishment:</b> Authentication, parameter negotiation, and session ID generation. Example: TLS handshake establishes a secure session before application data flows.</li><li><b>Session Maintenance:</b> Keep-alive messages, idle timeout management, and session state tracking. Example: HTTP cookies maintain user sessions across stateless requests.</li><li><b>Session Termination:</b> Graceful shutdown, resource cleanup, and state persistence. Example: logout invalidates the session token on the server.</li><li><b>Dialog Control:</b> Manages who can transmit and when:<ul><li><b>Simplex:</b> One-way communication only (e.g., broadcast TV)</li><li><b>Half-duplex:</b> Two-way, but one at a time (e.g., walkie-talkie, HTTP 1.0 request-response)</li><li><b>Full-duplex:</b> Both parties transmit simultaneously (e.g., WebSocket, telephone)</li></ul></li><li><b>Synchronization:</b> Inserting checkpoints (sync points) in data streams so that if a failure occurs, transmission can resume from the last checkpoint rather than starting over. Critical for long file transfers.</li><li><b>Token Management:</b> Controls which party has the right to perform certain operations (e.g., who can send data, who can initiate disconnect).</li></ul></div><div class="learn-section"><div class="learn-h">Session Layer Protocols</div><table class="learn-table"><tr><th>Protocol</th><th>Function</th><th>Modern Equivalent</th></tr><tr><td>NetBIOS</td><td>Name service, session, datagram for LAN</td><td>Largely replaced by DNS + TCP</td></tr><tr><td>RPC (Remote Procedure Call)</td><td>Call functions on remote machines</td><td>gRPC, Apache Thrift</td></tr><tr><td>PPTP</td><td>VPN tunneling protocol</td><td>WireGuard, OpenVPN</td></tr><tr><td>SIP (Session Initiation Protocol)</td><td>Establish/terminate multimedia sessions</td><td>Used in VoIP (Skype, Zoom)</td></tr><tr><td>SMPP</td><td>SMS messaging sessions</td><td>Still used in telecom</td></tr></table></div><div class="learn-section"><div class="learn-h">Remote Procedure Call (RPC)</div><p class="learn-p"><b>RPC</b> allows a program to call a function on a remote machine as if it were local. The caller does not need to know network details — the <b>stub</b> handles marshalling (serializing) parameters, sending them over the network, and unmarshalling the result.</p><div class="learn-code">RPC Flow:\n\n  Client Process          Network           Server Process\n  ┌─────────────┐                        ┌─────────────┐\n  │ Client Code │────────────────────────▶│ Server Code │\n  ├─────────────┤                        ├─────────────┤\n  │ Client Stub │  ──marshal──▶          │ Server Stub │\n  ├─────────────┤   request              ├─────────────┤\n  │  Transport  │  ◄──result──           │  Transport  │\n  └─────────────┘   response             └─────────────┘\n\nSteps:\n1. Client calls stub function (looks like a local call)\n2. Client stub marshals (serializes) parameters\n3. Transport sends request to server\n4. Server stub unmarshals parameters\n5. Server stub calls actual server function\n6. Result marshalled and sent back\n7. Client stub unmarshals result and returns to caller</div><p class="learn-p"><b>Modern RPC frameworks:</b></p><table class="learn-table"><tr><th>Framework</th><th>Serialization</th><th>Transport</th><th>Language Support</th></tr><tr><td>gRPC (Google)</td><td>Protocol Buffers</td><td>HTTP/2</td><td>Multi-language (C++, Java, Python, Go)</td></tr><tr><td>Apache Thrift</td><td>Thrift Binary/Compact</td><td>TCP, HTTP</td><td>Multi-language</td></tr><tr><td>JSON-RPC</td><td>JSON</td><td>HTTP</td><td>Any</td></tr><tr><td>XML-RPC</td><td>XML</td><td>HTTP</td><td>Any</td></tr></table></div><div class="learn-section"><div class="learn-h">Web Sessions in Practice</div><p class="learn-p">Modern web applications implement session management at the application level:</p><div class="learn-code">HTTP Session Management:\n\n1. Cookie-based sessions:\n   Client logs in → Server creates session, stores in memory/Redis\n   Server sends: Set-Cookie: session_id=abc123; HttpOnly; Secure\n   Client sends: Cookie: session_id=abc123 (on every request)\n   Server looks up session_id → retrieves user state\n\n2. Token-based sessions (JWT):\n   Client logs in → Server signs JWT with secret key\n   Server sends: { token: "eyJhbGci..." }\n   Client sends: Authorization: Bearer eyJhbGci...\n   Server verifies signature → extracts claims (no server-side lookup)\n\nCookie Sessions vs JWT:\n  Cookie: Stateful (server stores session), easy to revoke\n  JWT:    Stateless (self-contained), hard to revoke, scalable</div></div><div class="learn-section"><div class="learn-h">Interview Spotlight</div><p class="learn-p"><b>Q1: What are the key functions of the Session Layer?</b><br>A: Session establishment (authentication, ID generation), maintenance (keep-alive, state tracking), termination (logout, cleanup), dialog control (simplex/half-duplex/full-duplex), synchronization (checkpoints for resumption), and token management (controlling who can transmit).</p><p class="learn-p"><b>Q2: Explain the RPC mechanism.</b><br>A: RPC lets a client call a function on a remote server as if it were local. The client stub marshals (serializes) parameters and sends them over the network. The server stub unmarshals them, executes the function, marshals the result, and sends it back. The client stub unmarshals the result and returns it to the caller. Modern implementations: gRPC (Protocol Buffers over HTTP/2), Thrift.</p><p class="learn-p"><b>Q3: What is the difference between simplex, half-duplex, and full-duplex?</b><br>A: Simplex: one-way only (TV broadcast). Half-duplex: two-way but alternating (walkie-talkie, HTTP/1.0). Full-duplex: simultaneous two-way (WebSocket, telephone). The session layer controls which mode is used for a given dialog.</p><p class="learn-p"><b>Q4: Compare cookie-based sessions with JWT tokens.</b><br>A: Cookies are stateful — the server stores session data and the cookie is just an ID. Easy to revoke (delete from server store). JWT is stateless — the token contains the claims, signed by the server. No server-side storage needed (scalable), but hard to revoke before expiry. Use cookies for traditional web apps; JWT for APIs and microservices.</p><p class="learn-p"><b>Q5: What are synchronization points in the Session Layer?</b><br>A: Checkpoints inserted into a data stream during long transfers. If a failure occurs, the session can resume from the last checkpoint instead of starting over. Two types: major sync points (require acknowledgment) and minor sync points (no acknowledgment needed). Analogous to save points in a database transaction.</p></div>',
-          code: `// === Session Layer Concepts in C++ ===
-// Demonstrates session management patterns
-
+          t: 'Transmission Media, Topologies & Switching',
+          learn: '<div class="learn-section"><div class="learn-h">Why This Matters</div><p class="learn-p">Choosing the right transmission medium, topology, and switching technique is fundamental to network design. In SDE placement interviews you will be asked to compare twisted pair vs fiber, explain why star topology dominates LANs, and contrast circuit switching with packet switching. At firms like DE Shaw, understanding physical infrastructure decisions — why data centers use fiber internally, why microwave links compete with fiber for HFT, and how topology affects fault tolerance — is directly relevant to building low-latency trading systems.</p></div><div class="learn-section"><div class="learn-h">Guided Media — Twisted Pair Cable</div><p class="learn-p"><b>Twisted pair</b> consists of two insulated copper wires twisted together to reduce electromagnetic interference (crosstalk). There are two types:</p><ul class="learn-list"><li><b>UTP (Unshielded Twisted Pair):</b> No metallic shield. Most common in LANs. Cheaper but more susceptible to EMI.</li><li><b>STP (Shielded Twisted Pair):</b> Has a metallic foil or braided shield around each pair. Better EMI protection, used in industrial environments.</li></ul><table class="learn-table"><tr><th>Category</th><th>Max Speed</th><th>Max Bandwidth</th><th>Use Case</th></tr><tr><td>CAT5</td><td>100 Mbps</td><td>100 MHz</td><td>Fast Ethernet (legacy)</td></tr><tr><td>CAT5e</td><td>1 Gbps</td><td>100 MHz</td><td>Gigabit Ethernet</td></tr><tr><td>CAT6</td><td>1 Gbps (10 Gbps up to 55m)</td><td>250 MHz</td><td>Gigabit / 10G Ethernet</td></tr><tr><td>CAT6a</td><td>10 Gbps</td><td>500 MHz</td><td>10G Ethernet (full 100m)</td></tr></table><p class="learn-p">All categories are limited to <b>100 meters</b> maximum segment length. RJ-45 connectors are standard.</p></div><div class="learn-section"><div class="learn-h">Guided Media — Coaxial Cable</div><p class="learn-p"><b>Coaxial cable</b> has a central copper conductor surrounded by insulation, a metallic shield, and an outer jacket. The shield provides better noise immunity than twisted pair.</p><ul class="learn-list"><li><b>Thin coax (10BASE2):</b> 185m max, BNC connectors, bus topology. Legacy Ethernet.</li><li><b>Thick coax (10BASE5):</b> 500m max, AUI connectors. Original Ethernet backbone.</li><li><b>Modern use:</b> Cable TV (CATV), cable internet (DOCSIS), CCTV systems.</li></ul><p class="learn-p">Coaxial cable supports higher bandwidth than twisted pair but is more expensive and harder to install. It has largely been replaced by twisted pair in LANs and fiber in backbones.</p></div><div class="learn-section"><div class="learn-h">Guided Media — Fiber Optic Cable</div><p class="learn-p"><b>Fiber optic</b> transmits data as pulses of light through a glass or plastic core. It works on the principle of <b>total internal reflection</b> — when light hits the core-cladding boundary at an angle greater than the critical angle, it reflects back into the core instead of refracting out.</p><div class="learn-code">Total Internal Reflection:\n  Core (higher refractive index n1)\n  Cladding (lower refractive index n2, where n1 &gt; n2)\n  Critical angle: sin(theta_c) = n2 / n1\n  Light entering at angle &gt; theta_c reflects completely</div><table class="learn-table"><tr><th>Property</th><th>Single-Mode (SMF)</th><th>Multi-Mode (MMF)</th></tr><tr><td>Core diameter</td><td>~8-10 &mu;m</td><td>~50-62.5 &mu;m</td></tr><tr><td>Light source</td><td>Laser</td><td>LED or VCSEL</td></tr><tr><td>Max distance</td><td>Up to 100+ km</td><td>Up to 2 km</td></tr><tr><td>Bandwidth</td><td>Very high</td><td>High</td></tr><tr><td>Cost</td><td>Higher</td><td>Lower</td></tr><tr><td>Modal dispersion</td><td>None (single path)</td><td>Present (multiple paths)</td></tr><tr><td>Use case</td><td>WAN, backbone, long-haul</td><td>LAN, data center, short runs</td></tr></table><div class="learn-tip"><b>Tip:</b> Multi-mode fiber suffers from <b>modal dispersion</b> — different light rays take different paths through the large core, arriving at slightly different times and causing signal spreading. Single-mode eliminates this by allowing only one path. This is why SMF supports much longer distances.</div></div><div class="learn-section"><div class="learn-h">Unguided Media</div><ul class="learn-list"><li><b>Radio Waves (3 kHz - 1 GHz):</b> Omnidirectional, can penetrate walls. Used in AM/FM radio, Wi-Fi (2.4/5 GHz), Bluetooth, cellular. Susceptible to interference.</li><li><b>Microwaves (1 GHz - 300 GHz):</b> Directional, line-of-sight. Used in satellite communication, point-to-point links, HFT inter-exchange links. Affected by rain (rain fade).</li><li><b>Infrared:</b> Very short range (~1m), line-of-sight, cannot penetrate walls. Used in TV remotes, IrDA (legacy data transfer). Secure from eavesdropping due to limited range.</li></ul><div class="learn-warn"><b>HFT Note:</b> Some trading firms use microwave links between exchanges (e.g., Chicago to New Jersey) because microwaves travel at the speed of light in air (~3 x 10^8 m/s) vs ~2 x 10^8 m/s in fiber. The ~33% speed advantage shaves microseconds off latency, which matters in high-frequency trading.</div></div><div class="learn-section"><div class="learn-h">Network Topologies</div><table class="learn-table"><tr><th>Topology</th><th>Structure</th><th>Pros</th><th>Cons</th></tr><tr><td>Bus</td><td>All devices on a single cable</td><td>Simple, cheap, easy to extend</td><td>Single point of failure (the bus), collisions, hard to troubleshoot</td></tr><tr><td>Star</td><td>All devices connect to a central hub/switch</td><td>Easy to add/remove devices, fault isolation, no collisions (with switch)</td><td>Central device is single point of failure, more cabling</td></tr><tr><td>Ring</td><td>Devices in a closed loop</td><td>Predictable performance, no collisions (token passing)</td><td>One break disrupts entire network, hard to add devices</td></tr><tr><td>Mesh</td><td>Every device connects to every other</td><td>Highly redundant, fault tolerant, no single point of failure</td><td>Expensive (n(n-1)/2 links), complex wiring</td></tr><tr><td>Tree</td><td>Hierarchical star topology</td><td>Scalable, logical grouping</td><td>Root failure affects all, backbone dependency</td></tr><tr><td>Hybrid</td><td>Combination of two or more topologies</td><td>Flexible, scalable</td><td>Complex design and management</td></tr></table><div class="learn-code">Full Mesh: Links = n(n-1)/2\n  5 nodes: 5*4/2 = 10 links\n  10 nodes: 10*9/2 = 45 links\n  100 nodes: 100*99/2 = 4950 links (impractical!)\n\nPartial Mesh: Only critical nodes are fully connected.\nUsed in WAN backbone and data center spine-leaf designs.</div><p class="learn-p"><b>Modern LANs</b> predominantly use <b>star topology</b> with Ethernet switches at the center. Data centers use <b>spine-leaf</b> (a form of partial mesh/fat-tree) for predictable latency and high bandwidth.</p></div><div class="learn-section"><div class="learn-h">Switching Techniques</div><p class="learn-p">Switching determines how data moves from source to destination across a network.</p><table class="learn-table"><tr><th>Feature</th><th>Circuit Switching</th><th>Packet Switching</th><th>Message Switching</th></tr><tr><td>Connection</td><td>Dedicated path established before data transfer</td><td>No dedicated path; packets routed independently</td><td>No dedicated path; entire message stored-and-forwarded</td></tr><tr><td>Setup delay</td><td>Yes (path must be established)</td><td>No</td><td>No</td></tr><tr><td>Bandwidth</td><td>Reserved (wasted if idle)</td><td>Shared dynamically</td><td>Shared dynamically</td></tr><tr><td>Latency</td><td>Constant after setup</td><td>Variable (queuing delays)</td><td>High (store full message at each hop)</td></tr><tr><td>Reliability</td><td>Path failure breaks connection</td><td>Packets rerouted around failures</td><td>Message rerouted around failures</td></tr><tr><td>Order</td><td>In order (single path)</td><td>May arrive out of order</td><td>In order per message</td></tr><tr><td>Example</td><td>Traditional telephone (PSTN)</td><td>Internet (IP)</td><td>Email relay (legacy)</td></tr></table><p class="learn-p"><b>Packet switching sub-types:</b></p><ul class="learn-list"><li><b>Datagram (connectionless):</b> Each packet routed independently. No setup. Packets may take different paths and arrive out of order. Example: UDP/IP.</li><li><b>Virtual circuit (connection-oriented):</b> A logical path is established before data transfer. All packets follow the same path. Setup required but lower per-packet overhead. Example: ATM, MPLS, Frame Relay.</li></ul></div><div class="learn-section"><div class="learn-h">Network Devices by OSI Layer</div><table class="learn-table"><tr><th>Device</th><th>OSI Layer</th><th>Operates On</th><th>Function</th></tr><tr><td>Hub (Repeater)</td><td>Layer 1 (Physical)</td><td>Bits</td><td>Broadcasts to all ports. No intelligence. Creates a single collision domain.</td></tr><tr><td>Switch (Bridge)</td><td>Layer 2 (Data Link)</td><td>Frames (MAC addresses)</td><td>Forwards to specific port using MAC table. Each port is a separate collision domain.</td></tr><tr><td>Router</td><td>Layer 3 (Network)</td><td>Packets (IP addresses)</td><td>Routes between networks. Each interface is a separate broadcast domain.</td></tr></table><div class="learn-code">Hub:    All ports = 1 collision domain, 1 broadcast domain\nSwitch: Each port = separate collision domain, 1 broadcast domain\nRouter: Each interface = separate collision domain AND broadcast domain\n\nCollision domain: area where frames can collide\nBroadcast domain: area where a broadcast reaches all devices</div><div class="learn-tip"><b>Tip:</b> A switch with N ports creates N collision domains (one per port) but only 1 broadcast domain. A router separates broadcast domains. VLANs on a switch can also create separate broadcast domains at Layer 2.</div></div><div class="learn-section"><div class="learn-h">Interview Spotlight</div><p class="learn-p"><b>Q1: Compare single-mode and multi-mode fiber optic cable.</b><br>A: Single-mode has a small core (~9 &mu;m), uses laser light, supports distances up to 100+ km with no modal dispersion — used in WANs and backbone links. Multi-mode has a larger core (~50-62.5 &mu;m), uses LED/VCSEL, supports up to ~2 km but suffers from modal dispersion — used in LANs and data centers. Single-mode is more expensive but essential for long-haul.</p><p class="learn-p"><b>Q2: Why does star topology dominate modern LANs?</b><br>A: Star topology provides easy fault isolation (one cable failure affects only one device), simple addition/removal of devices, and when used with a switch (not hub), eliminates collisions entirely. The only weakness is the central switch being a single point of failure, which is mitigated with redundant switches.</p><p class="learn-p"><b>Q3: What is the difference between a hub, a switch, and a router?</b><br>A: A hub operates at Layer 1 and broadcasts all frames to all ports — creating one large collision domain. A switch operates at Layer 2 and uses a MAC address table to forward frames only to the correct port — each port is a separate collision domain. A router operates at Layer 3 and routes packets between different networks using IP addresses — each interface is a separate broadcast domain.</p><p class="learn-p"><b>Q4: Why do some HFT firms prefer microwave over fiber for inter-exchange links?</b><br>A: Microwaves travel at the speed of light in air (~3 x 10^8 m/s) whereas light in fiber travels at ~2 x 10^8 m/s due to the refractive index of glass. This ~33% speed advantage translates to microseconds of latency savings on routes like Chicago-to-New Jersey, which is significant in high-frequency trading.</p><p class="learn-p"><b>Q5: How many links are needed in a full mesh topology with n nodes? Why is full mesh impractical for large networks?</b><br>A: Full mesh requires n(n-1)/2 links. For 10 nodes that is 45 links; for 100 nodes, 4950 links. The O(n^2) growth makes full mesh impractical for large networks. Instead, partial mesh or spine-leaf architectures connect only critical nodes fully, balancing redundancy with cost.</p></div>',
+          code: `// === Topology & Switching Simulation in C++ ===
 #include <iostream>
-#include <string>
-#include <unordered_map>
-#include <random>
-#include <chrono>
-using namespace std;
-
-// Simple session store (like server-side session management)
-class SessionStore {
-    struct Session {
-        string userId;
-        string data;
-        time_t createdAt;
-        time_t lastAccess;
-        int timeout; // seconds
-    };
-    unordered_map<string, Session> sessions;
-
-    string generateId() {
-        static mt19937 rng(42);
-        uniform_int_distribution<> dist(0, 15);
-        string id;
-        const char hex[] = "0123456789abcdef";
-        for (int i = 0; i < 32; i++) id += hex[dist(rng)];
-        return id;
-    }
-public:
-    string createSession(const string& userId, int timeoutSec = 1800) {
-        string sid = generateId();
-        time_t now = time(nullptr);
-        sessions[sid] = {userId, "", now, now, timeoutSec};
-        cout << "Session created: " << sid.substr(0, 8)
-             << "... for user " << userId << endl;
-        return sid;
-    }
-
-    bool validateSession(const string& sid) {
-        auto it = sessions.find(sid);
-        if (it == sessions.end()) return false;
-        time_t now = time(nullptr);
-        if (now - it->second.lastAccess > it->second.timeout) {
-            cout << "Session expired: " << sid.substr(0, 8) << "..." << endl;
-            sessions.erase(it);
-            return false;
-        }
-        it->second.lastAccess = now;
-        return true;
-    }
-
-    void destroySession(const string& sid) {
-        sessions.erase(sid);
-        cout << "Session destroyed: " << sid.substr(0, 8) << "..." << endl;
-    }
-
-    size_t activeSessions() const { return sessions.size(); }
-};
-
-// RPC stub simulation
-class RPCStub {
-public:
-    // Marshal: serialize function call into bytes
-    static string marshal(const string& funcName, const string& params) {
-        return funcName + "|" + params; // simplified serialization
-    }
-
-    // Unmarshal: deserialize bytes into function call
-    static pair<string, string> unmarshal(const string& data) {
-        size_t pos = data.find('|');
-        return {data.substr(0, pos), data.substr(pos + 1)};
-    }
-
-    // Simulate RPC call
-    static string call(const string& funcName, const string& params) {
-        string request = marshal(funcName, params);
-        cout << "RPC Request: " << request << endl;
-
-        // "Network transfer" (simulated)
-        auto [func, args] = unmarshal(request);
-        cout << "Server executing: " << func << "(" << args << ")" << endl;
-
-        // Server processes and returns result
-        string result = "result_of_" + func;
-        cout << "RPC Response: " << result << endl;
-        return result;
-    }
-};
-
-// Dialog control modes
-enum class DialogMode { SIMPLEX, HALF_DUPLEX, FULL_DUPLEX };
-
-string dialogModeStr(DialogMode m) {
-    switch (m) {
-        case DialogMode::SIMPLEX: return "Simplex (one-way)";
-        case DialogMode::HALF_DUPLEX: return "Half-Duplex (alternating)";
-        case DialogMode::FULL_DUPLEX: return "Full-Duplex (simultaneous)";
-    }
-    return "Unknown";
-}
-
-int main() {
-    cout << "=== Session Management ===" << endl;
-    SessionStore store;
-    string sid1 = store.createSession("alice");
-    string sid2 = store.createSession("bob");
-    cout << "Active sessions: " << store.activeSessions() << endl;
-    cout << "Validate sid1: " << (store.validateSession(sid1) ? "valid" : "invalid") << endl;
-    store.destroySession(sid2);
-    cout << "Active after logout: " << store.activeSessions() << endl;
-
-    cout << "\n=== RPC Simulation ===" << endl;
-    RPCStub::call("getPrice", "AAPL");
-    RPCStub::call("placeOrder", "BUY,AAPL,100");
-
-    cout << "\n=== Dialog Control Modes ===" << endl;
-    cout << dialogModeStr(DialogMode::SIMPLEX) << " - e.g., TV broadcast" << endl;
-    cout << dialogModeStr(DialogMode::HALF_DUPLEX) << " - e.g., HTTP/1.0" << endl;
-    cout << dialogModeStr(DialogMode::FULL_DUPLEX) << " - e.g., WebSocket" << endl;
-
-    return 0;
-}`,
-          problems: [
-            {t: 'Implement a simple session store with create, validate, and destroy operations', d: 'Easy', tags: ['Session Layer']},
-            {t: 'Design an RPC stub with marshalling and unmarshalling of function calls', d: 'Medium', tags: ['RPC']},
-            {t: 'Compare cookie-based sessions vs JWT tokens with pros and cons', d: 'Easy', tags: ['Session Layer']},
-            {t: 'Implement synchronization checkpoints for a file transfer protocol', d: 'Medium', tags: ['Session Layer']},
-            {t: 'Design a session timeout manager using priority queues', d: 'Medium', tags: ['Session Layer']},
-          ],
-          mcqs: [
-            {q: 'The Session Layer is responsible for:', o: ['Routing packets', 'Dialog control and session management', 'Error detection', 'Encryption'], a: 1},
-            {q: 'Which dialog mode allows simultaneous two-way communication?', o: ['Simplex', 'Half-duplex', 'Full-duplex', 'Broadcast'], a: 2},
-            {q: 'In RPC, the client stub is responsible for:', o: ['Executing the remote function', 'Marshalling parameters and sending the request', 'Managing the TCP connection', 'Encrypting the data'], a: 1},
-            {q: 'gRPC uses which serialization format by default?', o: ['JSON', 'XML', 'Protocol Buffers', 'MessagePack'], a: 2},
-            {q: 'Synchronization points in the Session Layer are used to:', o: ['Encrypt data', 'Resume transmission from the last checkpoint after failure', 'Compress data', 'Assign IP addresses'], a: 1},
-            {q: 'Cookie-based sessions vs JWT — which is stateful?', o: ['JWT', 'Cookie-based sessions', 'Both are stateless', 'Both are stateful'], a: 1},
-            {q: 'SIP (Session Initiation Protocol) is primarily used for:', o: ['File transfer', 'Establishing multimedia sessions (VoIP)', 'Email delivery', 'DNS resolution'], a: 1},
-            {q: 'NetBIOS operates at which OSI layer?', o: ['Network', 'Transport', 'Session', 'Application'], a: 2}
-          ],
-        },
-        {
-          t: 'Presentation Layer — Encryption, Encoding & Compression',
-          learn: '<div class="learn-section"><div class="learn-h">Why This Matters</div><p class="learn-p">The <b>Presentation Layer (Layer 6)</b> is responsible for data translation, encryption, and compression — ensuring that data sent by one application can be understood by another, regardless of differences in encoding or architecture. For SDE placements, this layer\'s cryptography concepts are <b>heavily tested</b>: symmetric vs asymmetric encryption, hashing algorithms, digital signatures, and the TLS handshake. At DE Shaw, secure communication is critical for trading systems — understanding how TLS protects data in transit and how certificates work is a practical daily requirement.</p></div><div class="learn-section"><div class="learn-h">Presentation Layer Functions</div><ul class="learn-list"><li><b>Data Translation / Encoding:</b> Converting data between different formats — ASCII, Unicode (UTF-8/16), EBCDIC. Ensures a Windows machine and a Unix server can exchange text correctly.</li><li><b>Data Encryption / Decryption:</b> Applying cryptographic algorithms to protect data confidentiality. TLS/SSL encryption operates conceptually at this layer.</li><li><b>Data Compression:</b> Reducing data size for efficient transmission. Lossy (JPEG, MP3) for multimedia; lossless (gzip, Huffman, LZ77) for text/binary.</li><li><b>Serialization / Deserialization:</b> Converting structured data (objects, records) into a byte stream for transmission and back. JSON, XML, Protocol Buffers, MessagePack.</li></ul></div><div class="learn-section"><div class="learn-h">Character Encoding</div><table class="learn-table"><tr><th>Encoding</th><th>Bits</th><th>Characters</th><th>Notes</th></tr><tr><td>ASCII</td><td>7 bits</td><td>128</td><td>English letters, digits, symbols only</td></tr><tr><td>Extended ASCII</td><td>8 bits</td><td>256</td><td>Adds accented characters (Latin-1)</td></tr><tr><td>Unicode (UTF-8)</td><td>1-4 bytes</td><td>1.1M+</td><td>Variable-length, backward compatible with ASCII. The web standard.</td></tr><tr><td>Unicode (UTF-16)</td><td>2-4 bytes</td><td>1.1M+</td><td>Used internally by Java, Windows</td></tr><tr><td>Unicode (UTF-32)</td><td>4 bytes</td><td>1.1M+</td><td>Fixed-width, wasteful for ASCII text</td></tr><tr><td>EBCDIC</td><td>8 bits</td><td>256</td><td>IBM mainframes (legacy)</td></tr></table><p class="learn-p"><b>MIME Types:</b> Used in HTTP and email to specify the format of data being transmitted. Examples: <code>text/html</code>, <code>application/json</code>, <code>image/png</code>, <code>application/octet-stream</code>. The Content-Type header tells the receiver how to interpret the data.</p></div><div class="learn-section"><div class="learn-h">Cryptography — Symmetric Encryption</div><p class="learn-p"><b>Symmetric encryption</b> uses the <b>same key</b> for both encryption and decryption. It is fast and used for bulk data encryption.</p><div class="learn-code">Plaintext + Key → [Encryption Algorithm] → Ciphertext\nCiphertext + Key → [Decryption Algorithm] → Plaintext\n\nKey challenge: How do sender and receiver securely share the key?\nThis is the KEY DISTRIBUTION PROBLEM.</div><table class="learn-table"><tr><th>Algorithm</th><th>Key Size</th><th>Block Size</th><th>Status</th></tr><tr><td>DES</td><td>56 bits</td><td>64 bits</td><td>Broken (brute-forceable). Do not use.</td></tr><tr><td>3DES (Triple DES)</td><td>112/168 bits</td><td>64 bits</td><td>Legacy. Slow (3x DES operations).</td></tr><tr><td>AES</td><td>128/192/256 bits</td><td>128 bits</td><td><b>Current standard.</b> Fast, secure.</td></tr><tr><td>ChaCha20</td><td>256 bits</td><td>Stream cipher</td><td>Modern. Used in TLS 1.3 (mobile/IoT).</td></tr><tr><td>RC4</td><td>40-2048 bits</td><td>Stream cipher</td><td>Broken. Removed from TLS.</td></tr></table><p class="learn-p"><b>Block Cipher Modes:</b></p><ul class="learn-list"><li><b>ECB (Electronic Codebook):</b> Each block encrypted independently. <b>Insecure</b> — identical plaintext blocks produce identical ciphertext blocks (reveals patterns).</li><li><b>CBC (Cipher Block Chaining):</b> Each block XORed with previous ciphertext block before encryption. Requires an IV (Initialization Vector). Sequential — cannot parallelize encryption.</li><li><b>CTR (Counter Mode):</b> Converts block cipher to stream cipher using a counter. <b>Parallelizable</b> for both encryption and decryption.</li><li><b>GCM (Galois/Counter Mode):</b> CTR + authentication tag. Provides <b>authenticated encryption</b> (confidentiality + integrity). <b>Used in TLS 1.3</b>.</li></ul><div class="learn-warn"><b>Never use ECB mode.</b> The famous ECB penguin demonstrates the problem: encrypting an image with ECB preserves the outline of the original image because identical pixel blocks produce identical ciphertext blocks.</div></div><div class="learn-section"><div class="learn-h">Cryptography — Asymmetric Encryption</div><p class="learn-p"><b>Asymmetric (public-key) encryption</b> uses a <b>key pair</b>: a public key (shared freely) and a private key (kept secret). Data encrypted with the public key can only be decrypted with the private key, and vice versa.</p><div class="learn-code">Encryption: Plaintext + Public Key → Ciphertext\nDecryption: Ciphertext + Private Key → Plaintext\n\nAlternatively (for digital signatures):\nSign:   Message + Private Key → Signature\nVerify: Signature + Public Key → Valid/Invalid</div><table class="learn-table"><tr><th>Algorithm</th><th>Key Size</th><th>Based On</th><th>Use Case</th></tr><tr><td>RSA</td><td>2048-4096 bits</td><td>Integer factorization</td><td>Encryption, digital signatures</td></tr><tr><td>ECC (Elliptic Curve)</td><td>256-384 bits</td><td>Elliptic curve discrete log</td><td>Faster, smaller keys. Used in TLS 1.3</td></tr><tr><td>Diffie-Hellman (DH)</td><td>2048+ bits</td><td>Discrete logarithm</td><td>Key exchange only (not encryption)</td></tr><tr><td>ECDHE</td><td>256 bits</td><td>Elliptic curve DH</td><td>Key exchange in TLS with forward secrecy</td></tr></table><p class="learn-p"><b>Symmetric vs Asymmetric:</b></p><table class="learn-table"><tr><th>Aspect</th><th>Symmetric</th><th>Asymmetric</th></tr><tr><td>Speed</td><td><b>Fast</b> (100-1000x faster)</td><td>Slow</td></tr><tr><td>Key Distribution</td><td>Hard (shared secret)</td><td><b>Easy</b> (public key is public)</td></tr><tr><td>Key Count (n parties)</td><td>n(n-1)/2 keys</td><td>2n keys (1 pair per party)</td></tr><tr><td>Use Case</td><td>Bulk data encryption</td><td>Key exchange, digital signatures</td></tr></table><div class="learn-tip"><b>Key insight:</b> In practice, <b>both are used together</b> (hybrid encryption). Asymmetric encryption exchanges a symmetric session key. Then symmetric encryption encrypts the actual data. This is exactly what TLS does.</div></div><div class="learn-section"><div class="learn-h">Hashing Algorithms</div><p class="learn-p">A <b>hash function</b> maps arbitrary-length input to a fixed-length output (digest). It is a one-way function — you cannot reverse a hash to get the original input.</p><div class="learn-code">Properties of a cryptographic hash:\n1. Deterministic: same input always gives same output\n2. Fast to compute\n3. Pre-image resistance: given H(x), cannot find x\n4. Collision resistance: hard to find x != y where H(x) = H(y)\n5. Avalanche effect: 1-bit input change → ~50% output bits change</div><table class="learn-table"><tr><th>Algorithm</th><th>Output Size</th><th>Status</th></tr><tr><td>MD5</td><td>128 bits</td><td><b>Broken.</b> Collisions found. Do not use for security.</td></tr><tr><td>SHA-1</td><td>160 bits</td><td><b>Broken.</b> Google demonstrated collision (SHAttered). Deprecated.</td></tr><tr><td>SHA-256</td><td>256 bits</td><td><b>Current standard.</b> Used in Bitcoin, TLS, Git.</td></tr><tr><td>SHA-3</td><td>224-512 bits</td><td>Latest standard (different internal structure: Keccak sponge).</td></tr><tr><td>bcrypt/scrypt/Argon2</td><td>Variable</td><td>Password hashing (intentionally slow + salted).</td></tr></table><p class="learn-p"><b>Use cases:</b> Password storage (hash + salt), data integrity verification, digital signatures (hash then sign), blockchain proof of work, Git commit IDs.</p></div><div class="learn-section"><div class="learn-h">Digital Signatures &amp; Certificates</div><p class="learn-p">A <b>digital signature</b> provides authentication, integrity, and non-repudiation:</p><div class="learn-code">Signing:\n  1. Hash the message: digest = SHA-256(message)\n  2. Encrypt digest with sender\'s private key: signature = Encrypt(digest, priv_key)\n  3. Send: message + signature\n\nVerification:\n  1. Hash the received message: digest1 = SHA-256(message)\n  2. Decrypt signature with sender\'s public key: digest2 = Decrypt(signature, pub_key)\n  3. If digest1 == digest2: signature is valid\n     (message is authentic, unmodified, and non-repudiable)</div><p class="learn-p"><b>Digital Certificates (X.509):</b> Bind a public key to an identity. Issued by a <b>Certificate Authority (CA)</b>. The CA signs the certificate with its private key. Browsers trust certificates signed by known CAs (root certificates pre-installed in OS/browser).</p><div class="learn-code">Certificate Chain of Trust:\n\nRoot CA (self-signed, pre-installed in browser)\n  └─ signs → Intermediate CA certificate\n                 └─ signs → Server certificate (e.g., google.com)\n\nBrowser verifies: server cert → intermediate CA → root CA (trusted)</div></div><div class="learn-section"><div class="learn-h">TLS Handshake (Presentation + Session)</div><p class="learn-p">The <b>TLS handshake</b> combines session establishment with presentation-layer encryption. TLS 1.3 (current standard) simplified the handshake to <b>1-RTT</b> (vs 2-RTT in TLS 1.2):</p><div class="learn-code">TLS 1.3 Handshake (1-RTT):\n\nClient                                    Server\n  │                                          │\n  │── ClientHello ────────────────────▶│\n  │   (supported ciphers, key share,          │\n  │    client random, SNI)                    │\n  │                                          │\n  │◀── ServerHello + Certificate + Verify ──│\n  │   (chosen cipher, key share,              │\n  │    server cert, signature)                │\n  │                                          │\n  │   [Both derive session keys using ECDHE]  │\n  │                                          │\n  │── Finished (encrypted) ────────────▶│\n  │                                          │\n  │◀────── Application Data (encrypted) ────│\n\nKey exchange: ECDHE (Elliptic Curve Diffie-Hellman Ephemeral)\nBulk encryption: AES-256-GCM or ChaCha20-Poly1305\nForward secrecy: New key pair per session (ephemeral keys)</div><p class="learn-p"><b>Forward Secrecy:</b> Even if the server\'s long-term private key is compromised, past sessions cannot be decrypted because each session used a unique ephemeral key pair. ECDHE provides this; static RSA key exchange does not (removed in TLS 1.3).</p></div><div class="learn-section"><div class="learn-h">Data Compression</div><table class="learn-table"><tr><th>Type</th><th>Algorithm</th><th>Ratio</th><th>Use Case</th></tr><tr><td>Lossless</td><td>Huffman Coding</td><td>~50%</td><td>Text, general-purpose</td></tr><tr><td>Lossless</td><td>LZ77 / LZ78</td><td>~60-70%</td><td>gzip, zlib, PNG</td></tr><tr><td>Lossless</td><td>Deflate (LZ77 + Huffman)</td><td>~65%</td><td>gzip, zip, HTTP compression</td></tr><tr><td>Lossy</td><td>JPEG (DCT)</td><td>~90%</td><td>Images</td></tr><tr><td>Lossy</td><td>MP3 / AAC</td><td>~90%</td><td>Audio</td></tr><tr><td>Lossy</td><td>H.264 / H.265</td><td>~95%</td><td>Video</td></tr></table><p class="learn-p"><b>HTTP Compression:</b> The browser sends <code>Accept-Encoding: gzip, br</code>. The server compresses the response body and sends <code>Content-Encoding: gzip</code>. This typically reduces HTML/CSS/JS by 60-80%.</p></div><div class="learn-section"><div class="learn-h">Serialization Formats</div><table class="learn-table"><tr><th>Format</th><th>Type</th><th>Size</th><th>Speed</th><th>Use Case</th></tr><tr><td>JSON</td><td>Text</td><td>Large</td><td>Moderate</td><td>REST APIs, web (human-readable)</td></tr><tr><td>XML</td><td>Text</td><td>Very large</td><td>Slow</td><td>SOAP, legacy enterprise</td></tr><tr><td>Protocol Buffers</td><td>Binary</td><td><b>Small</b></td><td><b>Fast</b></td><td>gRPC, internal services</td></tr><tr><td>MessagePack</td><td>Binary</td><td>Small</td><td>Fast</td><td>Redis, IoT</td></tr><tr><td>Avro</td><td>Binary</td><td>Small</td><td>Fast</td><td>Hadoop, Kafka</td></tr></table></div><div class="learn-section"><div class="learn-h">Interview Spotlight</div><p class="learn-p"><b>Q1: Compare symmetric and asymmetric encryption.</b><br>A: Symmetric uses one shared key (AES, ChaCha20) — fast but key distribution is hard. Asymmetric uses a key pair (RSA, ECC) — slow but solves key distribution. In practice, TLS uses asymmetric to exchange a symmetric session key, then symmetric for bulk encryption. For n parties: symmetric needs n(n-1)/2 keys; asymmetric needs 2n.</p><p class="learn-p"><b>Q2: Why is ECB mode insecure?</b><br>A: ECB encrypts each block independently with the same key. Identical plaintext blocks produce identical ciphertext blocks, revealing patterns in the data. The ECB penguin example shows an image encrypted with ECB retains the original outline. Use CBC, CTR, or GCM instead.</p><p class="learn-p"><b>Q3: Explain the TLS 1.3 handshake.</b><br>A: 1-RTT handshake: Client sends ClientHello (supported ciphers + ECDHE key share). Server responds with ServerHello (chosen cipher + key share + certificate + signature). Both derive the session key using ECDHE. Subsequent data is encrypted with AES-GCM or ChaCha20. Forward secrecy is guaranteed by ephemeral keys.</p><p class="learn-p"><b>Q4: What is forward secrecy and why does it matter?</b><br>A: Forward secrecy ensures that compromising the server\'s long-term private key doesn\'t compromise past sessions. Achieved using ephemeral key exchange (ECDHE) — each session generates new key pairs that are discarded after use. Without forward secrecy (static RSA), an attacker who obtains the private key can decrypt all recorded traffic.</p><p class="learn-p"><b>Q5: How does a digital signature work?</b><br>A: The sender hashes the message (SHA-256), then encrypts the hash with their private key — this is the signature. The receiver decrypts the signature with the sender\'s public key to get the hash, then independently hashes the message and compares. If they match: the message is authentic (came from the sender), has integrity (wasn\'t modified), and is non-repudiable (sender can\'t deny signing it).</p><p class="learn-p"><b>Q6: Why is MD5 considered broken?</b><br>A: Researchers demonstrated practical collision attacks — two different inputs producing the same MD5 hash. This breaks integrity verification and certificate security. SHA-1 is also broken (Google\'s SHAttered attack). Use SHA-256 or SHA-3 for security-critical applications.</p></div>',
-          code: `// === Presentation Layer — Cryptography Concepts in C++ ===
-#include <iostream>
-#include <string>
 #include <vector>
-#include <numeric>
-#include <sstream>
-#include <iomanip>
+#include <queue>
+#include <cmath>
 using namespace std;
 
-// --- Simple Caesar Cipher (symmetric, substitution) ---
-string caesarEncrypt(const string& text, int shift) {
-    string result = text;
-    for (char& c : result) {
-        if (isalpha(c)) {
-            char base = isupper(c) ? 'A' : 'a';
-            c = base + (c - base + shift) % 26;
+// --- Mesh Topology Link Calculator ---
+int fullMeshLinks(int n) {
+    return n * (n - 1) / 2;
+}
+
+// --- Adjacency list graph for topology simulation ---
+class Network {
+    int nodes;
+    vector<vector<int>> adj;
+public:
+    Network(int n) : nodes(n), adj(n) {}
+
+    void addLink(int u, int v) {
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+
+    // Build star topology: node 0 is the center
+    void buildStar() {
+        for (int i = 1; i < nodes; i++) {
+            addLink(0, i);
         }
     }
-    return result;
-}
 
-string caesarDecrypt(const string& text, int shift) {
-    return caesarEncrypt(text, 26 - shift);
-}
-
-// --- XOR Cipher (symmetric, stream cipher concept) ---
-string xorCipher(const string& text, const string& key) {
-    string result = text;
-    for (size_t i = 0; i < text.size(); i++)
-        result[i] = text[i] ^ key[i % key.size()];
-    return result;
-}
-
-// --- Simple Hash Function (DJB2 — for demonstration) ---
-uint32_t djb2Hash(const string& str) {
-    uint32_t hash = 5381;
-    for (char c : str)
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
-    return hash;
-}
-
-// --- RSA-like math (simplified with small numbers) ---
-long long modPow(long long base, long long exp, long long mod) {
-    long long result = 1;
-    base %= mod;
-    while (exp > 0) {
-        if (exp & 1) result = result * base % mod;
-        base = base * base % mod;
-        exp >>= 1;
+    // Build ring topology
+    void buildRing() {
+        for (int i = 0; i < nodes; i++) {
+            addLink(i, (i + 1) % nodes);
+        }
     }
-    return result;
-}
 
-void demoRSA() {
-    // Small example (NOT secure — use large primes in practice)
-    long long p = 61, q = 53;
-    long long n = p * q;           // 3233 (modulus)
-    long long phi = (p-1)*(q-1);   // 3120
-    long long e = 17;              // public exponent (coprime to phi)
-    // d = modular inverse of e mod phi
-    // d * e ≡ 1 (mod 3120), d = 2753
-    long long d = 2753;
+    // Build full mesh
+    void buildFullMesh() {
+        for (int i = 0; i < nodes; i++)
+            for (int j = i + 1; j < nodes; j++)
+                addLink(i, j);
+    }
 
-    long long message = 42;
-    long long encrypted = modPow(message, e, n);
-    long long decrypted = modPow(encrypted, d, n);
+    // Build bus topology (linear chain)
+    void buildBus() {
+        for (int i = 0; i < nodes - 1; i++) {
+            addLink(i, i + 1);
+        }
+    }
 
-    cout << "RSA Demo (p=" << p << ", q=" << q << "):" << endl;
-    cout << "  Public key:  (e=" << e << ", n=" << n << ")" << endl;
-    cout << "  Private key: (d=" << d << ", n=" << n << ")" << endl;
-    cout << "  Message:     " << message << endl;
-    cout << "  Encrypted:   " << encrypted << endl;
-    cout << "  Decrypted:   " << decrypted << endl;
-}
+    // BFS to check connectivity and find shortest path
+    int shortestPath(int src, int dst) {
+        vector<int> dist(nodes, -1);
+        queue<int> q;
+        dist[src] = 0;
+        q.push(src);
+        while (!q.empty()) {
+            int u = q.front(); q.pop();
+            if (u == dst) return dist[u];
+            for (int v : adj[u]) {
+                if (dist[v] == -1) {
+                    dist[v] = dist[u] + 1;
+                    q.push(v);
+                }
+            }
+        }
+        return -1; // unreachable
+    }
 
-// --- Digital Signature (simplified) ---
-void demoDigitalSignature() {
-    string message = "Transfer $1000 to Alice";
-    uint32_t hash = djb2Hash(message);
-    cout << "\nDigital Signature Demo:" << endl;
-    cout << "  Message: " << message << endl;
-    cout << "  Hash:    " << hex << hash << dec << endl;
-    cout << "  Sign:    Encrypt(hash, private_key) -> signature" << endl;
-    cout << "  Verify:  Decrypt(signature, public_key) == hash?" << endl;
+    int countLinks() {
+        int total = 0;
+        for (auto& neighbors : adj) total += neighbors.size();
+        return total / 2; // each link counted twice
+    }
 
-    // Tampered message
-    string tampered = "Transfer $9000 to Alice";
-    uint32_t tamperedHash = djb2Hash(tampered);
-    cout << "  Tampered hash: " << hex << tamperedHash << dec << endl;
-    cout << "  Hashes match? " << (hash == tamperedHash ? "YES (bad!)" : "NO (tamper detected!)") << endl;
+    void printStats(const string& name) {
+        cout << name << " Topology (" << nodes << " nodes):" << endl;
+        cout << "  Links: " << countLinks() << endl;
+        cout << "  Path 1->last: " << shortestPath(1, nodes - 1) << " hops" << endl;
+    }
+};
+
+// --- Collision / Broadcast domain calculator ---
+void domainAnalysis(int switchPorts, int routerInterfaces) {
+    cout << "\\n=== Domain Analysis ===" << endl;
+    // Hub: 1 collision domain, 1 broadcast domain
+    cout << "Hub (" << switchPorts << " ports): "
+         << "1 collision domain, 1 broadcast domain" << endl;
+    // Switch: N collision domains, 1 broadcast domain
+    cout << "Switch (" << switchPorts << " ports): "
+         << switchPorts << " collision domains, 1 broadcast domain" << endl;
+    // Router: N collision + N broadcast domains
+    cout << "Router (" << routerInterfaces << " interfaces): "
+         << routerInterfaces << " collision domains, "
+         << routerInterfaces << " broadcast domains" << endl;
 }
 
 int main() {
-    // Caesar cipher
-    cout << "=== Caesar Cipher (Symmetric) ===" << endl;
-    string plaintext = "HELLO WORLD";
-    int shift = 3;
-    string encrypted = caesarEncrypt(plaintext, shift);
-    string decrypted = caesarDecrypt(encrypted, shift);
-    cout << "  Plaintext:  " << plaintext << endl;
-    cout << "  Encrypted:  " << encrypted << endl;
-    cout << "  Decrypted:  " << decrypted << endl;
-
-    // XOR cipher
-    cout << "\n=== XOR Cipher (Symmetric Stream) ===" << endl;
-    string msg = "SECRET";
-    string key = "KEY";
-    string xorEnc = xorCipher(msg, key);
-    string xorDec = xorCipher(xorEnc, key); // XOR is its own inverse
-    cout << "  Message:   " << msg << endl;
-    cout << "  Key:       " << key << endl;
-    cout << "  Decrypted: " << xorDec << endl;
-
-    // Hashing
-    cout << "\n=== Hashing ===" << endl;
-    cout << "  Hash('hello'):   " << hex << djb2Hash("hello") << dec << endl;
-    cout << "  Hash('hello1'):  " << hex << djb2Hash("hello1") << dec << endl;
-    cout << "  Hash('hello'):   " << hex << djb2Hash("hello") << dec << " (deterministic)" << endl;
-
-    // RSA
-    cout << "\n=== RSA (Asymmetric) ===" << endl;
-    demoRSA();
-
-    // Digital signature
-    demoDigitalSignature();
-
-    // Key count comparison
-    cout << "\n=== Key Count: n parties ===" << endl;
-    for (int n : {2, 5, 10, 100}) {
-        cout << "  n=" << n << ": Symmetric=" << n*(n-1)/2
-             << " keys, Asymmetric=" << 2*n << " keys" << endl;
+    // Mesh link calculations
+    cout << "=== Full Mesh Links ===" << endl;
+    for (int n : {5, 10, 20, 50, 100}) {
+        cout << "  n=" << n << ": " << fullMeshLinks(n) << " links" << endl;
     }
+
+    // Topology simulations
+    cout << "\\n=== Topology Simulations ===" << endl;
+    int n = 8;
+
+    Network star(n);
+    star.buildStar();
+    star.printStats("Star");
+
+    Network ring(n);
+    ring.buildRing();
+    ring.printStats("Ring");
+
+    Network mesh(n);
+    mesh.buildFullMesh();
+    mesh.printStats("Full Mesh");
+
+    Network bus(n);
+    bus.buildBus();
+    bus.printStats("Bus");
+
+    // Domain analysis
+    domainAnalysis(24, 4);
+
+    // Fiber comparison
+    cout << "\\n=== Fiber Latency Comparison ===" << endl;
+    double distance = 1000e3; // 1000 km in meters
+    double fiberSpeed = 2e8;  // m/s in fiber
+    double airSpeed = 3e8;    // m/s in air (microwave)
+    double fiberDelay = distance / fiberSpeed * 1000; // ms
+    double airDelay = distance / airSpeed * 1000;     // ms
+    cout << "  Distance: 1000 km" << endl;
+    cout << "  Fiber latency:     " << fiberDelay << " ms" << endl;
+    cout << "  Microwave latency: " << airDelay << " ms" << endl;
+    cout << "  Savings:           " << fiberDelay - airDelay << " ms" << endl;
 
     return 0;
 }`,
           problems: [
-            {t: 'Implement Caesar cipher encryption and decryption', d: 'Easy', tags: ['Cryptography']},
-            {t: 'Implement XOR stream cipher and demonstrate self-inverse property', d: 'Easy', tags: ['Cryptography']},
-            {t: 'Implement modular exponentiation for RSA-like encryption', d: 'Medium', tags: ['Cryptography']},
-            {t: 'Compare AES block cipher modes (ECB, CBC, CTR, GCM) with security analysis', d: 'Medium', tags: ['Cryptography']},
-            {t: 'Trace the TLS 1.3 handshake and identify where each crypto primitive is used', d: 'Medium', tags: ['TLS']},
-            {t: 'Calculate key count needed for n-party symmetric vs asymmetric communication', d: 'Easy', tags: ['Cryptography']},
+            ['Twisted Pair Cable Categories','https://www.geeksforgeeks.org/twisted-pair-cable/','Easy'],
+            ['Fiber Optic — Single vs Multi Mode','https://www.geeksforgeeks.org/fiber-optics-and-types/','Easy'],
+            ['Network Topologies Comparison','https://www.geeksforgeeks.org/types-of-network-topology/','Easy'],
+            ['Circuit Switching vs Packet Switching','https://www.geeksforgeeks.org/difference-between-circuit-switching-and-packet-switching/','Medium'],
+            ['Hub vs Switch vs Router','https://www.geeksforgeeks.org/difference-between-hub-switch-and-router/','Medium'],
           ],
           mcqs: [
-            {q: 'AES is a:', o: ['Asymmetric encryption algorithm', 'Symmetric encryption algorithm', 'Hashing algorithm', 'Key exchange protocol'], a: 1},
-            {q: 'In TLS 1.3, the key exchange uses:', o: ['Static RSA', 'ECDHE (Elliptic Curve Diffie-Hellman Ephemeral)', 'DES', 'MD5'], a: 1},
-            {q: 'ECB mode is insecure because:', o: ['It uses a weak key', 'Identical plaintext blocks produce identical ciphertext blocks', 'It does not use an IV', 'Both B and C'], a: 3},
-            {q: 'SHA-256 produces a hash of size:', o: ['128 bits', '160 bits', '256 bits', '512 bits'], a: 2},
-            {q: 'For 10 parties to communicate securely, symmetric encryption requires how many keys?', o: ['10', '20', '45', '100'], a: 2},
-            {q: 'Forward secrecy ensures that:', o: ['Messages are encrypted faster', 'Compromising the server key cannot decrypt past sessions', 'The server certificate never expires', 'All ciphers use AES'], a: 1},
-            {q: 'Which hash algorithm is considered broken and should not be used?', o: ['SHA-256', 'SHA-3', 'MD5', 'bcrypt'], a: 2},
-            {q: 'A digital signature provides:', o: ['Confidentiality only', 'Authentication, integrity, and non-repudiation', 'Compression', 'Routing'], a: 1},
-            {q: 'UTF-8 encoding is backward compatible with:', o: ['EBCDIC', 'UTF-16', 'ASCII', 'Latin-1'], a: 2}
+            {q: 'CAT6a cable supports a maximum data rate of:', o: ['100 Mbps', '1 Gbps', '10 Gbps', '40 Gbps'], a: 2},
+            {q: 'Total internal reflection in fiber optics requires:', o: ['Core refractive index less than cladding', 'Core refractive index greater than cladding', 'Equal refractive indices', 'No cladding'], a: 1},
+            {q: 'Modal dispersion is a problem in:', o: ['Single-mode fiber', 'Multi-mode fiber', 'Coaxial cable', 'Twisted pair'], a: 1},
+            {q: 'In a full mesh topology with 10 nodes, the number of links is:', o: ['10', '20', '45', '90'], a: 2},
+            {q: 'A switch operates at which OSI layer?', o: ['Layer 1', 'Layer 2', 'Layer 3', 'Layer 4'], a: 1},
+            {q: 'Which topology has the highest fault tolerance?', o: ['Bus', 'Star', 'Ring', 'Full Mesh'], a: 3},
+            {q: 'A hub creates how many collision domains for 8 ports?', o: ['1', '8', '16', '0'], a: 0},
+            {q: 'Microwave communication requires:', o: ['No special requirements', 'Line-of-sight between antennas', 'Fiber optic cable', 'Twisted pair wiring'], a: 1},
           ],
-        },
+        }
       ]
     },
-
-    // ==================== TAB 2: Data Link Layer ====================
+    // ==================== TAB 2: Data Link Layer (OSI Layer 2) ====================
     {
       id: 'dl', t: 'Data Link Layer',
       topics: [
@@ -4030,8 +3890,7 @@ int main() {
         }
       ]
     },
-
-    // ==================== TAB 3: Network Layer ====================
+    // ==================== TAB 3: Network Layer (OSI Layer 3) ====================
     {
       id: 'net', t: 'Network Layer',
       topics: [
@@ -4484,8 +4343,7 @@ int main() {
         },
       ]
     },
-
-    // ==================== TAB 4: Transport Layer ====================
+    // ==================== TAB 4: Transport Layer (OSI Layer 4) ====================
     {
       id: 'trans', t: 'Transport Layer',
       topics: [
@@ -5046,8 +4904,499 @@ int main() {
         }
       ]
     },
+    // ==================== TAB 5: Session Layer (OSI Layer 5) ====================
+    {
+      id: 'session', t: 'Session Layer',
+      topics: [
+        {
+          t: 'Session Layer — Session Management & RPCs',
+          learn: '<div class="learn-section"><div class="learn-h">Why This Matters</div><p class="learn-p">The <b>Session Layer (Layer 5)</b> manages the establishment, maintenance, and teardown of communication sessions between applications. While the TCP/IP model merges this into the Application layer, the concepts are still vital for understanding <b>how web sessions work, RPC mechanisms, and connection management</b> — all frequently tested in SDE placement interviews. At DE Shaw, session management is critical for maintaining state in trading terminals, managing persistent WebSocket connections for real-time market data feeds, and implementing reliable RPC frameworks for distributed systems.</p></div><div class="learn-section"><div class="learn-h">What is a Session?</div><p class="learn-p">A <b>session</b> is a logical connection between two communicating entities that persists across multiple requests. Unlike a transport-layer connection (TCP), which is about delivering bytes reliably, a session is about maintaining <b>application-level state</b> and <b>dialog structure</b>.</p><div class="learn-code">Session vs Connection:\n\nTCP Connection: Reliable byte stream between two endpoints\n  └─ Handles: ordering, retransmission, flow control\n  └─ Identified by: (src_ip, src_port, dst_ip, dst_port)\n\nSession: Application-level logical association\n  └─ Handles: login state, dialog control, synchronization\n  └─ Identified by: session ID, token, cookie\n  └─ Can span multiple TCP connections (HTTP keep-alive)\n  └─ Can be resumed after a connection drops</div></div><div class="learn-section"><div class="learn-h">Session Layer Functions</div><ul class="learn-list"><li><b>Session Establishment:</b> Authentication, parameter negotiation, and session ID generation. Example: TLS handshake establishes a secure session before application data flows.</li><li><b>Session Maintenance:</b> Keep-alive messages, idle timeout management, and session state tracking. Example: HTTP cookies maintain user sessions across stateless requests.</li><li><b>Session Termination:</b> Graceful shutdown, resource cleanup, and state persistence. Example: logout invalidates the session token on the server.</li><li><b>Dialog Control:</b> Manages who can transmit and when:<ul><li><b>Simplex:</b> One-way communication only (e.g., broadcast TV)</li><li><b>Half-duplex:</b> Two-way, but one at a time (e.g., walkie-talkie, HTTP 1.0 request-response)</li><li><b>Full-duplex:</b> Both parties transmit simultaneously (e.g., WebSocket, telephone)</li></ul></li><li><b>Synchronization:</b> Inserting checkpoints (sync points) in data streams so that if a failure occurs, transmission can resume from the last checkpoint rather than starting over. Critical for long file transfers.</li><li><b>Token Management:</b> Controls which party has the right to perform certain operations (e.g., who can send data, who can initiate disconnect).</li></ul></div><div class="learn-section"><div class="learn-h">Session Layer Protocols</div><table class="learn-table"><tr><th>Protocol</th><th>Function</th><th>Modern Equivalent</th></tr><tr><td>NetBIOS</td><td>Name service, session, datagram for LAN</td><td>Largely replaced by DNS + TCP</td></tr><tr><td>RPC (Remote Procedure Call)</td><td>Call functions on remote machines</td><td>gRPC, Apache Thrift</td></tr><tr><td>PPTP</td><td>VPN tunneling protocol</td><td>WireGuard, OpenVPN</td></tr><tr><td>SIP (Session Initiation Protocol)</td><td>Establish/terminate multimedia sessions</td><td>Used in VoIP (Skype, Zoom)</td></tr><tr><td>SMPP</td><td>SMS messaging sessions</td><td>Still used in telecom</td></tr></table></div><div class="learn-section"><div class="learn-h">Remote Procedure Call (RPC)</div><p class="learn-p"><b>RPC</b> allows a program to call a function on a remote machine as if it were local. The caller does not need to know network details — the <b>stub</b> handles marshalling (serializing) parameters, sending them over the network, and unmarshalling the result.</p><div class="learn-code">RPC Flow:\n\n  Client Process          Network           Server Process\n  ┌─────────────┐                        ┌─────────────┐\n  │ Client Code │────────────────────────▶│ Server Code │\n  ├─────────────┤                        ├─────────────┤\n  │ Client Stub │  ──marshal──▶          │ Server Stub │\n  ├─────────────┤   request              ├─────────────┤\n  │  Transport  │  ◄──result──           │  Transport  │\n  └─────────────┘   response             └─────────────┘\n\nSteps:\n1. Client calls stub function (looks like a local call)\n2. Client stub marshals (serializes) parameters\n3. Transport sends request to server\n4. Server stub unmarshals parameters\n5. Server stub calls actual server function\n6. Result marshalled and sent back\n7. Client stub unmarshals result and returns to caller</div><p class="learn-p"><b>Modern RPC frameworks:</b></p><table class="learn-table"><tr><th>Framework</th><th>Serialization</th><th>Transport</th><th>Language Support</th></tr><tr><td>gRPC (Google)</td><td>Protocol Buffers</td><td>HTTP/2</td><td>Multi-language (C++, Java, Python, Go)</td></tr><tr><td>Apache Thrift</td><td>Thrift Binary/Compact</td><td>TCP, HTTP</td><td>Multi-language</td></tr><tr><td>JSON-RPC</td><td>JSON</td><td>HTTP</td><td>Any</td></tr><tr><td>XML-RPC</td><td>XML</td><td>HTTP</td><td>Any</td></tr></table></div><div class="learn-section"><div class="learn-h">Web Sessions in Practice</div><p class="learn-p">Modern web applications implement session management at the application level:</p><div class="learn-code">HTTP Session Management:\n\n1. Cookie-based sessions:\n   Client logs in → Server creates session, stores in memory/Redis\n   Server sends: Set-Cookie: session_id=abc123; HttpOnly; Secure\n   Client sends: Cookie: session_id=abc123 (on every request)\n   Server looks up session_id → retrieves user state\n\n2. Token-based sessions (JWT):\n   Client logs in → Server signs JWT with secret key\n   Server sends: { token: "eyJhbGci..." }\n   Client sends: Authorization: Bearer eyJhbGci...\n   Server verifies signature → extracts claims (no server-side lookup)\n\nCookie Sessions vs JWT:\n  Cookie: Stateful (server stores session), easy to revoke\n  JWT:    Stateless (self-contained), hard to revoke, scalable</div></div><div class="learn-section"><div class="learn-h">Interview Spotlight</div><p class="learn-p"><b>Q1: What are the key functions of the Session Layer?</b><br>A: Session establishment (authentication, ID generation), maintenance (keep-alive, state tracking), termination (logout, cleanup), dialog control (simplex/half-duplex/full-duplex), synchronization (checkpoints for resumption), and token management (controlling who can transmit).</p><p class="learn-p"><b>Q2: Explain the RPC mechanism.</b><br>A: RPC lets a client call a function on a remote server as if it were local. The client stub marshals (serializes) parameters and sends them over the network. The server stub unmarshals them, executes the function, marshals the result, and sends it back. The client stub unmarshals the result and returns it to the caller. Modern implementations: gRPC (Protocol Buffers over HTTP/2), Thrift.</p><p class="learn-p"><b>Q3: What is the difference between simplex, half-duplex, and full-duplex?</b><br>A: Simplex: one-way only (TV broadcast). Half-duplex: two-way but alternating (walkie-talkie, HTTP/1.0). Full-duplex: simultaneous two-way (WebSocket, telephone). The session layer controls which mode is used for a given dialog.</p><p class="learn-p"><b>Q4: Compare cookie-based sessions with JWT tokens.</b><br>A: Cookies are stateful — the server stores session data and the cookie is just an ID. Easy to revoke (delete from server store). JWT is stateless — the token contains the claims, signed by the server. No server-side storage needed (scalable), but hard to revoke before expiry. Use cookies for traditional web apps; JWT for APIs and microservices.</p><p class="learn-p"><b>Q5: What are synchronization points in the Session Layer?</b><br>A: Checkpoints inserted into a data stream during long transfers. If a failure occurs, the session can resume from the last checkpoint instead of starting over. Two types: major sync points (require acknowledgment) and minor sync points (no acknowledgment needed). Analogous to save points in a database transaction.</p></div>',
+          code: `// === Session Layer Concepts in C++ ===
+// Demonstrates session management patterns
 
-    // ==================== TAB 5: Application Layer ====================
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <random>
+#include <chrono>
+using namespace std;
+
+// Simple session store (like server-side session management)
+class SessionStore {
+    struct Session {
+        string userId;
+        string data;
+        time_t createdAt;
+        time_t lastAccess;
+        int timeout; // seconds
+    };
+    unordered_map<string, Session> sessions;
+
+    string generateId() {
+        static mt19937 rng(42);
+        uniform_int_distribution<> dist(0, 15);
+        string id;
+        const char hex[] = "0123456789abcdef";
+        for (int i = 0; i < 32; i++) id += hex[dist(rng)];
+        return id;
+    }
+public:
+    string createSession(const string& userId, int timeoutSec = 1800) {
+        string sid = generateId();
+        time_t now = time(nullptr);
+        sessions[sid] = {userId, "", now, now, timeoutSec};
+        cout << "Session created: " << sid.substr(0, 8)
+             << "... for user " << userId << endl;
+        return sid;
+    }
+
+    bool validateSession(const string& sid) {
+        auto it = sessions.find(sid);
+        if (it == sessions.end()) return false;
+        time_t now = time(nullptr);
+        if (now - it->second.lastAccess > it->second.timeout) {
+            cout << "Session expired: " << sid.substr(0, 8) << "..." << endl;
+            sessions.erase(it);
+            return false;
+        }
+        it->second.lastAccess = now;
+        return true;
+    }
+
+    void destroySession(const string& sid) {
+        sessions.erase(sid);
+        cout << "Session destroyed: " << sid.substr(0, 8) << "..." << endl;
+    }
+
+    size_t activeSessions() const { return sessions.size(); }
+};
+
+// RPC stub simulation
+class RPCStub {
+public:
+    // Marshal: serialize function call into bytes
+    static string marshal(const string& funcName, const string& params) {
+        return funcName + "|" + params; // simplified serialization
+    }
+
+    // Unmarshal: deserialize bytes into function call
+    static pair<string, string> unmarshal(const string& data) {
+        size_t pos = data.find('|');
+        return {data.substr(0, pos), data.substr(pos + 1)};
+    }
+
+    // Simulate RPC call
+    static string call(const string& funcName, const string& params) {
+        string request = marshal(funcName, params);
+        cout << "RPC Request: " << request << endl;
+
+        // "Network transfer" (simulated)
+        auto [func, args] = unmarshal(request);
+        cout << "Server executing: " << func << "(" << args << ")" << endl;
+
+        // Server processes and returns result
+        string result = "result_of_" + func;
+        cout << "RPC Response: " << result << endl;
+        return result;
+    }
+};
+
+// Dialog control modes
+enum class DialogMode { SIMPLEX, HALF_DUPLEX, FULL_DUPLEX };
+
+string dialogModeStr(DialogMode m) {
+    switch (m) {
+        case DialogMode::SIMPLEX: return "Simplex (one-way)";
+        case DialogMode::HALF_DUPLEX: return "Half-Duplex (alternating)";
+        case DialogMode::FULL_DUPLEX: return "Full-Duplex (simultaneous)";
+    }
+    return "Unknown";
+}
+
+int main() {
+    cout << "=== Session Management ===" << endl;
+    SessionStore store;
+    string sid1 = store.createSession("alice");
+    string sid2 = store.createSession("bob");
+    cout << "Active sessions: " << store.activeSessions() << endl;
+    cout << "Validate sid1: " << (store.validateSession(sid1) ? "valid" : "invalid") << endl;
+    store.destroySession(sid2);
+    cout << "Active after logout: " << store.activeSessions() << endl;
+
+    cout << "\n=== RPC Simulation ===" << endl;
+    RPCStub::call("getPrice", "AAPL");
+    RPCStub::call("placeOrder", "BUY,AAPL,100");
+
+    cout << "\n=== Dialog Control Modes ===" << endl;
+    cout << dialogModeStr(DialogMode::SIMPLEX) << " - e.g., TV broadcast" << endl;
+    cout << dialogModeStr(DialogMode::HALF_DUPLEX) << " - e.g., HTTP/1.0" << endl;
+    cout << dialogModeStr(DialogMode::FULL_DUPLEX) << " - e.g., WebSocket" << endl;
+
+    return 0;
+}`,
+          problems: [
+            ['Session Management Basics','https://www.geeksforgeeks.org/session-layer-in-osi-model/','Easy'],
+            ['Remote Procedure Call (RPC)','https://www.geeksforgeeks.org/remote-procedure-call-rpc-in-operating-system/','Medium'],
+            ['Cookies vs JWT Tokens','https://www.geeksforgeeks.org/difference-between-session-and-token-based-authentication/','Easy'],
+            ['Session Hijacking & Prevention','https://www.geeksforgeeks.org/session-hijacking/','Medium'],
+            ['gRPC & Protocol Buffers','https://www.geeksforgeeks.org/remote-procedure-call-rpc-in-operating-system/','Medium'],
+          ],
+          mcqs: [
+            {q: 'The Session Layer is responsible for:', o: ['Routing packets', 'Dialog control and session management', 'Error detection', 'Encryption'], a: 1},
+            {q: 'Which dialog mode allows simultaneous two-way communication?', o: ['Simplex', 'Half-duplex', 'Full-duplex', 'Broadcast'], a: 2},
+            {q: 'In RPC, the client stub is responsible for:', o: ['Executing the remote function', 'Marshalling parameters and sending the request', 'Managing the TCP connection', 'Encrypting the data'], a: 1},
+            {q: 'gRPC uses which serialization format by default?', o: ['JSON', 'XML', 'Protocol Buffers', 'MessagePack'], a: 2},
+            {q: 'Synchronization points in the Session Layer are used to:', o: ['Encrypt data', 'Resume transmission from the last checkpoint after failure', 'Compress data', 'Assign IP addresses'], a: 1},
+            {q: 'Cookie-based sessions vs JWT — which is stateful?', o: ['JWT', 'Cookie-based sessions', 'Both are stateless', 'Both are stateful'], a: 1},
+            {q: 'SIP (Session Initiation Protocol) is primarily used for:', o: ['File transfer', 'Establishing multimedia sessions (VoIP)', 'Email delivery', 'DNS resolution'], a: 1},
+            {q: 'NetBIOS operates at which OSI layer?', o: ['Network', 'Transport', 'Session', 'Application'], a: 2}
+          ],
+        }
+      ]
+    },
+    // ==================== TAB 6: Presentation Layer (OSI Layer 6) ====================
+    {
+      id: 'presentation', t: 'Presentation Layer',
+      topics: [
+        {
+          t: 'Presentation Layer — Encryption, Encoding & Compression',
+          learn: '<div class="learn-section"><div class="learn-h">Why This Matters</div><p class="learn-p">The <b>Presentation Layer (Layer 6)</b> is responsible for data translation, encryption, and compression — ensuring that data sent by one application can be understood by another, regardless of differences in encoding or architecture. For SDE placements, this layer\'s cryptography concepts are <b>heavily tested</b>: symmetric vs asymmetric encryption, hashing algorithms, digital signatures, and the TLS handshake. At DE Shaw, secure communication is critical for trading systems — understanding how TLS protects data in transit and how certificates work is a practical daily requirement.</p></div><div class="learn-section"><div class="learn-h">Presentation Layer Functions</div><ul class="learn-list"><li><b>Data Translation / Encoding:</b> Converting data between different formats — ASCII, Unicode (UTF-8/16), EBCDIC. Ensures a Windows machine and a Unix server can exchange text correctly.</li><li><b>Data Encryption / Decryption:</b> Applying cryptographic algorithms to protect data confidentiality. TLS/SSL encryption operates conceptually at this layer.</li><li><b>Data Compression:</b> Reducing data size for efficient transmission. Lossy (JPEG, MP3) for multimedia; lossless (gzip, Huffman, LZ77) for text/binary.</li><li><b>Serialization / Deserialization:</b> Converting structured data (objects, records) into a byte stream for transmission and back. JSON, XML, Protocol Buffers, MessagePack.</li></ul></div><div class="learn-section"><div class="learn-h">Character Encoding</div><table class="learn-table"><tr><th>Encoding</th><th>Bits</th><th>Characters</th><th>Notes</th></tr><tr><td>ASCII</td><td>7 bits</td><td>128</td><td>English letters, digits, symbols only</td></tr><tr><td>Extended ASCII</td><td>8 bits</td><td>256</td><td>Adds accented characters (Latin-1)</td></tr><tr><td>Unicode (UTF-8)</td><td>1-4 bytes</td><td>1.1M+</td><td>Variable-length, backward compatible with ASCII. The web standard.</td></tr><tr><td>Unicode (UTF-16)</td><td>2-4 bytes</td><td>1.1M+</td><td>Used internally by Java, Windows</td></tr><tr><td>Unicode (UTF-32)</td><td>4 bytes</td><td>1.1M+</td><td>Fixed-width, wasteful for ASCII text</td></tr><tr><td>EBCDIC</td><td>8 bits</td><td>256</td><td>IBM mainframes (legacy)</td></tr></table><p class="learn-p"><b>MIME Types:</b> Used in HTTP and email to specify the format of data being transmitted. Examples: <code>text/html</code>, <code>application/json</code>, <code>image/png</code>, <code>application/octet-stream</code>. The Content-Type header tells the receiver how to interpret the data.</p></div><div class="learn-section"><div class="learn-h">Cryptography — Symmetric Encryption</div><p class="learn-p"><b>Symmetric encryption</b> uses the <b>same key</b> for both encryption and decryption. It is fast and used for bulk data encryption.</p><div class="learn-code">Plaintext + Key → [Encryption Algorithm] → Ciphertext\nCiphertext + Key → [Decryption Algorithm] → Plaintext\n\nKey challenge: How do sender and receiver securely share the key?\nThis is the KEY DISTRIBUTION PROBLEM.</div><table class="learn-table"><tr><th>Algorithm</th><th>Key Size</th><th>Block Size</th><th>Status</th></tr><tr><td>DES</td><td>56 bits</td><td>64 bits</td><td>Broken (brute-forceable). Do not use.</td></tr><tr><td>3DES (Triple DES)</td><td>112/168 bits</td><td>64 bits</td><td>Legacy. Slow (3x DES operations).</td></tr><tr><td>AES</td><td>128/192/256 bits</td><td>128 bits</td><td><b>Current standard.</b> Fast, secure.</td></tr><tr><td>ChaCha20</td><td>256 bits</td><td>Stream cipher</td><td>Modern. Used in TLS 1.3 (mobile/IoT).</td></tr><tr><td>RC4</td><td>40-2048 bits</td><td>Stream cipher</td><td>Broken. Removed from TLS.</td></tr></table><p class="learn-p"><b>Block Cipher Modes:</b></p><ul class="learn-list"><li><b>ECB (Electronic Codebook):</b> Each block encrypted independently. <b>Insecure</b> — identical plaintext blocks produce identical ciphertext blocks (reveals patterns).</li><li><b>CBC (Cipher Block Chaining):</b> Each block XORed with previous ciphertext block before encryption. Requires an IV (Initialization Vector). Sequential — cannot parallelize encryption.</li><li><b>CTR (Counter Mode):</b> Converts block cipher to stream cipher using a counter. <b>Parallelizable</b> for both encryption and decryption.</li><li><b>GCM (Galois/Counter Mode):</b> CTR + authentication tag. Provides <b>authenticated encryption</b> (confidentiality + integrity). <b>Used in TLS 1.3</b>.</li></ul><div class="learn-warn"><b>Never use ECB mode.</b> The famous ECB penguin demonstrates the problem: encrypting an image with ECB preserves the outline of the original image because identical pixel blocks produce identical ciphertext blocks.</div></div><div class="learn-section"><div class="learn-h">Cryptography — Asymmetric Encryption</div><p class="learn-p"><b>Asymmetric (public-key) encryption</b> uses a <b>key pair</b>: a public key (shared freely) and a private key (kept secret). Data encrypted with the public key can only be decrypted with the private key, and vice versa.</p><div class="learn-code">Encryption: Plaintext + Public Key → Ciphertext\nDecryption: Ciphertext + Private Key → Plaintext\n\nAlternatively (for digital signatures):\nSign:   Message + Private Key → Signature\nVerify: Signature + Public Key → Valid/Invalid</div><table class="learn-table"><tr><th>Algorithm</th><th>Key Size</th><th>Based On</th><th>Use Case</th></tr><tr><td>RSA</td><td>2048-4096 bits</td><td>Integer factorization</td><td>Encryption, digital signatures</td></tr><tr><td>ECC (Elliptic Curve)</td><td>256-384 bits</td><td>Elliptic curve discrete log</td><td>Faster, smaller keys. Used in TLS 1.3</td></tr><tr><td>Diffie-Hellman (DH)</td><td>2048+ bits</td><td>Discrete logarithm</td><td>Key exchange only (not encryption)</td></tr><tr><td>ECDHE</td><td>256 bits</td><td>Elliptic curve DH</td><td>Key exchange in TLS with forward secrecy</td></tr></table><p class="learn-p"><b>Symmetric vs Asymmetric:</b></p><table class="learn-table"><tr><th>Aspect</th><th>Symmetric</th><th>Asymmetric</th></tr><tr><td>Speed</td><td><b>Fast</b> (100-1000x faster)</td><td>Slow</td></tr><tr><td>Key Distribution</td><td>Hard (shared secret)</td><td><b>Easy</b> (public key is public)</td></tr><tr><td>Key Count (n parties)</td><td>n(n-1)/2 keys</td><td>2n keys (1 pair per party)</td></tr><tr><td>Use Case</td><td>Bulk data encryption</td><td>Key exchange, digital signatures</td></tr></table><div class="learn-tip"><b>Key insight:</b> In practice, <b>both are used together</b> (hybrid encryption). Asymmetric encryption exchanges a symmetric session key. Then symmetric encryption encrypts the actual data. This is exactly what TLS does.</div></div><div class="learn-section"><div class="learn-h">Hashing Algorithms</div><p class="learn-p">A <b>hash function</b> maps arbitrary-length input to a fixed-length output (digest). It is a one-way function — you cannot reverse a hash to get the original input.</p><div class="learn-code">Properties of a cryptographic hash:\n1. Deterministic: same input always gives same output\n2. Fast to compute\n3. Pre-image resistance: given H(x), cannot find x\n4. Collision resistance: hard to find x != y where H(x) = H(y)\n5. Avalanche effect: 1-bit input change → ~50% output bits change</div><table class="learn-table"><tr><th>Algorithm</th><th>Output Size</th><th>Status</th></tr><tr><td>MD5</td><td>128 bits</td><td><b>Broken.</b> Collisions found. Do not use for security.</td></tr><tr><td>SHA-1</td><td>160 bits</td><td><b>Broken.</b> Google demonstrated collision (SHAttered). Deprecated.</td></tr><tr><td>SHA-256</td><td>256 bits</td><td><b>Current standard.</b> Used in Bitcoin, TLS, Git.</td></tr><tr><td>SHA-3</td><td>224-512 bits</td><td>Latest standard (different internal structure: Keccak sponge).</td></tr><tr><td>bcrypt/scrypt/Argon2</td><td>Variable</td><td>Password hashing (intentionally slow + salted).</td></tr></table><p class="learn-p"><b>Use cases:</b> Password storage (hash + salt), data integrity verification, digital signatures (hash then sign), blockchain proof of work, Git commit IDs.</p></div><div class="learn-section"><div class="learn-h">Digital Signatures &amp; Certificates</div><p class="learn-p">A <b>digital signature</b> provides authentication, integrity, and non-repudiation:</p><div class="learn-code">Signing:\n  1. Hash the message: digest = SHA-256(message)\n  2. Encrypt digest with sender\'s private key: signature = Encrypt(digest, priv_key)\n  3. Send: message + signature\n\nVerification:\n  1. Hash the received message: digest1 = SHA-256(message)\n  2. Decrypt signature with sender\'s public key: digest2 = Decrypt(signature, pub_key)\n  3. If digest1 == digest2: signature is valid\n     (message is authentic, unmodified, and non-repudiable)</div><p class="learn-p"><b>Digital Certificates (X.509):</b> Bind a public key to an identity. Issued by a <b>Certificate Authority (CA)</b>. The CA signs the certificate with its private key. Browsers trust certificates signed by known CAs (root certificates pre-installed in OS/browser).</p><div class="learn-code">Certificate Chain of Trust:\n\nRoot CA (self-signed, pre-installed in browser)\n  └─ signs → Intermediate CA certificate\n                 └─ signs → Server certificate (e.g., google.com)\n\nBrowser verifies: server cert → intermediate CA → root CA (trusted)</div></div><div class="learn-section"><div class="learn-h">TLS Handshake (Presentation + Session)</div><p class="learn-p">The <b>TLS handshake</b> combines session establishment with presentation-layer encryption. TLS 1.3 (current standard) simplified the handshake to <b>1-RTT</b> (vs 2-RTT in TLS 1.2):</p><div class="learn-code">TLS 1.3 Handshake (1-RTT):\n\nClient                                    Server\n  │                                          │\n  │── ClientHello ────────────────────▶│\n  │   (supported ciphers, key share,          │\n  │    client random, SNI)                    │\n  │                                          │\n  │◀── ServerHello + Certificate + Verify ──│\n  │   (chosen cipher, key share,              │\n  │    server cert, signature)                │\n  │                                          │\n  │   [Both derive session keys using ECDHE]  │\n  │                                          │\n  │── Finished (encrypted) ────────────▶│\n  │                                          │\n  │◀────── Application Data (encrypted) ────│\n\nKey exchange: ECDHE (Elliptic Curve Diffie-Hellman Ephemeral)\nBulk encryption: AES-256-GCM or ChaCha20-Poly1305\nForward secrecy: New key pair per session (ephemeral keys)</div><p class="learn-p"><b>Forward Secrecy:</b> Even if the server\'s long-term private key is compromised, past sessions cannot be decrypted because each session used a unique ephemeral key pair. ECDHE provides this; static RSA key exchange does not (removed in TLS 1.3).</p></div><div class="learn-section"><div class="learn-h">Data Compression</div><table class="learn-table"><tr><th>Type</th><th>Algorithm</th><th>Ratio</th><th>Use Case</th></tr><tr><td>Lossless</td><td>Huffman Coding</td><td>~50%</td><td>Text, general-purpose</td></tr><tr><td>Lossless</td><td>LZ77 / LZ78</td><td>~60-70%</td><td>gzip, zlib, PNG</td></tr><tr><td>Lossless</td><td>Deflate (LZ77 + Huffman)</td><td>~65%</td><td>gzip, zip, HTTP compression</td></tr><tr><td>Lossy</td><td>JPEG (DCT)</td><td>~90%</td><td>Images</td></tr><tr><td>Lossy</td><td>MP3 / AAC</td><td>~90%</td><td>Audio</td></tr><tr><td>Lossy</td><td>H.264 / H.265</td><td>~95%</td><td>Video</td></tr></table><p class="learn-p"><b>HTTP Compression:</b> The browser sends <code>Accept-Encoding: gzip, br</code>. The server compresses the response body and sends <code>Content-Encoding: gzip</code>. This typically reduces HTML/CSS/JS by 60-80%.</p></div><div class="learn-section"><div class="learn-h">Serialization Formats</div><table class="learn-table"><tr><th>Format</th><th>Type</th><th>Size</th><th>Speed</th><th>Use Case</th></tr><tr><td>JSON</td><td>Text</td><td>Large</td><td>Moderate</td><td>REST APIs, web (human-readable)</td></tr><tr><td>XML</td><td>Text</td><td>Very large</td><td>Slow</td><td>SOAP, legacy enterprise</td></tr><tr><td>Protocol Buffers</td><td>Binary</td><td><b>Small</b></td><td><b>Fast</b></td><td>gRPC, internal services</td></tr><tr><td>MessagePack</td><td>Binary</td><td>Small</td><td>Fast</td><td>Redis, IoT</td></tr><tr><td>Avro</td><td>Binary</td><td>Small</td><td>Fast</td><td>Hadoop, Kafka</td></tr></table></div><div class="learn-section"><div class="learn-h">Interview Spotlight</div><p class="learn-p"><b>Q1: Compare symmetric and asymmetric encryption.</b><br>A: Symmetric uses one shared key (AES, ChaCha20) — fast but key distribution is hard. Asymmetric uses a key pair (RSA, ECC) — slow but solves key distribution. In practice, TLS uses asymmetric to exchange a symmetric session key, then symmetric for bulk encryption. For n parties: symmetric needs n(n-1)/2 keys; asymmetric needs 2n.</p><p class="learn-p"><b>Q2: Why is ECB mode insecure?</b><br>A: ECB encrypts each block independently with the same key. Identical plaintext blocks produce identical ciphertext blocks, revealing patterns in the data. The ECB penguin example shows an image encrypted with ECB retains the original outline. Use CBC, CTR, or GCM instead.</p><p class="learn-p"><b>Q3: Explain the TLS 1.3 handshake.</b><br>A: 1-RTT handshake: Client sends ClientHello (supported ciphers + ECDHE key share). Server responds with ServerHello (chosen cipher + key share + certificate + signature). Both derive the session key using ECDHE. Subsequent data is encrypted with AES-GCM or ChaCha20. Forward secrecy is guaranteed by ephemeral keys.</p><p class="learn-p"><b>Q4: What is forward secrecy and why does it matter?</b><br>A: Forward secrecy ensures that compromising the server\'s long-term private key doesn\'t compromise past sessions. Achieved using ephemeral key exchange (ECDHE) — each session generates new key pairs that are discarded after use. Without forward secrecy (static RSA), an attacker who obtains the private key can decrypt all recorded traffic.</p><p class="learn-p"><b>Q5: How does a digital signature work?</b><br>A: The sender hashes the message (SHA-256), then encrypts the hash with their private key — this is the signature. The receiver decrypts the signature with the sender\'s public key to get the hash, then independently hashes the message and compares. If they match: the message is authentic (came from the sender), has integrity (wasn\'t modified), and is non-repudiable (sender can\'t deny signing it).</p><p class="learn-p"><b>Q6: Why is MD5 considered broken?</b><br>A: Researchers demonstrated practical collision attacks — two different inputs producing the same MD5 hash. This breaks integrity verification and certificate security. SHA-1 is also broken (Google\'s SHAttered attack). Use SHA-256 or SHA-3 for security-critical applications.</p></div>',
+          code: `// === Presentation Layer — Cryptography Concepts in C++ ===
+#include <iostream>
+#include <string>
+#include <vector>
+#include <numeric>
+#include <sstream>
+#include <iomanip>
+using namespace std;
+
+// --- Simple Caesar Cipher (symmetric, substitution) ---
+string caesarEncrypt(const string& text, int shift) {
+    string result = text;
+    for (char& c : result) {
+        if (isalpha(c)) {
+            char base = isupper(c) ? 'A' : 'a';
+            c = base + (c - base + shift) % 26;
+        }
+    }
+    return result;
+}
+
+string caesarDecrypt(const string& text, int shift) {
+    return caesarEncrypt(text, 26 - shift);
+}
+
+// --- XOR Cipher (symmetric, stream cipher concept) ---
+string xorCipher(const string& text, const string& key) {
+    string result = text;
+    for (size_t i = 0; i < text.size(); i++)
+        result[i] = text[i] ^ key[i % key.size()];
+    return result;
+}
+
+// --- Simple Hash Function (DJB2 — for demonstration) ---
+uint32_t djb2Hash(const string& str) {
+    uint32_t hash = 5381;
+    for (char c : str)
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    return hash;
+}
+
+// --- RSA-like math (simplified with small numbers) ---
+long long modPow(long long base, long long exp, long long mod) {
+    long long result = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp & 1) result = result * base % mod;
+        base = base * base % mod;
+        exp >>= 1;
+    }
+    return result;
+}
+
+void demoRSA() {
+    // Small example (NOT secure — use large primes in practice)
+    long long p = 61, q = 53;
+    long long n = p * q;           // 3233 (modulus)
+    long long phi = (p-1)*(q-1);   // 3120
+    long long e = 17;              // public exponent (coprime to phi)
+    // d = modular inverse of e mod phi
+    // d * e ≡ 1 (mod 3120), d = 2753
+    long long d = 2753;
+
+    long long message = 42;
+    long long encrypted = modPow(message, e, n);
+    long long decrypted = modPow(encrypted, d, n);
+
+    cout << "RSA Demo (p=" << p << ", q=" << q << "):" << endl;
+    cout << "  Public key:  (e=" << e << ", n=" << n << ")" << endl;
+    cout << "  Private key: (d=" << d << ", n=" << n << ")" << endl;
+    cout << "  Message:     " << message << endl;
+    cout << "  Encrypted:   " << encrypted << endl;
+    cout << "  Decrypted:   " << decrypted << endl;
+}
+
+// --- Digital Signature (simplified) ---
+void demoDigitalSignature() {
+    string message = "Transfer $1000 to Alice";
+    uint32_t hash = djb2Hash(message);
+    cout << "\nDigital Signature Demo:" << endl;
+    cout << "  Message: " << message << endl;
+    cout << "  Hash:    " << hex << hash << dec << endl;
+    cout << "  Sign:    Encrypt(hash, private_key) -> signature" << endl;
+    cout << "  Verify:  Decrypt(signature, public_key) == hash?" << endl;
+
+    // Tampered message
+    string tampered = "Transfer $9000 to Alice";
+    uint32_t tamperedHash = djb2Hash(tampered);
+    cout << "  Tampered hash: " << hex << tamperedHash << dec << endl;
+    cout << "  Hashes match? " << (hash == tamperedHash ? "YES (bad!)" : "NO (tamper detected!)") << endl;
+}
+
+int main() {
+    // Caesar cipher
+    cout << "=== Caesar Cipher (Symmetric) ===" << endl;
+    string plaintext = "HELLO WORLD";
+    int shift = 3;
+    string encrypted = caesarEncrypt(plaintext, shift);
+    string decrypted = caesarDecrypt(encrypted, shift);
+    cout << "  Plaintext:  " << plaintext << endl;
+    cout << "  Encrypted:  " << encrypted << endl;
+    cout << "  Decrypted:  " << decrypted << endl;
+
+    // XOR cipher
+    cout << "\n=== XOR Cipher (Symmetric Stream) ===" << endl;
+    string msg = "SECRET";
+    string key = "KEY";
+    string xorEnc = xorCipher(msg, key);
+    string xorDec = xorCipher(xorEnc, key); // XOR is its own inverse
+    cout << "  Message:   " << msg << endl;
+    cout << "  Key:       " << key << endl;
+    cout << "  Decrypted: " << xorDec << endl;
+
+    // Hashing
+    cout << "\n=== Hashing ===" << endl;
+    cout << "  Hash('hello'):   " << hex << djb2Hash("hello") << dec << endl;
+    cout << "  Hash('hello1'):  " << hex << djb2Hash("hello1") << dec << endl;
+    cout << "  Hash('hello'):   " << hex << djb2Hash("hello") << dec << " (deterministic)" << endl;
+
+    // RSA
+    cout << "\n=== RSA (Asymmetric) ===" << endl;
+    demoRSA();
+
+    // Digital signature
+    demoDigitalSignature();
+
+    // Key count comparison
+    cout << "\n=== Key Count: n parties ===" << endl;
+    for (int n : {2, 5, 10, 100}) {
+        cout << "  n=" << n << ": Symmetric=" << n*(n-1)/2
+             << " keys, Asymmetric=" << 2*n << " keys" << endl;
+    }
+
+    return 0;
+}`,
+          problems: [
+            ['Caesar Cipher Implementation','https://www.geeksforgeeks.org/caesar-cipher-in-cryptography/','Easy'],
+            ['RSA Algorithm','https://www.geeksforgeeks.org/rsa-algorithm-cryptography/','Medium'],
+            ['Diffie-Hellman Key Exchange','https://www.geeksforgeeks.org/implementation-diffie-hellman-algorithm/','Medium'],
+            ['AES Encryption Modes','https://www.geeksforgeeks.org/advanced-encryption-standard-aes/','Medium'],
+            ['TLS 1.3 Handshake','https://www.geeksforgeeks.org/transport-layer-security-tls/','Medium'],
+            ['Digital Signatures','https://www.geeksforgeeks.org/digital-signatures-certificates/','Easy'],
+          ],
+          mcqs: [
+            {q: 'AES is a:', o: ['Asymmetric encryption algorithm', 'Symmetric encryption algorithm', 'Hashing algorithm', 'Key exchange protocol'], a: 1},
+            {q: 'In TLS 1.3, the key exchange uses:', o: ['Static RSA', 'ECDHE (Elliptic Curve Diffie-Hellman Ephemeral)', 'DES', 'MD5'], a: 1},
+            {q: 'ECB mode is insecure because:', o: ['It uses a weak key', 'Identical plaintext blocks produce identical ciphertext blocks', 'It does not use an IV', 'Both B and C'], a: 3},
+            {q: 'SHA-256 produces a hash of size:', o: ['128 bits', '160 bits', '256 bits', '512 bits'], a: 2},
+            {q: 'For 10 parties to communicate securely, symmetric encryption requires how many keys?', o: ['10', '20', '45', '100'], a: 2},
+            {q: 'Forward secrecy ensures that:', o: ['Messages are encrypted faster', 'Compromising the server key cannot decrypt past sessions', 'The server certificate never expires', 'All ciphers use AES'], a: 1},
+            {q: 'Which hash algorithm is considered broken and should not be used?', o: ['SHA-256', 'SHA-3', 'MD5', 'bcrypt'], a: 2},
+            {q: 'A digital signature provides:', o: ['Confidentiality only', 'Authentication, integrity, and non-repudiation', 'Compression', 'Routing'], a: 1},
+            {q: 'UTF-8 encoding is backward compatible with:', o: ['EBCDIC', 'UTF-16', 'ASCII', 'Latin-1'], a: 2}
+          ],
+        },
+        {
+          t: 'Cryptography Deep Dive — DH, RSA, AES & TLS',
+          learn: '<div class="learn-section"><div class="learn-h">Why This Matters</div><p class="learn-p">Cryptography is at the heart of every secure system. In SDE placement interviews, you are expected to go beyond surface-level definitions and understand <b>how</b> algorithms like Diffie-Hellman, RSA, and AES actually work — including the math. At firms like DE Shaw, secure communication protects trading strategies and client data; understanding TLS internals, certificate chains, and common crypto pitfalls is a practical requirement. This topic gives you the depth needed to confidently answer questions about key exchange, encryption, and PKI.</p></div><div class="learn-section"><div class="learn-h">Diffie-Hellman Key Exchange</div><p class="learn-p">The <b>Diffie-Hellman (DH) protocol</b> allows two parties to establish a shared secret over an insecure channel without prior shared knowledge. It was published in 1976 by Whitfield Diffie and Martin Hellman.</p><p class="learn-p"><b>Mathematical Basis:</b> DH relies on the <b>discrete logarithm problem</b> — given g, p, and g^a mod p, it is computationally infeasible to find a (for large primes).</p><div class="learn-code">Diffie-Hellman Key Exchange — Step by Step:\n\n1. Alice and Bob publicly agree on:\n   - A large prime p (e.g., p = 23)\n   - A generator g (e.g., g = 5)\n\n2. Alice picks a secret integer a (e.g., a = 6)\n   Computes A = g^a mod p = 5^6 mod 23 = 15625 mod 23 = 8\n   Sends A = 8 to Bob\n\n3. Bob picks a secret integer b (e.g., b = 15)\n   Computes B = g^b mod p = 5^15 mod 23 = 19\n   Sends B = 19 to Alice\n\n4. Alice computes shared secret: s = B^a mod p = 19^6 mod 23 = 2\n   Bob computes shared secret:   s = A^b mod p = 8^15 mod 23 = 2\n\nBoth get s = 2! This is the shared secret key.\nAn eavesdropper knows g=5, p=23, A=8, B=19 but cannot find s\nwithout solving the discrete log problem.</div><p class="learn-p"><b>Security:</b> The security of DH depends on the <b>discrete logarithm problem (DLP)</b>. Given g^a mod p, finding a requires trying an exponential number of possibilities for large primes (2048+ bits in practice).</p><div class="learn-warn"><b>MITM Vulnerability:</b> Basic DH is vulnerable to a man-in-the-middle attack. An attacker (Mallory) can intercept and replace A and B with her own values, establishing separate shared secrets with Alice and Bob. <b>Solution:</b> Authenticate the exchange using digital signatures or certificates (as done in TLS).</div></div><div class="learn-section"><div class="learn-h">RSA Algorithm</div><p class="learn-p"><b>RSA</b> (Rivest-Shamir-Adleman, 1977) is the most widely known asymmetric encryption algorithm. Its security relies on the difficulty of <b>factoring large integers</b>.</p><p class="learn-p"><b>Key Generation:</b></p><div class="learn-code">RSA Key Generation:\n\n1. Choose two large primes: p = 61, q = 53\n2. Compute n = p * q = 61 * 53 = 3233\n3. Compute phi(n) = (p-1)(q-1) = 60 * 52 = 3120\n4. Choose e such that 1 &lt; e &lt; phi(n) and gcd(e, phi(n)) = 1\n   e = 17 (common choices: 3, 17, 65537)\n5. Compute d = e^(-1) mod phi(n)  [modular inverse]\n   d = 2753  (because 17 * 2753 = 46801 = 15 * 3120 + 1)\n   Verify: 17 * 2753 mod 3120 = 1 ✓\n\nPublic key:  (e, n) = (17, 3233)\nPrivate key: (d, n) = (2753, 3233)</div><p class="learn-p"><b>Encryption &amp; Decryption:</b></p><div class="learn-code">Encryption (with public key):\n  Plaintext M = 65\n  Ciphertext C = M^e mod n = 65^17 mod 3233 = 2790\n\nDecryption (with private key):\n  Plaintext M = C^d mod n = 2790^2753 mod 3233 = 65 ✓\n\nWhy it works (Euler\'s theorem):\n  M^(e*d) mod n = M^(1 + k*phi(n)) mod n = M * (M^phi(n))^k mod n\n  By Euler\'s theorem: M^phi(n) mod n = 1 (when gcd(M,n) = 1)\n  Therefore: M^(e*d) mod n = M * 1^k mod n = M</div><p class="learn-p"><b>Key Sizes:</b> RSA-2048 (minimum recommended), RSA-3072 (128-bit security equivalent), RSA-4096 (high security). The security comes from the difficulty of factoring n back into p and q.</p><div class="learn-tip"><b>Tip:</b> e = 65537 (2^16 + 1) is the most commonly used public exponent because it has only two bits set in binary (10000000000000001), making modular exponentiation fast. Small values like e = 3 are vulnerable to certain attacks.</div></div><div class="learn-section"><div class="learn-h">AES Internals</div><p class="learn-p"><b>AES (Advanced Encryption Standard)</b> is a symmetric block cipher that processes data in 128-bit blocks. It was standardized by NIST in 2001, replacing DES. AES operates on a 4x4 byte matrix called the <b>state</b>.</p><p class="learn-p"><b>Number of Rounds:</b></p><table class="learn-table"><tr><th>Key Size</th><th>Rounds</th><th>Name</th></tr><tr><td>128 bits</td><td>10</td><td>AES-128</td></tr><tr><td>192 bits</td><td>12</td><td>AES-192</td></tr><tr><td>256 bits</td><td>14</td><td>AES-256</td></tr></table><p class="learn-p"><b>Each round consists of 4 operations:</b></p><ul class="learn-list"><li><b>SubBytes:</b> Each byte is substituted using a fixed lookup table (S-box). Provides <b>confusion</b> (non-linear relationship between key and ciphertext).</li><li><b>ShiftRows:</b> Rows of the state matrix are cyclically shifted left. Row 0: no shift. Row 1: shift 1. Row 2: shift 2. Row 3: shift 3. Provides <b>diffusion</b> across columns.</li><li><b>MixColumns:</b> Each column is multiplied by a fixed polynomial matrix in GF(2^8). Provides <b>diffusion</b> — each output byte depends on all 4 input bytes of the column. <b>Skipped in the final round.</b></li><li><b>AddRoundKey:</b> State is XORed with the round key (derived from the main key via key schedule). This is where the key material enters.</li></ul><div class="learn-code">AES Round Structure (for AES-128, 10 rounds):\n\nPlaintext (128 bits = 16 bytes)\n  |\n  v\nAddRoundKey (Round 0 — initial key addition)\n  |\n  v\nRound 1-9: SubBytes → ShiftRows → MixColumns → AddRoundKey\n  |\n  v\nRound 10 (final): SubBytes → ShiftRows → AddRoundKey\n  (no MixColumns in final round)\n  |\n  v\nCiphertext (128 bits)</div></div><div class="learn-section"><div class="learn-h">AES Block Cipher Modes</div><table class="learn-table"><tr><th>Mode</th><th>Description</th><th>Parallel?</th><th>IV?</th><th>Security</th></tr><tr><td>ECB</td><td>Each block encrypted independently</td><td>Yes</td><td>No</td><td><b>Insecure</b> — identical blocks produce identical ciphertext</td></tr><tr><td>CBC</td><td>Each block XORed with previous ciphertext</td><td>Decrypt only</td><td>Yes</td><td>Secure but sequential encryption</td></tr><tr><td>CTR</td><td>Counter encrypted, XORed with plaintext</td><td>Yes</td><td>Nonce</td><td>Secure, fast, parallelizable</td></tr><tr><td>GCM</td><td>CTR + authentication tag (GMAC)</td><td>Yes</td><td>Nonce</td><td><b>Best — authenticated encryption (AEAD)</b></td></tr></table><div class="learn-code">ECB Problem (the "ECB penguin"):\n  Block1 = "ATTACK AT DAWN" → Cipher_X\n  Block2 = "ATTACK AT DAWN" → Cipher_X  (same plaintext = same ciphertext!)\n  Pattern is preserved — an image encrypted with ECB retains its outline.\n\nCBC: C_i = E(P_i XOR C_{i-1}), where C_0 = IV\n  Identical plaintext blocks produce different ciphertext (due to chaining).\n\nCTR: C_i = P_i XOR E(Nonce || Counter_i)\n  Effectively turns a block cipher into a stream cipher.\n\nGCM: CTR mode + GHASH authentication tag\n  Provides both confidentiality AND integrity (AEAD).</div><div class="learn-warn"><b>IV Requirements:</b> CBC requires a random, unpredictable IV for each message. CTR/GCM require a unique nonce per message (can be a counter). Reusing a nonce in CTR/GCM completely breaks security — XORing two ciphertexts cancels the key stream, revealing plaintext XOR.</div></div><div class="learn-section"><div class="learn-h">TLS 1.2 vs TLS 1.3</div><table class="learn-table"><tr><th>Feature</th><th>TLS 1.2</th><th>TLS 1.3</th></tr><tr><td>Handshake RTTs</td><td>2-RTT</td><td>1-RTT (0-RTT resumption available)</td></tr><tr><td>Key exchange</td><td>RSA, DHE, ECDHE</td><td>ECDHE only (forward secrecy mandatory)</td></tr><tr><td>Symmetric ciphers</td><td>AES-CBC, AES-GCM, RC4, 3DES</td><td>AES-GCM, ChaCha20-Poly1305 only (AEAD)</td></tr><tr><td>Hash functions</td><td>MD5, SHA-1, SHA-256</td><td>SHA-256, SHA-384 only</td></tr><tr><td>Forward secrecy</td><td>Optional (only with DHE/ECDHE)</td><td>Mandatory (static RSA removed)</td></tr><tr><td>0-RTT</td><td>Not supported</td><td>Supported (with replay risk)</td></tr><tr><td>Cipher suites</td><td>37+ (many insecure)</td><td>5 (all secure)</td></tr></table><div class="learn-code">TLS 1.2 Handshake (2-RTT):\n  Client → Server: ClientHello (ciphers, random)\n  Server → Client: ServerHello, Certificate, ServerKeyExchange, Done\n  Client → Server: ClientKeyExchange, ChangeCipherSpec, Finished\n  Server → Client: ChangeCipherSpec, Finished\n  [2 round trips before encrypted data]\n\nTLS 1.3 Handshake (1-RTT):\n  Client → Server: ClientHello + KeyShare (ECDHE public key)\n  Server → Client: ServerHello + KeyShare + EncryptedExtensions\n                   + Certificate + CertificateVerify + Finished\n  Client → Server: Finished\n  [1 round trip — client sends key share immediately]\n\n0-RTT Resumption (TLS 1.3):\n  Client sends early data with the first message using a PSK\n  from a previous session. Risk: 0-RTT data is replayable.</div></div><div class="learn-section"><div class="learn-h">PKI &amp; Certificate Chains</div><p class="learn-p"><b>Public Key Infrastructure (PKI)</b> is the framework of policies, procedures, and technology for managing digital certificates and public keys.</p><p class="learn-p"><b>CA Hierarchy:</b></p><div class="learn-code">Certificate Authority Hierarchy:\n\nRoot CA (self-signed, pre-installed in browser/OS trust store)\n  |\n  +-- Intermediate CA (signed by Root CA)\n        |\n        +-- Server Certificate (signed by Intermediate CA)\n              Contains: domain name, public key, validity dates,\n              issuer, serial number, signature algorithm\n\nWhy intermediates? Root CA private keys are kept offline in HSMs.\nIntermediate CAs handle daily issuance. If an intermediate is\ncompromised, only it is revoked — not the entire root.</div><p class="learn-p"><b>How browsers verify certificates:</b></p><ol class="learn-list"><li>Server sends its certificate + intermediate CA certificate(s).</li><li>Browser checks: is the server cert signed by the intermediate CA? Verify signature using intermediate CA\'s public key.</li><li>Is the intermediate CA cert signed by a trusted root CA? Verify using root CA\'s public key (pre-installed in OS/browser).</li><li>Check validity dates (not expired), domain name matches, and revocation status (CRL or OCSP).</li><li>If all checks pass, the certificate is trusted.</li></ol><p class="learn-p"><b>Certificate Pinning:</b> The application hardcodes (pins) the expected certificate or public key hash. Even if a CA is compromised and issues a fraudulent certificate, the app rejects it because the pin does not match. Used in mobile apps and high-security systems. Downside: operational complexity when rotating certificates.</p></div><div class="learn-section"><div class="learn-h">Common Crypto Mistakes in Interviews</div><ul class="learn-list"><li><b>Confusing encryption with hashing:</b> Encryption is reversible (with the key); hashing is one-way. You encrypt data for confidentiality; you hash for integrity/authentication.</li><li><b>Saying "RSA encrypts data in TLS":</b> In modern TLS (1.3), RSA is NOT used for key exchange. ECDHE is used. RSA may only be used for signing the certificate.</li><li><b>Forgetting forward secrecy:</b> Static RSA key exchange means if the server key is compromised, all past recorded sessions can be decrypted. ECDHE provides forward secrecy (ephemeral keys).</li><li><b>Confusing authentication and encryption:</b> Encryption hides data; authentication proves identity. A digital signature provides authentication + integrity + non-repudiation, NOT confidentiality.</li><li><b>Saying "HTTPS is slow":</b> With TLS 1.3 (1-RTT), HTTP/2 multiplexing, and hardware AES-NI acceleration, the overhead is negligible. Session resumption with 0-RTT makes it even faster.</li><li><b>Not knowing key counts:</b> For n parties, symmetric encryption needs n(n-1)/2 keys; asymmetric needs 2n keys (one pair each).</li></ul></div><div class="learn-section"><div class="learn-h">Interview Spotlight</div><p class="learn-p"><b>Q1: Walk through the Diffie-Hellman key exchange with a numerical example.</b><br>A: Both parties agree on a prime p=23 and generator g=5. Alice picks secret a=6, computes A=5^6 mod 23=8, sends A. Bob picks secret b=15, computes B=5^15 mod 23=19, sends B. Alice computes s=19^6 mod 23=2. Bob computes s=8^15 mod 23=2. Both get shared secret 2. An eavesdropper sees g, p, A, B but cannot compute s without solving the discrete logarithm problem.</p><p class="learn-p"><b>Q2: Explain RSA key generation and why it works.</b><br>A: Choose primes p, q. Compute n=pq, phi(n)=(p-1)(q-1). Pick e coprime to phi(n). Compute d=e^-1 mod phi(n). Public key (e,n), private key (d,n). Encrypt: C=M^e mod n. Decrypt: M=C^d mod n. Works because of Euler\'s theorem: M^(ed) = M^(1+k*phi(n)) = M * (M^phi(n))^k = M*1^k = M (mod n).</p><p class="learn-p"><b>Q3: Describe the four AES round operations and their purpose.</b><br>A: SubBytes provides confusion via S-box substitution (non-linear). ShiftRows cyclically shifts rows for inter-column diffusion. MixColumns multiplies each column by a polynomial for intra-column diffusion. AddRoundKey XORs state with the round key. The final round skips MixColumns. Together, these achieve Shannon\'s confusion and diffusion principles.</p><p class="learn-p"><b>Q4: Why is ECB mode insecure and what should you use instead?</b><br>A: ECB encrypts each block independently — identical plaintext blocks produce identical ciphertext, revealing patterns. The ECB penguin demonstrates this: an encrypted image retains the original outline. Use GCM (best — provides authenticated encryption), CTR (parallelizable), or CBC (sequential but well-understood).</p><p class="learn-p"><b>Q5: What are the key differences between TLS 1.2 and TLS 1.3?</b><br>A: TLS 1.3 reduces the handshake from 2-RTT to 1-RTT by sending key shares in ClientHello. It removes insecure algorithms (RSA key exchange, CBC ciphers, MD5, SHA-1, RC4, 3DES). Forward secrecy is mandatory (ECDHE only). Only AEAD ciphers (AES-GCM, ChaCha20-Poly1305) are allowed. 0-RTT resumption is supported but has replay risks.</p><p class="learn-p"><b>Q6: How does certificate pinning work and when would you use it?</b><br>A: Certificate pinning hardcodes the expected certificate\'s public key hash in the application. During TLS, the app checks if the server\'s certificate matches the pin. Even if a rogue CA issues a valid certificate for the domain, it will be rejected because the public key hash won\'t match. Used in mobile banking apps and high-security systems. Downside: certificate rotation requires app updates.</p></div>',
+          code: `// === Cryptography — Simplified DH & RSA with Modular Exponentiation in C++ ===
+#include <iostream>
+#include <cmath>
+#include <cstdint>
+using namespace std;
+
+// --- Modular exponentiation (base^exp mod mod) using repeated squaring ---
+// This is the core operation for both DH and RSA.
+// Time complexity: O(log(exp)) multiplications
+long long modPow(long long base, long long exp, long long mod) {
+    long long result = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp & 1) {            // if exp is odd
+            result = (result * base) % mod;
+        }
+        exp >>= 1;                // exp = exp / 2
+        base = (base * base) % mod;
+    }
+    return result;
+}
+
+// --- GCD using Euclidean algorithm ---
+long long gcd(long long a, long long b) {
+    while (b != 0) {
+        long long t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+
+// --- Extended Euclidean Algorithm ---
+// Returns gcd, and sets x, y such that a*x + b*y = gcd(a,b)
+long long extGcd(long long a, long long b, long long &x, long long &y) {
+    if (b == 0) {
+        x = 1; y = 0;
+        return a;
+    }
+    long long x1, y1;
+    long long g = extGcd(b, a % b, x1, y1);
+    x = y1;
+    y = x1 - (a / b) * y1;
+    return g;
+}
+
+// --- Modular multiplicative inverse: a^(-1) mod m ---
+long long modInverse(long long a, long long m) {
+    long long x, y;
+    long long g = extGcd(a, m, x, y);
+    if (g != 1) return -1; // inverse doesn't exist
+    return (x % m + m) % m;
+}
+
+// --- Diffie-Hellman Key Exchange Simulation ---
+void demoDiffieHellman() {
+    cout << "=== Diffie-Hellman Key Exchange ===" << endl;
+    long long p = 23;  // public prime
+    long long g = 5;   // public generator
+
+    // Alice's secret
+    long long a = 6;
+    long long A = modPow(g, a, p); // A = g^a mod p = 5^6 mod 23 = 8
+
+    // Bob's secret
+    long long b = 15;
+    long long B = modPow(g, b, p); // B = g^b mod p = 5^15 mod 23 = 19
+
+    // Shared secret computation
+    long long secretAlice = modPow(B, a, p); // B^a mod p
+    long long secretBob   = modPow(A, b, p); // A^b mod p
+
+    cout << "  Public: p=" << p << ", g=" << g << endl;
+    cout << "  Alice: secret a=" << a << ", sends A=g^a mod p=" << A << endl;
+    cout << "  Bob:   secret b=" << b << ", sends B=g^b mod p=" << B << endl;
+    cout << "  Alice computes: B^a mod p = " << secretAlice << endl;
+    cout << "  Bob computes:   A^b mod p = " << secretBob << endl;
+    cout << "  Shared secret match: " << (secretAlice == secretBob ? "YES" : "NO") << endl;
+
+    // Demonstrate with larger values
+    cout << "\\n  --- Larger example ---" << endl;
+    long long p2 = 7919; // larger prime
+    long long g2 = 7;
+    long long a2 = 123, b2 = 456;
+    long long A2 = modPow(g2, a2, p2);
+    long long B2 = modPow(g2, b2, p2);
+    long long s1 = modPow(B2, a2, p2);
+    long long s2 = modPow(A2, b2, p2);
+    cout << "  p=" << p2 << ", g=" << g2 << endl;
+    cout << "  A=" << A2 << ", B=" << B2 << endl;
+    cout << "  Shared secret: " << s1 << " (match: " << (s1 == s2 ? "YES" : "NO") << ")" << endl;
+}
+
+// --- RSA Simulation ---
+void demoRSA() {
+    cout << "\\n=== RSA Algorithm ===" << endl;
+
+    // Key generation
+    long long p = 61, q = 53;
+    long long n = p * q;             // 3233
+    long long phi = (p-1) * (q-1);   // 3120
+    long long e = 17;                // public exponent, gcd(17, 3120) = 1
+
+    cout << "  Key Generation:" << endl;
+    cout << "    p=" << p << ", q=" << q << endl;
+    cout << "    n = p*q = " << n << endl;
+    cout << "    phi(n) = (p-1)(q-1) = " << phi << endl;
+    cout << "    e = " << e << " (gcd(e, phi) = " << gcd(e, phi) << ")" << endl;
+
+    long long d = modInverse(e, phi); // 2753
+    cout << "    d = e^(-1) mod phi = " << d << endl;
+    cout << "    Verify: e*d mod phi = " << (e * d) % phi << " (should be 1)" << endl;
+    cout << "    Public key:  (e=" << e << ", n=" << n << ")" << endl;
+    cout << "    Private key: (d=" << d << ", n=" << n << ")" << endl;
+
+    // Encrypt and decrypt
+    long long message = 65;
+    long long ciphertext = modPow(message, e, n);
+    long long decrypted  = modPow(ciphertext, d, n);
+
+    cout << "\\n  Encryption/Decryption:" << endl;
+    cout << "    Plaintext M = " << message << endl;
+    cout << "    Ciphertext C = M^e mod n = " << ciphertext << endl;
+    cout << "    Decrypted  M = C^d mod n = " << decrypted << endl;
+    cout << "    Match: " << (message == decrypted ? "YES" : "NO") << endl;
+
+    // Sign and verify (using private key to sign, public to verify)
+    long long signature = modPow(message, d, n); // sign with private key
+    long long verified  = modPow(signature, e, n); // verify with public key
+    cout << "\\n  Digital Signature:" << endl;
+    cout << "    Signature = M^d mod n = " << signature << endl;
+    cout << "    Verified  = S^e mod n = " << verified << endl;
+    cout << "    Valid: " << (message == verified ? "YES" : "NO") << endl;
+}
+
+int main() {
+    demoDiffieHellman();
+    demoRSA();
+
+    // Modular exponentiation examples
+    cout << "\\n=== Modular Exponentiation Examples ===" << endl;
+    cout << "  2^10 mod 1000 = " << modPow(2, 10, 1000) << endl;
+    cout << "  3^13 mod 7    = " << modPow(3, 13, 7) << endl;
+    cout << "  7^256 mod 13  = " << modPow(7, 256, 13) << endl;
+
+    // Key count comparison
+    cout << "\\n=== Key Count for n Parties ===" << endl;
+    for (int n : {2, 5, 10, 50, 100}) {
+        cout << "  n=" << n << ": Symmetric=" << n*(n-1)/2
+             << " keys, Asymmetric=" << 2*n << " key pairs" << endl;
+    }
+
+    return 0;
+}`,
+          problems: [
+            ['Diffie-Hellman Implementation','https://www.geeksforgeeks.org/implementation-diffie-hellman-algorithm/','Medium'],
+            ['RSA Algorithm Step by Step','https://www.geeksforgeeks.org/rsa-algorithm-cryptography/','Medium'],
+            ['Modular Exponentiation','https://www.geeksforgeeks.org/modular-exponentiation-power-in-modular-arithmetic/','Easy'],
+            ['AES Encryption Explained','https://www.geeksforgeeks.org/advanced-encryption-standard-aes/','Medium'],
+            ['TLS Handshake Process','https://www.geeksforgeeks.org/transport-layer-security-tls/','Medium'],
+            ['Digital Certificates & PKI','https://www.geeksforgeeks.org/digital-signatures-certificates/','Easy'],
+          ],
+          mcqs: [
+            {q: 'Diffie-Hellman key exchange is based on the difficulty of:', o: ['Integer factorization', 'Discrete logarithm problem', 'Elliptic curve problem', 'Knapsack problem'], a: 1},
+            {q: 'In RSA, if p=11 and q=3, what is phi(n)?', o: ['33', '30', '20', '32'], a: 2},
+            {q: 'AES-256 uses how many rounds of encryption?', o: ['10', '12', '14', '16'], a: 2},
+            {q: 'Which AES operation is skipped in the final round?', o: ['SubBytes', 'ShiftRows', 'MixColumns', 'AddRoundKey'], a: 2},
+            {q: 'In GCM mode, the authentication tag provides:', o: ['Confidentiality only', 'Integrity and authenticity', 'Key exchange', 'Compression'], a: 1},
+            {q: 'TLS 1.3 removed which key exchange method?', o: ['ECDHE', 'DHE', 'Static RSA', 'X25519'], a: 2},
+            {q: 'Reusing a nonce in CTR/GCM mode:', o: ['Has no effect', 'Slows encryption', 'Completely breaks security by revealing plaintext XOR', 'Changes the key'], a: 2},
+            {q: 'Certificate pinning protects against:', o: ['DDoS attacks', 'Compromised CA issuing fraudulent certificates', 'Buffer overflow', 'SQL injection'], a: 1},
+            {q: 'Basic Diffie-Hellman without authentication is vulnerable to:', o: ['Replay attacks', 'Man-in-the-middle attacks', 'Brute force', 'Side-channel attacks'], a: 1},
+            {q: 'The commonly used RSA public exponent 65537 is popular because:', o: ['It is prime', 'It has only two bits set making modular exponentiation fast', 'It is the largest prime below 2^16', 'It was mandated by NIST'], a: 1},
+          ],
+        }
+      ]
+    },
+    // ==================== TAB 7: Application Layer (OSI Layer 7) ====================
     {
       id: 'app', t: 'Application Layer',
       topics: [
@@ -5596,8 +5945,7 @@ int main() {
         },
       ]
     },
-
-    // ==================== TAB 6: Network Security ====================
+    // ==================== TAB 8: Network Security ====================
     {
       id: 'sec', t: 'Network Security',
       topics: [
@@ -6151,7 +6499,8 @@ int main() {
           ],
         },
       ]
-    },
+    }
+
   ]
 };
 const DBMS_CONTENT = {
