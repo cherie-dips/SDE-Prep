@@ -8,10 +8,11 @@
 </head>
 <body>
 <header>
-  <div class="brand">DE Shaw Prep</div>
+  <div class="brand">SDE Prep</div>
   <nav id="mainNav">
     <a data-v="cal">Calendar</a>
     <a class="on" data-v="road">Roadmap</a>
+    <a data-v="book">C++ Book</a>
   </nav>
   <div class="hstats">
     <span>Progress <strong id="hProg">0%</strong></span>
@@ -22,7 +23,7 @@
 <div class="view on" id="v-road">
   <div class="road-side" id="roadSide"></div>
   <div class="road-main">
-    <div class="road-head" id="roadHead"><h2>DE Shaw Prep Roadmap</h2><div class="rh-sub">Select a category to begin</div></div>
+    <div class="road-head" id="roadHead"><h2>SDE Prep Roadmap</h2><div class="rh-sub">Select a category to begin</div></div>
     <div class="road-tabs" id="roadTabs"></div>
     <div class="road-topics" id="roadTopics"><div class="empty-msg">Loading content...</div></div>
   </div>
@@ -37,12 +38,17 @@
   <div class="day-panel" id="dayPanel"><div class="empty-msg">Select a day</div></div>
 </div>
 
+<div class="view" id="v-book">
+  <iframe id="bookFrame" title="Learn C++ book" data-src="learncpp_book/learncpp_book.html"></iframe>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="js/content-cpp-dsa.js"></script>
 <script src="js/content-cs.js"></script>
 <script src="js/content-dev.js"></script>
 <script src="js/content-sysdes.js"></script>
+<script src="js/content-resume.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,6 @@
+.DS_Store
+
+# learncpp book build artifacts - regenerable with learncpp_makebook.py
+learncpp_book/html_raw/
+learncpp_book/html_edit/
+learncpp_book/build.log

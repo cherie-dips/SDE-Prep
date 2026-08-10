@@ -14,6 +14,7 @@ const ROADMAP=[
   typeof MERN_CONTENT!=='undefined'?MERN_CONTENT:null,
   typeof GENAI_CONTENT!=='undefined'?GENAI_CONTENT:null,
   typeof APTITUDE_CONTENT!=='undefined'?APTITUDE_CONTENT:null,
+  typeof RESUME_CONTENT!=='undefined'?RESUME_CONTENT:null,
 ].filter(Boolean);
 
 // ====== CALENDAR ======
@@ -414,7 +415,13 @@ function switchView(v){
   document.getElementById('v-'+v).classList.add('on');
   if(v==='road')renderRoad();
   if(v==='cal'){renderCal();renderDP();renderDash()}
+  if(v==='book')loadBook();
   updTop();
+}
+// The book is a few MB, so it is fetched the first time the tab is opened, not on boot.
+function loadBook(){
+  const f=document.getElementById('bookFrame');
+  if(f&&!f.dataset.loaded){f.src=f.dataset.src;f.dataset.loaded='1'}
 }
 document.querySelectorAll('#mainNav a').forEach(a=>a.addEventListener('click',()=>switchView(a.dataset.v)));
 
