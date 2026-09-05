@@ -432,6 +432,8 @@ function switchView(v,fromHistory){
   if(!view)return;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
   view.classList.add('on');
+  const ai=document.getElementById('aiNote');
+  if(ai)ai.classList.toggle('hide',v!=='road');
   if(v==='road')renderRoad();
   if(v==='cal'){renderPlanBar();renderCal();renderDP();renderDash()}
   // Notes manages its own deeper hashes; on a history restore it reads them itself.

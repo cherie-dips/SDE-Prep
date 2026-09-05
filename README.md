@@ -13,5 +13,6 @@ and the calendar fills in from your start date.
 - **Notes** — subject PDFs (Plaksha CSAI, Software Development, GATE CSE), served live
   from Supabase.
 
-> **Note:** the notes, explanations, MCQs and practice sets in this app are AI-generated.
-> Verify anything you rely on.
+> **Note:** the **Roadmap** content — explanations, MCQs and practice sets — is
+> AI-generated, so verify anything you rely on. The **Notes** PDFs are real course
+> material and are not AI-generated.
