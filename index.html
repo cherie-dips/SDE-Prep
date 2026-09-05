@@ -12,7 +12,7 @@
   <nav id="mainNav">
     <a data-v="cal">Calendar</a>
     <a class="on" data-v="road">Roadmap</a>
-    <a data-v="book">C++ Book</a>
+    <a data-v="appdesign">App Design</a>
   </nav>
   <div class="hstats">
     <span>Progress <strong id="hProg">0%</strong></span>
@@ -31,6 +31,7 @@
 
 <div class="view" id="v-cal">
   <div class="cal-left">
+    <div class="plan-bar" id="planBar"></div>
     <div class="cal-head"><h2 id="calTitle"></h2><div class="cal-nav"><button onclick="calNav(-1)">&larr;</button><button onclick="calToday()">Today</button><button onclick="calNav(1)">&rarr;</button></div></div>
     <div class="cal-grid" id="calGrid"></div>
     <div class="dash-inline"><h4>Roadmap Progress</h4><div class="prog-grid" id="roadProg"></div></div>
@@ -38,8 +39,9 @@
   <div class="day-panel" id="dayPanel"><div class="empty-msg">Select a day</div></div>
 </div>
 
-<div class="view" id="v-book">
-  <iframe id="bookFrame" title="Learn C++ book" data-src="learncpp_book/learncpp_book.html"></iframe>
+<div class="view" id="v-appdesign">
+  <iframe id="appdesignFrame" title="App architecture and data modeling prep"
+          data-src="appdesign/appdesign_prep.html"></iframe>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -48,7 +50,6 @@
 <script src="js/content-cs.js"></script>
 <script src="js/content-dev.js"></script>
 <script src="js/content-sysdes.js"></script>
-<script src="js/content-resume.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

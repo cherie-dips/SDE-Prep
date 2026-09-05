@@ -106,6 +106,51 @@ header .hstats strong{color:#eee;font-weight:600}
 
 #v-cal{flex-direction:row}
 .cal-left{flex:1;display:flex;flex-direction:column;padding:16px 24px;overflow:hidden}
+
+/* ---- plan setup / summary bar ---- */
+.plan-bar{flex-shrink:0}
+.plan-bar:empty{display:none}
+.plan-empty,.plan-live{background:#111;border-radius:4px;padding:10px 14px;margin-bottom:12px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;color:#bbb}
+.plan-empty b{color:#eee;font-weight:600}
+.plan-empty button,.plan-live button,.plan-setup button{font:inherit;font-size:12px;padding:5px 12px;
+  border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#ddd;cursor:pointer;white-space:nowrap}
+.plan-empty button:hover,.plan-live button:hover,.plan-setup button:hover{background:#222;color:#fff}
+.plan-setup button.prim{background:#25482f;border-color:#2f5c3b;color:#dbeede}
+.plan-setup button.prim:hover{background:#2c5638}
+.plan-setup button.prim:disabled{background:#1a1a1a;border-color:#2a2a2a;color:#666;cursor:not-allowed}
+.plan-live button.ghost,.plan-setup button.ghost{background:none;border-color:#2a2a2a;color:#888}
+.plan-empty button{margin-left:auto}
+
+.plan-live{align-items:flex-start}
+.plan-live .pl-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.plan-live .pl-name{font-size:14px;font-weight:600;color:#eee}
+.plan-live .pl-meta{font-size:12px;color:#888}
+.plan-live .pl-act{margin-left:auto;display:flex;gap:6px}
+.plan-live .pl-bar{flex-basis:100%;height:3px;background:#1e1e1e;border-radius:2px;overflow:hidden}
+.plan-live .pl-bar .fill{height:100%;background:#666;border-radius:2px}
+
+.plan-setup{background:#111;border-radius:4px;padding:14px;margin-bottom:12px}
+.plan-setup .ps-h{font-size:13px;font-weight:600;color:#eee;margin-bottom:10px}
+.pcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.pcard{background:#161616;border:1px solid #242424;border-radius:4px;padding:9px 11px;cursor:pointer;transition:border-color .12s,background .12s}
+.pcard:hover{background:#1b1b1b;border-color:#333}
+.pcard.on{border-color:#3f7350;background:#141c17}
+.pcard .pc-h{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+.pcard .pc-mon{font-size:13px;font-weight:600;color:#eee}
+.pcard .pc-nm{font-size:11px;color:#7d9c88;text-transform:uppercase;letter-spacing:.05em}
+.pcard .pc-b{font-size:11.5px;color:#8a8a8a;line-height:1.45}
+
+.ps-dates{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ps-dates label{font-size:12px;color:#999;display:flex;align-items:center;gap:6px}
+.ps-dates input[type=date]{font:inherit;font-size:12px;padding:4px 8px;border:1px solid #2a2a2a;
+  border-radius:4px;background:#181818;color:#ddd;color-scheme:dark}
+.pnote{margin-top:10px;font-size:12px;color:#888;line-height:1.5}
+.pnote b{color:#ccc}
+.pnote.warn{color:#c8a85e}
+.pnote.err{color:#c87b6e}
+
+.cal-d.rev .dt{color:#7d9c88;font-style:italic}
 .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0}
 .cal-head h2{font-size:19px;font-weight:600;color:#e0e0e0}
 .cal-nav{display:flex;gap:4px}
@@ -157,6 +202,6 @@ header .hstats strong{color:#eee;font-weight:600}
 @media(max-width:900px){.day-panel{width:320px}.road-side{width:200px}}
 @media(max-width:700px){.day-panel{display:none}.road-side{width:180px}}
 
-/* C++ book tab: the book is a standalone page shown in-app */
-#v-book{flex-direction:row}
-#v-book iframe{flex:1;width:100%;height:100%;border:0;display:block;background:#161819}
+/* Standalone pages shown in-app via iframe */
+#v-appdesign{flex-direction:row}
+#v-appdesign iframe{flex:1;width:100%;height:100%;border:0;display:block;background:#161819}

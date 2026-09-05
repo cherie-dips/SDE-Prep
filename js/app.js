@@ -14,7 +14,6 @@ const ROADMAP=[
   typeof MERN_CONTENT!=='undefined'?MERN_CONTENT:null,
   typeof GENAI_CONTENT!=='undefined'?GENAI_CONTENT:null,
   typeof APTITUDE_CONTENT!=='undefined'?APTITUDE_CONTENT:null,
-  typeof RESUME_CONTENT!=='undefined'?RESUME_CONTENT:null,
 ].filter(Boolean);
 
 // ====== CALENDAR ======
@@ -401,7 +400,7 @@ const SP=[
 {t:'Review: Edge Cases & Common Bugs',c:'Review'}
 ]},
 {date:"2026-08-10",theme:"Final Sprint & Confidence",tasks:[
-{t:'DE Shaw Past Questions (GFG, Glassdoor)',c:'Practice'},
+{t:'Company Past Questions (GFG, Glassdoor)',c:'Practice'},
 {t:'Solve: 5 Medium (one per topic)',c:'Practice'},
 {t:'Review: All Cheat Sheets',c:'Review'},
 {t:'Review: Top 10 DSA Patterns',c:'Review'}
@@ -411,16 +410,18 @@ const SP=[
 function switchView(v){
   document.querySelectorAll('#mainNav a').forEach(x=>x.classList.remove('on'));
   const a=document.querySelector(`#mainNav a[data-v="${v}"]`);if(a)a.classList.add('on');
+  const view=document.getElementById('v-'+v);
+  if(!view)return;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
-  document.getElementById('v-'+v).classList.add('on');
+  view.classList.add('on');
   if(v==='road')renderRoad();
-  if(v==='cal'){renderCal();renderDP();renderDash()}
-  if(v==='book')loadBook();
+  if(v==='cal'){renderPlanBar();renderCal();renderDP();renderDash()}
+  if(v==='appdesign')loadFrame('appdesignFrame');
   updTop();
 }
-// The book is a few MB, so it is fetched the first time the tab is opened, not on boot.
-function loadBook(){
-  const f=document.getElementById('bookFrame');
+// These pages are large, so each is fetched the first time its tab is opened, not on boot.
+function loadFrame(id){
+  const f=document.getElementById(id);
   if(f&&!f.dataset.loaded){f.src=f.dataset.src;f.dataset.loaded='1'}
 }
 document.querySelectorAll('#mainNav a').forEach(a=>a.addEventListener('click',()=>switchView(a.dataset.v)));
@@ -581,9 +582,9 @@ function toggleOpen(ti){openTopic=openTopic===ti?-1:ti;innerTab='learn';st.navTo
 function swInner(tab){innerTab=tab;st.navInner=tab;sv();renderRoadTopics()}
 function tgDone(key){
   st.road[key]=!st.road[key];if(!st.road[key])delete st.road[key];
-  const done=!!st.road[key];
-  SP.forEach(dy=>{dy.tasks.forEach((t,i)=>{if(t.road===key){if(done)st.cal[dy.date+'_'+i]=true;else delete st.cal[dy.date+'_'+i]}})});
   sv();renderRoadSide();renderRoadTabs();updTop();
+  // The calendar reads st.road for scheduled topics, so keep it in step.
+  if(document.getElementById('v-cal').classList.contains('on')){renderPlanBar();renderCal();renderDP();renderDash()}
 }
 function pickMCQ(mkey,picked,correct){st.mcq[mkey]=picked;sv();renderRoadTopics()}
 function tgProb(pkey){st.prob[pkey]=!st.prob[pkey];if(!st.prob[pkey])delete st.prob[pkey];sv();renderRoadTopics()}
@@ -600,10 +601,237 @@ function goToRoad(roadKey){
 }
 
 // ====== CALENDAR ======
-let _now=new Date(),calM=_now.getMonth(),calY=_now.getFullYear(),selDate=ds(_now.getFullYear(),_now.getMonth(),_now.getDate());
+// SP above is the curriculum: an ordered 57-day syllabus. Those dates are never
+// shown. The dates the user sees come from re-pacing that same ordered task list
+// across whatever range they pick, so every plan covers all of it.
+
+const PLANS=[
+  {id:'1m',months:1,name:'Sprint',rest:[0],reviewEvery:0,
+   blurb:'Everything, fast. Six days a week, heavy days, no slack. For a deadline you cannot move.'},
+  {id:'2m',months:2,name:'Focused',rest:[0],reviewEvery:0,
+   blurb:'The intended pace. Six days a week, one topic block per day. The default.'},
+  {id:'4m',months:4,name:'Steady',rest:[0,6],reviewEvery:6,
+   blurb:'Weekdays only, lighter days, a review day roughly every two weeks. Fits alongside a job.'},
+  {id:'6m',months:6,name:'Thorough',rest:[0,6],reviewEvery:5,
+   blurb:'Weekdays only, the lightest load, frequent review days. Most room to go deep.'},
+];
+
+// One flat, ordered list of everything to be done, with a stable key per task so
+// ticking something off survives switching to a different plan later.
+const CURRICULUM=(function(){
+  const out=[];
+  SP.forEach(dy=>dy.tasks.forEach(t=>{
+    out.push({t:t.t,c:t.c,road:t.road||null,theme:dy.theme,key:t.road?null:'sp:'+out.length});
+  }));
+  return out;
+})();
+
 function ds(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`}
-function getDay(d){return SP.find(x=>x.date===d)}
-function dayProg(d){const dy=getDay(d);if(!dy)return{dn:0,tot:0,p:0};const tot=dy.tasks.length;let dn=0;dy.tasks.forEach((_,i)=>{if(st.cal[d+'_'+i])dn++});return{dn,tot,p:tot?Math.round(dn/tot*100):0}}
+function dsOf(d){return ds(d.getFullYear(),d.getMonth(),d.getDate())}
+function parseDs(s){return new Date(s+'T12:00:00')}
+function todayDs(){return dsOf(new Date())}
+function addMonths(s,n){
+  const d=parseDs(s),day=d.getDate();
+  d.setMonth(d.getMonth()+n);
+  if(d.getDate()<day)d.setDate(0);   // 31 Jan + 1 month -> 28/29 Feb, not 3 Mar
+  d.setDate(d.getDate()-1);          // an N-month plan ends the day before the anniversary
+  return dsOf(d);
+}
+function fmtDs(s){return parseDs(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+
+// Every date in range that the plan actually studies on.
+function studyDates(plan,start,end){
+  const out=[],d=parseDs(start),e=parseDs(end);
+  let guard=0;
+  while(d<=e&&guard++<4000){
+    if(plan.rest.indexOf(d.getDay())<0)out.push(dsOf(d));
+    d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+
+// Split the curriculum into n consecutive chunks of roughly equal size, nudging
+// each break towards a topic-boundary so a day does not start mid-subject.
+function packInto(units,n){
+  const groups=[];let idx=0;
+  for(let d=0;d<n;d++){
+    const daysLeft=n-d,left=units.length-idx;
+    if(left<=0){groups.push([]);continue}
+    const cap=left-(daysLeft-1);                       // keep >=1 for each later day
+    let take=Math.max(1,Math.min(Math.round(left/daysLeft),cap));
+    const slack=Math.max(1,Math.floor(take*0.45));
+    for(let sft=1;sft<=slack;sft++){
+      const back=take-sft,fwd=take+sft;
+      if(back>=1&&idx+back<units.length&&units[idx+back].theme!==units[idx+back-1].theme){take=back;break}
+      if(fwd<=cap&&idx+fwd<units.length&&units[idx+fwd].theme!==units[idx+fwd-1].theme){take=fwd;break}
+    }
+    groups.push(units.slice(idx,idx+take));idx+=take;
+  }
+  if(idx<units.length&&groups.length)groups[groups.length-1]=groups[groups.length-1].concat(units.slice(idx));
+  return groups;
+}
+
+function themeOf(g){
+  const seen=[];g.forEach(u=>{if(seen.indexOf(u.theme)<0)seen.push(u.theme)});
+  if(seen.length<=2)return seen.join(' & ');
+  return seen[0]+' +'+(seen.length-1)+' more';
+}
+
+let SCHED=[],SCHED_MAP={};
+function buildSchedule(){
+  SCHED=[];SCHED_MAP={};
+  if(!st.plan)return;
+  const plan=PLANS.find(p=>p.id===st.plan.id);
+  if(!plan||!st.plan.start||!st.plan.end||st.plan.end<st.plan.start)return;
+
+  const dates=studyDates(plan,st.plan.start,st.plan.end);
+  if(!dates.length)return;
+
+  // Reserve review days, but never so many that content has nowhere to go.
+  const isReview={};
+  if(plan.reviewEvery&&dates.length>plan.reviewEvery*2){
+    dates.forEach((_,i)=>{if(i>0&&i<dates.length-1&&(i+1)%plan.reviewEvery===0)isReview[i]=true});
+  }
+  const contentCount=dates.length-Object.keys(isReview).length;
+  const groups=packInto(CURRICULUM,contentCount);
+
+  let gi=0,recent=[];
+  dates.forEach((date,i)=>{
+    if(isReview[i]){
+      const themes=recent.slice(-3);recent=[];
+      if(!themes.length)return;
+      const tasks=themes.map(th=>({t:'Review: '+th,c:'Review',road:null,key:'rev:'+i+':'+th}));
+      tasks.push({t:'Solve 3 problems from the last block',c:'Practice',road:null,key:'rev:'+i+':solve'});
+      SCHED.push({date:date,theme:'Review & consolidate',tasks:tasks,review:true});
+    }else{
+      const g=groups[gi++];
+      if(!g||!g.length)return;
+      g.forEach(u=>{if(recent.indexOf(u.theme)<0)recent.push(u.theme)});
+      SCHED.push({date:date,theme:themeOf(g),tasks:g});
+    }
+  });
+  SCHED.forEach(d=>SCHED_MAP[d.date]=d);
+}
+
+// ---- progress ----
+// Road-linked tasks read and write st.road, so calendar and roadmap stay in step
+// and progress is not lost when the plan is regenerated on new dates.
+function taskDone(t){return t.road?!!st.road[t.road]:!!st.cal[t.key]}
+function tgTask(date,i){
+  const dy=SCHED_MAP[date];if(!dy)return;
+  const t=dy.tasks[i];if(!t)return;
+  if(t.road){st.road[t.road]=!st.road[t.road];if(!st.road[t.road])delete st.road[t.road]}
+  else{st.cal[t.key]=!st.cal[t.key];if(!st.cal[t.key])delete st.cal[t.key]}
+  sv();renderPlanBar();renderCal();renderDP();renderDash();updTop();renderRoadSide();renderRoadTabs();
+}
+function getDay(d){return SCHED_MAP[d]}
+function dayProg(d){
+  const dy=SCHED_MAP[d];if(!dy)return{dn:0,tot:0,p:0};
+  let dn=0;dy.tasks.forEach(t=>{if(taskDone(t))dn++});
+  return{dn,tot:dy.tasks.length,p:dy.tasks.length?Math.round(dn/dy.tasks.length*100):0};
+}
+function planTotals(){
+  let tot=0,dn=0;
+  SCHED.forEach(d=>d.tasks.forEach(t=>{tot++;if(taskDone(t))dn++}));
+  return{tot,dn,p:tot?Math.round(dn/tot*100):0};
+}
+
+// ---- plan setup UI ----
+let planDraft=null;
+function editPlan(){
+  const cur=st.plan||{};
+  planDraft={id:cur.id||'2m',start:cur.start||todayDs(),end:cur.end||''};
+  if(!planDraft.end)planDraft.end=addMonths(planDraft.start,PLANS.find(p=>p.id===planDraft.id).months);
+  renderPlanBar();
+}
+function cancelPlan(){planDraft=null;renderPlanBar()}
+function pickPlan(id){
+  planDraft.id=id;
+  planDraft.end=addMonths(planDraft.start,PLANS.find(p=>p.id===id).months);
+  renderPlanBar();
+}
+function setPlanDate(which,v){
+  if(!v)return;
+  planDraft[which]=v;
+  if(which==='start')planDraft.end=addMonths(v,PLANS.find(p=>p.id===planDraft.id).months);
+  renderPlanBar();
+}
+function draftStats(){
+  const plan=PLANS.find(p=>p.id===planDraft.id);
+  if(planDraft.end<planDraft.start)return{err:'End date is before the start date.'};
+  const dates=studyDates(plan,planDraft.start,planDraft.end);
+  if(dates.length<5)return{err:'That range leaves only '+dates.length+' study day'+(dates.length===1?'':'s')+'. Pick a longer range.'};
+  const reviews=plan.reviewEvery&&dates.length>plan.reviewEvery*2?Math.max(0,Math.floor((dates.length-1)/plan.reviewEvery)):0;
+  const contentDays=dates.length-reviews;
+  const per=CURRICULUM.length/contentDays;
+  return{days:dates.length,reviews:reviews,per:per,
+         warn:per>12?'That is a very heavy load per day.':(per<1.5?'That range is longer than the content needs — days will be light.':'')};
+}
+function savePlan(){
+  const stt=draftStats();if(stt.err)return;
+  st.plan={id:planDraft.id,start:planDraft.start,end:planDraft.end};
+  planDraft=null;sv();buildSchedule();
+  selDate=SCHED.length?SCHED[0].date:selDate;
+  const f=parseDs(selDate);calM=f.getMonth();calY=f.getFullYear();
+  renderPlanBar();renderCal();renderDP();renderDash();
+}
+function clearPlan(){
+  if(!confirm('Remove the schedule? Topics you have already ticked off stay done.'))return;
+  delete st.plan;planDraft=null;sv();buildSchedule();
+  renderPlanBar();renderCal();renderDP();renderDash();
+}
+
+function renderPlanBar(){
+  const el=document.getElementById('planBar');if(!el)return;
+
+  if(!planDraft&&st.plan&&SCHED.length){
+    const plan=PLANS.find(p=>p.id===st.plan.id),tt=planTotals();
+    el.innerHTML=`<div class="plan-live">
+      <div class="pl-main">
+        <span class="pl-name">${plan.name}</span>
+        <span class="pl-meta">${fmtDs(st.plan.start)} &rarr; ${fmtDs(st.plan.end)} &middot; ${SCHED.length} study days &middot; ${tt.dn}/${tt.tot} tasks done</span>
+      </div>
+      <div class="pl-act">
+        <button onclick="editPlan()">Change plan</button>
+        <button class="ghost" onclick="clearPlan()">Clear</button>
+      </div>
+      <div class="pl-bar"><div class="fill ${tt.p===100?'complete':tt.p>0?'partial':''}" style="width:${tt.p}%"></div></div>
+    </div>`;
+    return;
+  }
+
+  if(!planDraft){
+    el.innerHTML=`<div class="plan-empty">
+      <div><b>No schedule yet.</b> Pick how long you have and the dates get filled in for you.</div>
+      <button onclick="editPlan()">Set up a plan</button>
+    </div>`;
+    return;
+  }
+
+  const stt=draftStats();
+  const cards=PLANS.map(p=>`
+    <div class="pcard${p.id===planDraft.id?' on':''}" onclick="pickPlan('${p.id}')">
+      <div class="pc-h"><span class="pc-mon">${p.months} month${p.months>1?'s':''}</span><span class="pc-nm">${p.name}</span></div>
+      <div class="pc-b">${p.blurb}</div>
+    </div>`).join('');
+
+  const note=stt.err?`<div class="pnote err">${stt.err}</div>`
+    :`<div class="pnote${stt.warn?' warn':''}">${stt.days} study days${stt.reviews?', '+stt.reviews+' of them review days':''} &middot; about <b>${stt.per.toFixed(1)} tasks a day</b> to finish all ${CURRICULUM.length}.${stt.warn?' '+stt.warn:''}</div>`;
+
+  el.innerHTML=`<div class="plan-setup">
+    <div class="ps-h">How long do you have?</div>
+    <div class="pcards">${cards}</div>
+    <div class="ps-dates">
+      <label>Start <input type="date" value="${planDraft.start}" onchange="setPlanDate('start',this.value)"></label>
+      <label>Finish by <input type="date" value="${planDraft.end}" onchange="setPlanDate('end',this.value)"></label>
+      <button class="prim" ${stt.err?'disabled':''} onclick="savePlan()">Fill my calendar</button>
+      ${st.plan?'<button class="ghost" onclick="cancelPlan()">Cancel</button>':''}
+    </div>
+    ${note}
+  </div>`;
+}
+
+let _now=new Date(),calM=_now.getMonth(),calY=_now.getFullYear(),selDate=todayDs();
 
 function renderCal(){
   const M=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -611,13 +839,13 @@ function renderCal(){
   const g=document.getElementById('calGrid');g.innerHTML='';
   ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{const e=document.createElement('div');e.className='cal-dh';e.textContent=d;g.appendChild(e)});
   const fd=new Date(calY,calM,1).getDay(),dim=new Date(calY,calM+1,0).getDate();
-  const td=new Date(),ts=ds(td.getFullYear(),td.getMonth(),td.getDate());
+  const ts=todayDs();
   for(let i=0;i<fd;i++){const e=document.createElement('div');e.className='cal-d empty';g.appendChild(e)}
   for(let d=1;d<=dim;d++){
     const s=ds(calY,calM,d),dy=getDay(s),pr=dayProg(s);
     const e=document.createElement('div');
     const sc=dy?(pr.p===100?' full':pr.p>0?' part':''):'';
-    e.className='cal-d'+(s===selDate?' sel':'')+(s===ts?' today':'')+sc;
+    e.className='cal-d'+(s===selDate?' sel':'')+(s===ts?' today':'')+sc+(dy&&dy.review?' rev':'');
     e.onclick=()=>{selDate=s;renderCal();renderDP()};
     let h=`<div class="dn">${d}</div>`;
     if(dy){const fc=pr.p===100?'complete':pr.p>0?'partial':'';h+=`<div class="dt">${dy.theme}</div><div class="dp"><div class="fill ${fc}" style="width:${pr.p}%"></div></div>`}
@@ -627,23 +855,26 @@ function renderCal(){
 
 function renderDP(){
   const p=document.getElementById('dayPanel');const dy=getDay(selDate);
-  if(!dy){p.innerHTML='<div class="empty-msg">No tasks for this day</div>';return}
-  const d=new Date(selDate+'T12:00:00'),dn=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  if(!dy){
+    p.innerHTML=st.plan?'<div class="empty-msg">Nothing scheduled for this day</div>'
+      :'<div class="empty-msg">Set up a plan to fill your calendar</div>';
+    return;
+  }
+  const dn=parseDs(selDate).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   const pr=dayProg(selDate);const dpc=pr.p===100?'complete':pr.p>0?'partial':'';
   let h=`<h3>${dy.theme}</h3><div class="ds">${dn}</div>`;
   h+=`<div class="day-prog"><div class="fill ${dpc}" style="width:${pr.p}%"></div></div><div class="day-pct">${pr.dn} of ${pr.tot} done</div>`;
   h+='<ul class="tl">';
   dy.tasks.forEach((t,i)=>{
-    const done=!!st.cal[selDate+'_'+i];
+    const done=taskDone(t);
     const roadLink=t.road?`<span class="go-link" onclick="event.stopPropagation();goToRoad('${t.road}')">Open in Roadmap &rarr;</span>`:'';
-    h+=`<li class="ti ${done?'done':''}"><input type="checkbox" ${done?'checked':''} onchange="tgCal('${selDate}',${i})"/><div class="tt">${t.t}${roadLink}</div><span class="cat">${t.c}</span></li>`;
+    h+=`<li class="ti ${done?'done':''}"><input type="checkbox" ${done?'checked':''} onchange="tgTask('${selDate}',${i})"/><div class="tt">${t.t}${roadLink}</div><span class="cat">${t.c}</span></li>`;
   });
   h+='</ul>';p.innerHTML=h;
 }
 
-function tgCal(d,i){st.cal[d+'_'+i]=!st.cal[d+'_'+i];sv();renderCal();renderDP();updTop()}
 function calNav(d){calM+=d;if(calM>11){calM=0;calY++}if(calM<0){calM=11;calY--}renderCal()}
-function calToday(){const t=new Date();calM=t.getMonth();calY=t.getFullYear();selDate=ds(t.getFullYear(),t.getMonth(),t.getDate());renderCal();renderDP()}
+function calToday(){const t=new Date();calM=t.getMonth();calY=t.getFullYear();selDate=todayDs();renderCal();renderDP()}
 
 // ====== DASHBOARD ======
 function renderDash(){
@@ -657,4 +888,11 @@ function toast(msg){const t=document.getElementById('toast');t.innerHTML=msg;t.c
 function updTop(){const p=totalProg();document.getElementById('hProg').textContent=p.p+'%';document.getElementById('hTop').textContent=p.d+'/'+p.t}
 
 // ====== INIT ======
+buildSchedule();
+if(st.plan&&SCHED.length&&!SCHED_MAP[selDate]){
+  // Open on the plan if today falls outside it, so the calendar is never blank.
+  const first=SCHED[0].date,last=SCHED[SCHED.length-1].date;
+  const anchor=todayDs()<first?first:(todayDs()>last?last:selDate);
+  const a=parseDs(anchor);calM=a.getMonth();calY=a.getFullYear();selDate=anchor;
+}
 renderRoad();updTop();
