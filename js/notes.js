@@ -73,31 +73,34 @@ function notesFetchSubjectFiles(categoryId, subjectId) {
 }
 
 // ---- navigation ----
-function notesGoList() {
+function notesGoList(push) {
   notesNav = { categoryId: null, subjectId: null, folderSlug: null };
   notesFiles = null; notesActivePath = null;
-  notesSyncHash(); renderNotes();
+  notesSyncHash(push !== false); renderNotes();
 }
-function notesGoCategory(categoryId) {
+function notesGoCategory(categoryId, push) {
   notesNav = { categoryId: categoryId, subjectId: null, folderSlug: null };
   notesFiles = null; notesActivePath = null;
-  notesSyncHash(); renderNotes();
+  notesSyncHash(push !== false); renderNotes();
 }
-function notesGoSubject(categoryId, subjectId, folderSlug) {
+function notesGoSubject(categoryId, subjectId, folderSlug, push) {
   notesNav = { categoryId, subjectId, folderSlug: folderSlug || 'class-notes' };
   notesExpanded = new Set([notesNav.folderSlug]);
   notesActivePath = null; notesFiles = null;
-  notesSyncHash(); renderNotes();
+  notesSyncHash(push !== false); renderNotes();
   notesFetchSubjectFiles(categoryId, subjectId).then(() => {
     notesPickFirstInFolder(); renderNotes();
   });
 }
-function notesSyncHash() {
+// push adds a history entry (so Back steps through the notes); replace is used
+// when the URL is only being kept in step with state the user did not navigate to.
+function notesSyncHash(push) {
   const { categoryId, subjectId, folderSlug } = notesNav;
   let h = '#notes';
   if (categoryId) h += '/' + categoryId;
   if (subjectId) h += '/' + subjectId + '/' + folderSlug;
-  try { history.replaceState(null, '', h); } catch (e) {}
+  if (h === (location.hash || '')) return;
+  try { push ? history.pushState(null, '', h) : history.replaceState(null, '', h); } catch (e) {}
 }
 
 function notesPickFirstInFolder() {
@@ -114,15 +117,16 @@ function notesToggleFolder(slug) {
 }
 function notesOpenFolder(slug) {
   notesExpanded.add(slug); notesNav.folderSlug = slug;
-  notesPickFirstInFolder(); notesSyncHash(); renderNotes();
+  notesPickFirstInFolder(); notesSyncHash(false); renderNotes();
 }
 function notesSelectPdf(slug, storagePath) {
   notesExpanded.add(slug); notesNav.folderSlug = slug; notesActivePath = storagePath;
-  notesSyncHash(); renderNotes();
+  notesSyncHash(false); renderNotes();
 }
 function notesToggleSidebar() { notesSidebarOpen = !notesSidebarOpen; renderNotes(); }
 
 // ---- icons (react-icons HiBars3 / HiChevronRight / HiChevronDown) ----
+const ICON_BACK = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>';
 const ICON_BARS = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>';
 const ICON_RIGHT = '<svg class="notes-tree-chevron-icon" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>';
 const ICON_DOWN = '<svg class="notes-tree-chevron-icon" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>';
@@ -182,8 +186,12 @@ function notesRenderSection() {
 
   let h = '<div class="notes-page notes-section-page page-content">';
   h += '<div class="notes-section-layout-wrap"><div class="notes-section-left-col">';
-  h += `<button type="button" class="notes-toggle-list-btn${notesSidebarOpen ? ' notes-toggle-list-btn-active' : ''}"
-          onclick="notesToggleSidebar()" aria-label="${notesSidebarOpen ? 'Hide notes list' : 'Show notes list'}">${ICON_BARS}</button>`;
+  h += `<div class="notes-section-tools">
+    <button type="button" class="notes-toggle-list-btn${notesSidebarOpen ? ' notes-toggle-list-btn-active' : ''}"
+      onclick="notesToggleSidebar()" aria-label="${notesSidebarOpen ? 'Hide notes list' : 'Show notes list'}">${ICON_BARS}</button>
+    <button type="button" class="notes-toggle-list-btn notes-back-icon-btn"
+      onclick="notesGoCategory('${esc(cat.id)}')" title="Back to ${esc(cat.title)}" aria-label="Back to ${esc(cat.title)}">${ICON_BACK}</button>
+  </div>`;
 
   if (notesSidebarOpen) {
     h += '<aside class="notes-section-sidebar notes-section-sidebar-tree">';
@@ -441,8 +449,8 @@ function renderNotes() {
 function notesRestoreFromHash() {
   const m = /^#notes(?:\/([^/]+))?(?:\/([^/]+)\/([^/]+))?$/.exec(location.hash || '');
   if (!m) return false;
-  if (m[2]) notesGoSubject(decodeURIComponent(m[1]), decodeURIComponent(m[2]), m[3]);
-  else if (m[1]) notesGoCategory(decodeURIComponent(m[1]));
-  else notesGoList();
+  if (m[2]) notesGoSubject(decodeURIComponent(m[1]), decodeURIComponent(m[2]), m[3], false);
+  else if (m[1]) notesGoCategory(decodeURIComponent(m[1]), false);
+  else notesGoList(false);
   return true;
 }

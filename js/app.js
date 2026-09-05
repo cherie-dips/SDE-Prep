@@ -149,11 +149,27 @@ const SP=[
 {t:'Builder & Command Pattern',c:'LLD',road:'sysdes:patterns:3'},
 {t:'State, Proxy & Chain of Responsibility',c:'LLD',road:'sysdes:patterns:4'}
 ]},
-{date:"2026-07-03",theme:"LLD - Case Studies",tasks:[
-{t:'Design Parking Lot',c:'LLD',road:'sysdes:patterns:5'},
-{t:'Design BookMyShow',c:'LLD',road:'sysdes:patterns:6'},
-{t:'Design Splitwise',c:'LLD',road:'sysdes:patterns:7'},
-{t:'Design Elevator System',c:'LLD',road:'sysdes:patterns:8'}
+{date:"2026-07-03",theme:"LLD - Case Study & App Design Round",tasks:[
+{t:'Design Splitwise',c:'LLD',road:'sysdes:patterns:5'},
+{t:'What this round actually is',c:'LLD',road:'sysdes:appdesign:0'},
+{t:'The 45-minute method',c:'LLD',road:'sysdes:appdesign:1'},
+{t:'Turning a vague prompt into a design',c:'LLD',road:'sysdes:appdesign:2'},
+{t:'API design',c:'LLD',road:'sysdes:appdesign:3'}
+]},
+{date:"2026-07-03",theme:"App Design - Classes & Patterns",tasks:[
+{t:'Class design in C++',c:'LLD',road:'sysdes:appdesign:4'},
+{t:'The nine design principles',c:'LLD',road:'sysdes:appdesign:5'},
+{t:'The patterns you will actually use',c:'LLD',road:'sysdes:appdesign:6'},
+{t:'The rest of the pattern catalogue',c:'LLD',road:'sysdes:appdesign:7'},
+{t:'Data modeling and schema design',c:'LLD',road:'sysdes:appdesign:8'}
+]},
+{date:"2026-07-03",theme:"App Design - Worked Problems",tasks:[
+{t:'Problem 1: Library system',c:'LLD',road:'sysdes:appdesign:9'},
+{t:'Problem 2: Parking lot',c:'LLD',road:'sysdes:appdesign:10'},
+{t:'Problem 3: E-commerce cart and checkout',c:'LLD',road:'sysdes:appdesign:11'},
+{t:'Problem bank',c:'LLD',road:'sysdes:appdesign:12'},
+{t:'Common mistakes and a self-check',c:'LLD',road:'sysdes:appdesign:13'},
+{t:'Cheat sheet',c:'LLD',road:'sysdes:appdesign:14'}
 ]},
 {date:"2026-07-04",theme:"HLD - Fundamentals",tasks:[
 {t:'Scalability Fundamentals',c:'HLD',road:'sysdes:hld:0'},
@@ -407,7 +423,9 @@ const SP=[
 ]}
 ];
 // ====== NAV ======
-function switchView(v){
+// Each view owns a hash and pushes a history entry, so the browser Back button
+// walks back through the app instead of leaving the site on the first press.
+function switchView(v,fromHistory){
   document.querySelectorAll('#mainNav a').forEach(x=>x.classList.remove('on'));
   const a=document.querySelector(`#mainNav a[data-v="${v}"]`);if(a)a.classList.add('on');
   const view=document.getElementById('v-'+v);
@@ -416,15 +434,25 @@ function switchView(v){
   view.classList.add('on');
   if(v==='road')renderRoad();
   if(v==='cal'){renderPlanBar();renderCal();renderDP();renderDash()}
-  if(v==='appdesign')loadFrame('appdesignFrame');
-  if(v==='notes')notesGoList();
+  // Notes manages its own deeper hashes; on a history restore it reads them itself.
+  if(v==='notes'&&!fromHistory)notesGoList();
+  else if(v!=='notes'&&!fromHistory){
+    const h='#'+v;
+    if((location.hash||'')!==h){try{history.pushState(null,'',h)}catch(e){}}
+  }
   updTop();
 }
-// These pages are large, so each is fetched the first time its tab is opened, not on boot.
-function loadFrame(id){
-  const f=document.getElementById(id);
-  if(f&&!f.dataset.loaded){f.src=f.dataset.src;f.dataset.loaded='1'}
+function viewFromHash(){
+  const h=location.hash||'';
+  if(/^#notes/.test(h))return'notes';
+  const m=/^#(road|cal)$/.exec(h);
+  return m?m[1]:null;
 }
+window.addEventListener('popstate',()=>{
+  const v=viewFromHash();
+  if(v==='notes'){switchView('notes',true);if(!notesRestoreFromHash())notesGoList(false)}
+  else switchView(v||'road',true);
+});
 document.querySelectorAll('#mainNav a').forEach(a=>a.addEventListener('click',()=>switchView(a.dataset.v)));
 
 // ====== ROADMAP ======
@@ -528,7 +556,14 @@ function renderRoadTopics(){
     }
     card+=`</div>`;return card;
   }).join('');
-  document.getElementById('roadTopics').innerHTML=h;
+  const host=document.getElementById('roadTopics');
+  host.innerHTML=h;
+  // The App Design sections arrive as plain <pre><code>; run them through the
+  // same highlighter the .learn-code blocks are built with.
+  host.querySelectorAll('.ad-book pre code:not([data-hl])').forEach(el=>{
+    el.dataset.hl='1';
+    el.innerHTML=hlCode(el.textContent);
+  });
   document.querySelectorAll('.learn-code:not(.hl)').forEach(el=>{el.classList.add('hl');el.innerHTML=hlCode(el.textContent)});
 }
 
@@ -897,3 +932,9 @@ if(st.plan&&SCHED.length&&!SCHED_MAP[selDate]){
   const a=parseDs(anchor);calM=a.getMonth();calY=a.getFullYear();selDate=anchor;
 }
 renderRoad();updTop();
+(function(){
+  const v=viewFromHash();
+  if(v==='notes'){switchView('notes',true);if(!notesRestoreFromHash())notesGoList(false)}
+  else if(v&&v!=='road')switchView(v,true);
+  else if((location.hash||'')!=='#road'){try{history.replaceState(null,'','#road')}catch(e){}}
+})();

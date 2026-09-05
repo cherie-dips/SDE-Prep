@@ -214,6 +214,9 @@ header .hstats strong{color:#eee;font-weight:600}
 #v-notes svg{display:block;vertical-align:middle}
 /* The button stretches the column width and centres its content, so pin the icon left. */
 #v-notes .notes-toggle-list-btn{text-align:left}
+/* Toggle first, back second - keeps the menu icon at the far left. */
+#v-notes .notes-section-tools{display:flex;align-items:center;gap:10px;margin-bottom:.25rem}
+#v-notes .notes-section-tools .notes-toggle-list-btn{margin-bottom:0;width:auto;flex:0 0 auto}
 
 /* PDF viewer - mirrors @react-pdf-viewer's default layout in its dark theme. */
 #v-notes .notes-pdf-host{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#282828}
@@ -246,6 +249,5 @@ header .hstats strong{color:#eee;font-weight:600}
 .rpv-page{margin:0 auto;padding-bottom:24px;width:fit-content}
 .rpv-page canvas{display:block}
 
-/* Standalone pages shown in-app via iframe */
-#v-appdesign{flex-direction:row}
-#v-appdesign iframe{flex:1;width:100%;height:100%;border:0;display:block;background:#161819}
+/* App Design now lives in Roadmap -> System Design; the standalone page at
+   appdesign/appdesign_prep.html is still built and can be opened directly. */
