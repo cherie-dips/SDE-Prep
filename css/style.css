@@ -202,6 +202,50 @@ header .hstats strong{color:#eee;font-weight:600}
 @media(max-width:900px){.day-panel{width:320px}.road-side{width:200px}}
 @media(max-width:700px){.day-panel{display:none}.road-side{width:180px}}
 
+#v-notes{display:none;overflow-y:auto}
+#v-notes.on{display:block}
+/* notes.css is copied verbatim from the profile site, where the page sits under a
+   fixed overlay navbar and owns the full viewport. Here it lives inside .view,
+   which already accounts for this app's header - so drop that reserved space. */
+#v-notes .notes-page{padding-top:2rem}
+#v-notes .notes-page.notes-section-page.page-content{padding-top:0;min-height:0;height:100%}
+/* The profile site loads Tailwind, whose preflight sets svg{display:block}. Without
+   it these icons are inline and the button's text-align:center shifts them off-left. */
+#v-notes svg{display:block;vertical-align:middle}
+/* The button stretches the column width and centres its content, so pin the icon left. */
+#v-notes .notes-toggle-list-btn{text-align:left}
+
+/* PDF viewer - mirrors @react-pdf-viewer's default layout in its dark theme. */
+#v-notes .notes-pdf-host{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#282828}
+.rpv-shell{flex:1;min-height:0;display:flex;flex-direction:column;background:#282828}
+.rpv-shell:fullscreen{background:#282828}
+.rpv-toolbar{flex-shrink:0;display:flex;align-items:center;gap:4px;height:40px;padding:0 8px;
+  background:#363636;color:#fff;font-size:13px;border-bottom:1px solid #1f1f1f}
+.rpv-tb-group{display:flex;align-items:center;gap:2px}
+.rpv-tb-center{margin:0 auto}
+.rpv-tb-right{margin-left:auto}
+.rpv-sep{width:1px;height:20px;background:#4b4b4b;margin:0 4px}
+.rpv-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;
+  border:none;border-radius:4px;background:transparent;color:#fff;font-size:16px;cursor:pointer;
+  text-decoration:none;transition:background .12s}
+.rpv-btn:hover{background:#4b4b4b}
+.rpv-btn-on{background:#4b4b4b}
+.rpv-page-input{width:38px;height:26px;text-align:center;font:inherit;font-size:12px;color:#fff;
+  background:#282828;border:1px solid #4b4b4b;border-radius:4px}
+.rpv-page-total{color:#c4c4c4;font-size:12px;margin:0 6px 0 2px;white-space:nowrap}
+.rpv-zoom{min-width:44px;text-align:center;font-size:12px;color:#fff}
+.rpv-body{flex:1;min-height:0;display:flex}
+.rpv-thumbs{width:150px;flex-shrink:0;overflow-y:auto;background:#2b2b2b;border-right:1px solid #1f1f1f;padding:8px}
+.rpv-thumbs.rpv-hidden{display:none}
+.rpv-thumb{position:relative;margin:0 auto 10px;padding:3px;border:1px solid transparent;border-radius:3px;cursor:pointer;width:fit-content}
+.rpv-thumb:hover{border-color:#5b5b5b}
+.rpv-thumb-on{border-color:#8ab4f8}
+.rpv-thumb canvas{display:block;box-shadow:0 1px 4px rgba(0,0,0,.6)}
+.rpv-thumb-n{display:block;text-align:center;font-size:11px;color:#c4c4c4;margin-top:2px}
+.rpv-pages{flex:1;min-width:0;overflow:auto;padding:16px;text-align:center}
+.rpv-page{margin:0 auto;padding-bottom:24px;width:fit-content}
+.rpv-page canvas{display:block}
+
 /* Standalone pages shown in-app via iframe */
 #v-appdesign{flex-direction:row}
 #v-appdesign iframe{flex:1;width:100%;height:100%;border:0;display:block;background:#161819}

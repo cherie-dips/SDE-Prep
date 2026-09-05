@@ -417,6 +417,7 @@ function switchView(v){
   if(v==='road')renderRoad();
   if(v==='cal'){renderPlanBar();renderCal();renderDP();renderDash()}
   if(v==='appdesign')loadFrame('appdesignFrame');
+  if(v==='notes')notesGoList();
   updTop();
 }
 // These pages are large, so each is fetched the first time its tab is opened, not on boot.
