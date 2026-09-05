@@ -6,7 +6,11 @@ header nav{display:flex;gap:2px}
 header nav a{padding:7px 16px;font-size:14px;color:#ccc;text-decoration:none;cursor:pointer;border-radius:4px;transition:color .15s,background .15s;font-weight:500}
 header nav a:hover{color:#fff;background:#161616}
 header nav a.on{color:#fff;background:#1a1a1a}
-header .hstats{margin-left:auto;font-size:13px;color:#ccc;display:flex;gap:16px}
+header .ai-note{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;
+  color:#9a9a9a;background:#141414;border:1px solid #262626;border-radius:999px;
+  padding:4px 11px;white-space:nowrap;cursor:default}
+header .ai-note .ai-dot{width:6px;height:6px;border-radius:50%;background:#c8a85e;flex-shrink:0}
+header .hstats{font-size:13px;color:#ccc;display:flex;gap:16px}
 header .hstats strong{color:#eee;font-weight:600}
 .view{display:none;height:calc(100vh - 78px);overflow:hidden}.view.on{display:flex}
 .fill.complete{background:#2a6b3f!important}
