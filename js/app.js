@@ -423,8 +423,10 @@ const SP=[
 ]}
 ];
 // ====== NAV ======
-// Each view owns a hash and pushes a history entry, so the browser Back button
-// walks back through the app instead of leaving the site on the first press.
+// The calendar is the landing view and owns the bare URL - no hash - so a link to
+// the site opens straight onto it. The roadmap and notes each own a hash and push a
+// history entry, so the browser Back button walks back through the app instead of
+// leaving the site on the first press.
 function switchView(v,fromHistory){
   document.querySelectorAll('#mainNav a').forEach(x=>x.classList.remove('on'));
   const a=document.querySelector(`#mainNav a[data-v="${v}"]`);if(a)a.classList.add('on');
@@ -439,21 +441,24 @@ function switchView(v,fromHistory){
   // Notes manages its own deeper hashes; on a history restore it reads them itself.
   if(v==='notes'&&!fromHistory)notesGoList();
   else if(v!=='notes'&&!fromHistory){
-    const h='#'+v;
-    if((location.hash||'')!==h){try{history.pushState(null,'',h)}catch(e){}}
+    // The calendar drops the hash entirely rather than carrying a '#cal'.
+    const h=v==='cal'?'':'#'+v;
+    if((location.hash||'')!==h){try{history.pushState(null,'',h||location.pathname+location.search)}catch(e){}}
   }
   updTop();
 }
 function viewFromHash(){
   const h=location.hash||'';
   if(/^#notes/.test(h))return'notes';
-  const m=/^#(road|cal)$/.exec(h);
-  return m?m[1]:null;
+  if(h==='#road')return'road';
+  // No hash means the calendar; '#cal' stays understood so old links still land right.
+  if(h===''||h==='#'||h==='#cal')return'cal';
+  return null;
 }
 window.addEventListener('popstate',()=>{
   const v=viewFromHash();
   if(v==='notes'){switchView('notes',true);if(!notesRestoreFromHash())notesGoList(false)}
-  else switchView(v||'road',true);
+  else switchView(v||'cal',true);
 });
 document.querySelectorAll('#mainNav a').forEach(a=>a.addEventListener('click',()=>switchView(a.dataset.v)));
 
@@ -937,6 +942,10 @@ renderRoad();updTop();
 (function(){
   const v=viewFromHash();
   if(v==='notes'){switchView('notes',true);if(!notesRestoreFromHash())notesGoList(false)}
-  else if(v&&v!=='road')switchView(v,true);
-  else if((location.hash||'')!=='#road'){try{history.replaceState(null,'','#road')}catch(e){}}
+  else if(v==='road')switchView('road',true);
+  else{
+    switchView('cal',true);
+    // Strip a legacy '#cal' so the calendar always sits on the bare URL.
+    if(location.hash){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
+  }
 })();

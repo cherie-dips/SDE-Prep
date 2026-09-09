@@ -4,16 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SDE Job Prep</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PVT13BPF32"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-PVT13BPF32');
+</script>
+
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/notes.css">
 <link rel="stylesheet" href="css/appdesign-topic.css">
 </head>
 <body>
 <header>
-  <div class="brand">SDE Prep</div>
+  <a class="brand" href="https://cherie-dips.github.io/SDE-Prep/">SDE Prep</a>
   <nav id="mainNav">
-    <a data-v="cal">Calendar</a>
-    <a class="on" data-v="road">Roadmap</a>
+    <a class="on" data-v="cal">Calendar</a>
+    <a data-v="road">Roadmap</a>
     <a data-v="notes">Notes</a>
   </nav>
   <div class="hdr-right">
@@ -27,7 +37,7 @@
   </div>
 </header>
 
-<div class="view on" id="v-road">
+<div class="view" id="v-road">
   <div class="road-side" id="roadSide"></div>
   <div class="road-main">
     <div class="road-head" id="roadHead"><h2>SDE Prep Roadmap</h2><div class="rh-sub">Select a category to begin</div></div>
@@ -36,7 +46,7 @@
   </div>
 </div>
 
-<div class="view" id="v-cal">
+<div class="view on" id="v-cal">
   <div class="cal-left">
     <div class="plan-bar" id="planBar"></div>
     <div class="cal-head"><h2 id="calTitle"></h2><div class="cal-nav"><button onclick="calNav(-1)">&larr;</button><button onclick="calToday()">Today</button><button onclick="calNav(1)">&rarr;</button></div></div>
