@@ -2,20 +2,23 @@
    Notes - copied verbatim from the profile site (diptidhawade/src/styles/notes.css).
    The variables below come from that project's global.css :root (dark theme);
    they are inlined here because this project has no global stylesheet to
-   inherit them from. Everything after this block is unmodified.
+   inherit them from, and recoloured to the app's neutral greys.
+   Everything after this block is unmodified.
    --------------------------------------------------------------------------- */
 :root {
   --page-padding-x: 1.25rem;
   --page-padding-x-sm: 2rem;
   --page-max-width: 80rem;
-  --color-bg: #0d0809;
-  --color-bg-elevated: #140f11;
-  --color-bg-card: #1c181a;
-  --color-border: #1C1C21;
-  --color-border-muted: #3A3A49;
-  --color-text: #E4E4E6;
-  --color-text-muted: #AFB0B6;
-  --color-text-dim: #62646C;
+  /* Neutral greys taken from css/style.css so Notes sits on the same
+     background as the rest of the app - the originals were warm-tinted. */
+  --color-bg: #0c0c0c;
+  --color-bg-elevated: #141414;
+  --color-bg-card: #1a1a1a;
+  --color-border: #1e1e1e;
+  --color-border-muted: #333;
+  --color-text: #f0f0f0;
+  --color-text-muted: #bbb;
+  --color-text-dim: #666;
   --color-accent: #fff;
 }
 
@@ -224,7 +227,7 @@
   color: var(--color-text);
 }
 
-/* Category list (Plaksha, Software Dev, GATE) — square boxes with image */
+/* Category list (Plaksha, Software Dev) — square boxes with image */
 .notes-category-list {
   list-style: none;
   padding-top: 2rem;

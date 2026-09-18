@@ -111,43 +111,4 @@ const notesCategories = [
       },
     ],
   },
-  {
-    id: "gate",
-    title: "GATE | CSE",
-    subheading: null,
-    image: "/assets/notes/gate.png",
-    subjectLabels: ["C Programming", "Mathematics", "DSA", "Computer Organization", "Operating Systems", "Databases"],
-    subjects: [
-      {
-        id: "c-programming",
-        name: "C Programming",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-      {
-        id: "mathematics",
-        name: "Mathematics",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-      {
-        id: "dsa",
-        name: "DSA",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-      {
-        id: "computer-organization",
-        name: "Computer Organization",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-      {
-        id: "operating-systems",
-        name: "Operating Systems",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-      {
-        id: "databases",
-        name: "Databases",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-    ],
-  },
 ];

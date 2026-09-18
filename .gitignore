@@ -3,7 +3,7 @@
 # Claude Code local config
 .claude/
 
-# learncpp book - local reading only, open learncpp_book/learncpp_book.html directly
+# learncpp book - local reading only
 learncpp_book/
 
 # Python bytecode
@@ -12,6 +12,8 @@ __pycache__/
 
 # Personal / local-only material - kept on disk, never deployed
 js/content-resume.js
+js/content-wayfair.js
+js/wayfair.js
 
 # Book PDF (large, local reading only)
 Head First Design Patterns copy.pdf

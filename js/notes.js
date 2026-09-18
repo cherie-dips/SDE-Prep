@@ -126,7 +126,6 @@ function notesSelectPdf(slug, storagePath) {
 function notesToggleSidebar() { notesSidebarOpen = !notesSidebarOpen; renderNotes(); }
 
 // ---- icons (react-icons HiBars3 / HiChevronRight / HiChevronDown) ----
-const ICON_BACK = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>';
 const ICON_BARS = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>';
 const ICON_RIGHT = '<svg class="notes-tree-chevron-icon" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>';
 const ICON_DOWN = '<svg class="notes-tree-chevron-icon" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>';
@@ -189,8 +188,6 @@ function notesRenderSection() {
   h += `<div class="notes-section-tools">
     <button type="button" class="notes-toggle-list-btn${notesSidebarOpen ? ' notes-toggle-list-btn-active' : ''}"
       onclick="notesToggleSidebar()" aria-label="${notesSidebarOpen ? 'Hide notes list' : 'Show notes list'}">${ICON_BARS}</button>
-    <button type="button" class="notes-toggle-list-btn notes-back-icon-btn"
-      onclick="notesGoCategory('${esc(cat.id)}')" title="Back to ${esc(cat.title)}" aria-label="Back to ${esc(cat.title)}">${ICON_BACK}</button>
   </div>`;
 
   if (notesSidebarOpen) {

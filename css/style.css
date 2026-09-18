@@ -220,7 +220,7 @@ header .hstats strong{color:#eee;font-weight:600}
 #v-notes svg{display:block;vertical-align:middle}
 /* The button stretches the column width and centres its content, so pin the icon left. */
 #v-notes .notes-toggle-list-btn{text-align:left}
-/* Toggle first, back second - keeps the menu icon at the far left. */
+/* Just the menu toggle now - the back arrow was removed. */
 #v-notes .notes-section-tools{display:flex;align-items:center;gap:10px;margin-bottom:.25rem}
 #v-notes .notes-section-tools .notes-toggle-list-btn{margin-bottom:0;width:auto;flex:0 0 auto}
 
