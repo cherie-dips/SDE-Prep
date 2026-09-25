@@ -6,7 +6,10 @@ function sv(){localStorage.setItem('dsprep_v4',JSON.stringify(st))}
 // ====== ROADMAP DATA ======
 const ROADMAP=[
   typeof CPP_CONTENT!=='undefined'?CPP_CONTENT:null,
-  typeof DSA_CONTENT!=='undefined'?DSA_CONTENT:null,
+  // Old DSA category hidden - superseded by DSA Patterns below. The content still
+  // lives in js/content-cpp-dsa.js; uncomment this line to bring the tab back.
+  // typeof DSA_CONTENT!=='undefined'?DSA_CONTENT:null,
+  typeof DSA_PATTERNS_CONTENT!=='undefined'?DSA_PATTERNS_CONTENT:null,
   typeof SYSDES_CONTENT!=='undefined'?SYSDES_CONTENT:null,
   typeof OS_CONTENT!=='undefined'?OS_CONTENT:null,
   typeof CN_CONTENT!=='undefined'?CN_CONTENT:null,
@@ -41,99 +44,125 @@ const SP=[
 {t:'Exception Handling & RAII',c:'C++',road:'cpp:oop:4'},
 {t:'Const Correctness, Design Patterns & Polymorphism Deep Dive',c:'C++',road:'cpp:oop:5'}
 ]},
-{date:"2026-06-18",theme:"Arrays & Sorting",tasks:[
-{t:'Sorting Algorithms',c:'DSA',road:'dsa:arrays:0'},
-{t:'Two Pointers',c:'DSA',road:'dsa:arrays:1'},
-{t:'Merge Intervals',c:'DSA',road:'dsa:arrays:2'},
-{t:'Sliding Window',c:'DSA',road:'dsa:arrays:3'},
-{t:'Prefix Sums',c:'DSA',road:'dsa:arrays:4'},
-{t:'Kadane\'s Algorithm',c:'DSA',road:'dsa:arrays:5'},
-{t:'Rotate Array & Array Manipulation',c:'DSA',road:'dsa:arrays:6'},
-{t:'Boyer-Moore Voting & Frequency Problems',c:'DSA',road:'dsa:arrays:7'},
-{t:'Stock Buy & Sell Problems',c:'DSA',road:'dsa:arrays:8'}
+{date:"2026-06-18",theme:"DSA Patterns - Two Pointers",tasks:[
+{t:'P1 \u00b7 Converging Pointers',c:'DSA',road:'dsapat:tp:0'},
+{t:'P2 \u00b7 Fast & Slow Pointers',c:'DSA',road:'dsapat:tp:1'},
+{t:'P3 \u00b7 Fixed Separation (gap pointers)',c:'DSA',road:'dsapat:tp:2'},
+{t:'P4 \u00b7 In-place Array Modification',c:'DSA',road:'dsapat:tp:3'},
+{t:'P5 \u00b7 String Compare with Special Characters',c:'DSA',road:'dsapat:tp:4'},
+{t:'P6 \u00b7 Expanding From Center',c:'DSA',road:'dsapat:tp:5'},
+{t:'P7 \u00b7 String Reversal',c:'DSA',road:'dsapat:tp:6'}
 ]},
-{date:"2026-06-19",theme:"Binary Search & Strings",tasks:[
-{t:'Binary Search on 1D Arrays',c:'DSA',road:'dsa:bs:0'},
-{t:'Binary Search on Answers',c:'DSA',road:'dsa:bs:1'},
-{t:'Binary Search on 2D Arrays',c:'DSA',road:'dsa:bs:2'},
-{t:'String Basics & Operations',c:'DSA',road:'dsa:strings:0'},
-{t:'Pattern Matching (KMP)',c:'DSA',road:'dsa:strings:1'}
+{date:"2026-06-19",theme:"Sliding Window & Trees I",tasks:[
+{t:'P8 \u00b7 Fixed Size Window',c:'DSA',road:'dsapat:sw:0'},
+{t:'P9 \u00b7 Variable Size Window',c:'DSA',road:'dsapat:sw:1'},
+{t:'P10 \u00b7 Monotonic Deque for Window Max/Min',c:'DSA',road:'dsapat:sw:2'},
+{t:'P11 \u00b7 Character Frequency Matching',c:'DSA',road:'dsapat:sw:3'},
+{t:'P12 \u00b7 Level Order Traversal (BFS)',c:'DSA',road:'dsapat:tree:0'},
+{t:'P13 \u00b7 Recursive Preorder (top-down)',c:'DSA',road:'dsapat:tree:1'},
+{t:'P14 \u00b7 Recursive Inorder (BST order)',c:'DSA',road:'dsapat:tree:2'}
 ]},
-{date:"2026-06-20",theme:"Strings & Linked Lists",tasks:[
-{t:'Rabin-Karp & Z-Algorithm',c:'DSA',road:'dsa:strings:2'},
-{t:'Palindrome Problems',c:'DSA',road:'dsa:strings:3'},
-{t:'Singly Linked List',c:'DSA',road:'dsa:ll:0'},
-{t:'Doubly Linked List',c:'DSA',road:'dsa:ll:1'},
-{t:'Fast & Slow Pointers',c:'DSA',road:'dsa:ll:2'}
+{date:"2026-06-20",theme:"Trees II & Graphs I",tasks:[
+{t:'P15 \u00b7 Recursive Postorder (bottom-up)',c:'DSA',road:'dsapat:tree:3'},
+{t:'P16 \u00b7 Lowest Common Ancestor',c:'DSA',road:'dsapat:tree:4'},
+{t:'P17 \u00b7 Serialization & Subtree Identity',c:'DSA',road:'dsapat:tree:5'},
+{t:'P18 \u00b7 DFS \u2014 Connected Components / Islands',c:'DSA',road:'dsapat:graph:0'},
+{t:'P19 \u00b7 BFS \u2014 Shortest Path on Grids',c:'DSA',road:'dsapat:graph:1'},
+{t:'P20 \u00b7 DFS \u2014 Cycle Detection (directed)',c:'DSA',road:'dsapat:graph:2'},
+{t:'P21 \u00b7 BFS Topological Sort (Kahn\u2019s Algorithm)',c:'DSA',road:'dsapat:graph:3'}
 ]},
-{date:"2026-06-21",theme:"Stacks & Queues",tasks:[
-{t:'Stack Basics & Implementation',c:'DSA',road:'dsa:stq:0'},
-{t:'Monotonic Stack',c:'DSA',road:'dsa:stq:1'},
-{t:'Next Greater Element',c:'DSA',road:'dsa:stq:2'},
-{t:'Queue using Stacks',c:'DSA',road:'dsa:stq:3'},
-{t:'Deque Problems',c:'DSA',road:'dsa:stq:4'},
-{t:'Expression Evaluation & Infix Parsing',c:'DSA',road:'dsa:stq:5'}
+{date:"2026-06-21",theme:"Graphs II - Traversal & Shortest Paths",tasks:[
+{t:'P22 \u00b7 Deep Copy / Cloning a Graph',c:'DSA',road:'dsapat:graph:4'},
+{t:'P23 \u00b7 Shortest Path (Dijkstra)',c:'DSA',road:'dsapat:graph:5'},
+{t:'P24 \u00b7 Bellman-Ford & BFS with K Stops',c:'DSA',road:'dsapat:graph:6'},
+{t:'P25 \u00b7 Union-Find (Disjoint Set Union)',c:'DSA',road:'dsapat:graph:7'},
+{t:'P26 \u00b7 Strongly Connected Components',c:'DSA',road:'dsapat:graph:8'},
+{t:'P27 \u00b7 Bridges & Articulation Points',c:'DSA',road:'dsapat:graph:9'},
+{t:'P28 \u00b7 Minimum Spanning Tree (Kruskal / Prim)',c:'DSA',road:'dsapat:graph:10'}
 ]},
-{date:"2026-06-22",theme:"Recursion & Backtracking",tasks:[
-{t:'Recursion Basics & Patterns',c:'DSA',road:'dsa:recursion:0'},
-{t:'Backtracking Framework',c:'DSA',road:'dsa:recursion:1'},
-{t:'Subsets & Permutations',c:'DSA',road:'dsa:recursion:2'},
-{t:'N-Queens & Sudoku Solver',c:'DSA',road:'dsa:recursion:3'}
+{date:"2026-06-22",theme:"Graphs III & DP I",tasks:[
+{t:'P29 \u00b7 Bidirectional BFS',c:'DSA',road:'dsapat:graph:11'},
+{t:'P30 \u00b7 Fibonacci Style (linear DP)',c:'DSA',road:'dsapat:dp:0'},
+{t:'P31 \u00b7 Kadane \u2014 Max/Min Subarray',c:'DSA',road:'dsapat:dp:1'},
+{t:'P32 \u00b7 Unbounded Knapsack (Coin Change)',c:'DSA',road:'dsapat:dp:2'},
+{t:'P33 \u00b7 0/1 Knapsack & Subset Sum',c:'DSA',road:'dsapat:dp:3'},
+{t:'P34 \u00b7 Word Break Style',c:'DSA',road:'dsapat:dp:4'},
+{t:'P35 \u00b7 Longest Common Subsequence',c:'DSA',road:'dsapat:dp:5'}
 ]},
-{date:"2026-06-23",theme:"Binary Trees & BST",tasks:[
-{t:'Tree Traversals (Inorder, Preorder, Postorder)',c:'DSA',road:'dsa:trees:0'},
-{t:'Level Order & Zigzag Traversal',c:'DSA',road:'dsa:trees:1'},
-{t:'BST Operations (Insert, Delete, Search)',c:'DSA',road:'dsa:trees:2'},
-{t:'Tree Construction from Traversals',c:'DSA',road:'dsa:trees:3'},
-{t:'LCA, Diameter & Height',c:'DSA',road:'dsa:trees:4'}
+{date:"2026-06-23",theme:"DP II & Heaps I",tasks:[
+{t:'P36 \u00b7 Edit Distance (Levenshtein)',c:'DSA',road:'dsapat:dp:6'},
+{t:'P37 \u00b7 Grid DP (Unique Paths / Min Path Sum)',c:'DSA',road:'dsapat:dp:7'},
+{t:'P38 \u00b7 Interval DP',c:'DSA',road:'dsapat:dp:8'},
+{t:'P39 \u00b7 Catalan Numbers',c:'DSA',road:'dsapat:dp:9'},
+{t:'P40 \u00b7 Longest Increasing Subsequence',c:'DSA',road:'dsapat:dp:10'},
+{t:'P41 \u00b7 Stock Problems (state machine DP)',c:'DSA',road:'dsapat:dp:11'},
+{t:'P42 \u00b7 Top K Elements',c:'DSA',road:'dsapat:heap:0'}
 ]},
-{date:"2026-06-24",theme:"Heaps & Graphs Start",tasks:[
-{t:'Heap Basics & Heapify',c:'DSA',road:'dsa:pq:0'},
-{t:'Top-K Problems',c:'DSA',road:'dsa:pq:1'},
-{t:'Merge K Sorted Lists',c:'DSA',road:'dsa:pq:2'},
-{t:'BFS & DFS',c:'DSA',road:'dsa:graphs:0'},
-{t:'Cycle Detection',c:'DSA',road:'dsa:graphs:1'}
+{date:"2026-06-24",theme:"Heaps II & Backtracking I",tasks:[
+{t:'P43 \u00b7 Two Heaps for Running Median',c:'DSA',road:'dsapat:heap:1'},
+{t:'P44 \u00b7 K-Way Merge',c:'DSA',road:'dsapat:heap:2'},
+{t:'P45 \u00b7 Heap for Scheduling & Minimum Cost',c:'DSA',road:'dsapat:heap:3'},
+{t:'P46 \u00b7 Subsets (include / exclude)',c:'DSA',road:'dsapat:bt:0'},
+{t:'P47 \u00b7 Permutations',c:'DSA',road:'dsapat:bt:1'},
+{t:'P48 \u00b7 Combination Sum',c:'DSA',road:'dsapat:bt:2'},
+{t:'P49 \u00b7 Parentheses Generation',c:'DSA',road:'dsapat:bt:3'}
 ]},
-{date:"2026-06-25",theme:"Graphs Core",tasks:[
-{t:'Bipartite Graph Check',c:'DSA',road:'dsa:graphs:2'},
-{t:'Dijkstra\'s Shortest Path',c:'DSA',road:'dsa:graphs:3'},
-{t:'Bellman-Ford Algorithm',c:'DSA',road:'dsa:graphs:4'},
-{t:'Union-Find / DSU',c:'DSA',road:'dsa:graphs:5'},
-{t:'MST - Prim & Kruskal',c:'DSA',road:'dsa:graphs:6'},
-{t:'Topological Sort',c:'DSA',road:'dsa:graphs:7'}
+{date:"2026-06-25",theme:"Backtracking II & Greedy I",tasks:[
+{t:'P50 \u00b7 Word Search / Grid Path Finding',c:'DSA',road:'dsapat:bt:4'},
+{t:'P51 \u00b7 N-Queens / Constraint Satisfaction',c:'DSA',road:'dsapat:bt:5'},
+{t:'P52 \u00b7 Palindrome Partitioning',c:'DSA',road:'dsapat:bt:6'},
+{t:'P53 \u00b7 Interval Merging / Scheduling',c:'DSA',road:'dsapat:greedy:0'},
+{t:'P54 \u00b7 Jump Game Reachability',c:'DSA',road:'dsapat:greedy:1'},
+{t:'P55 \u00b7 Buy / Sell Stock (greedy view)',c:'DSA',road:'dsapat:greedy:2'},
+{t:'P56 \u00b7 Gas Station Circuit',c:'DSA',road:'dsapat:greedy:3'}
 ]},
-{date:"2026-06-26",theme:"Graphs Advanced & DP Start",tasks:[
-{t:'Floyd-Warshall All-Pairs Shortest Path',c:'DSA',road:'dsa:graphs:8'},
-{t:'Strongly Connected Components (SCC)',c:'DSA',road:'dsa:graphs:9'},
-{t:'1D DP (Climbing Stairs, House Robber)',c:'DSA',road:'dsa:dp:0'},
-{t:'2D DP (Unique Paths, LCS)',c:'DSA',road:'dsa:dp:1'},
-{t:'DP on Strings (Edit Distance)',c:'DSA',road:'dsa:dp:2'}
+{date:"2026-06-26",theme:"Greedy II & Binary Search",tasks:[
+{t:'P57 \u00b7 Task Scheduling',c:'DSA',road:'dsapat:greedy:4'},
+{t:'P58 \u00b7 Sorting-Based Greedy',c:'DSA',road:'dsapat:greedy:5'},
+{t:'P59 \u00b7 Binary Search on a Sorted Array',c:'DSA',road:'dsapat:bs:0'},
+{t:'P60 \u00b7 Rotated Sorted Array',c:'DSA',road:'dsapat:bs:1'},
+{t:'P61 \u00b7 Binary Search on the Answer',c:'DSA',road:'dsapat:bs:2'},
+{t:'P62 \u00b7 First / Last Occurrence',c:'DSA',road:'dsapat:bs:3'},
+{t:'P63 \u00b7 Median / Kth Across Two Sorted Arrays',c:'DSA',road:'dsapat:bs:4'}
 ]},
-{date:"2026-06-27",theme:"Dynamic Programming",tasks:[
-{t:'DP on Subsequences (LIS)',c:'DSA',road:'dsa:dp:3'},
-{t:'Knapsack Problems (0/1, Unbounded)',c:'DSA',road:'dsa:dp:4'},
-{t:'DP on Trees',c:'DSA',road:'dsa:dp:5'},
-{t:'Partition DP',c:'DSA',road:'dsa:dp:6'},
-{t:'Bitmask DP (TSP, Subset Problems)',c:'DSA',road:'dsa:dp:7'},
-{t:'Digit DP',c:'DSA',road:'dsa:dp:8'}
+{date:"2026-06-27",theme:"Stack & Bit Manipulation I",tasks:[
+{t:'P64 \u00b7 Valid Parentheses Matching',c:'DSA',road:'dsapat:stack:0'},
+{t:'P65 \u00b7 Monotonic Stack',c:'DSA',road:'dsapat:stack:1'},
+{t:'P66 \u00b7 Expression Evaluation',c:'DSA',road:'dsapat:stack:2'},
+{t:'P67 \u00b7 Simulation with a Stack',c:'DSA',road:'dsapat:stack:3'},
+{t:'P68 \u00b7 Min Stack & Stack Design',c:'DSA',road:'dsapat:stack:4'},
+{t:'P69 \u00b7 Largest Rectangle in Histogram',c:'DSA',road:'dsapat:stack:5'},
+{t:'P70 \u00b7 XOR \u2014 Finding the Single / Missing Number',c:'DSA',road:'dsapat:bits:0'}
 ]},
-{date:"2026-06-28",theme:"Greedy Algorithms",tasks:[
-{t:'Interval Scheduling & Activity Selection',c:'DSA',road:'dsa:greedy:0'},
-{t:'Jump Game & Gas Station',c:'DSA',road:'dsa:greedy:1'},
-{t:'Huffman Coding',c:'DSA',road:'dsa:greedy:2'},
-{t:'Fractional Knapsack & Job Sequencing',c:'DSA',road:'dsa:greedy:3'}
+{date:"2026-06-28",theme:"Bits II & Linked Lists",tasks:[
+{t:'P71 \u00b7 Counting Set Bits (Hamming Weight)',c:'DSA',road:'dsapat:bits:1'},
+{t:'P72 \u00b7 Bitmask DP & Counting Bits',c:'DSA',road:'dsapat:bits:2'},
+{t:'P73 \u00b7 Power of Two / Four Checks',c:'DSA',road:'dsapat:bits:3'},
+{t:'P74 \u00b7 In-place Reversal',c:'DSA',road:'dsapat:ll:0'},
+{t:'P75 \u00b7 Merging Sorted Lists',c:'DSA',road:'dsapat:ll:1'},
+{t:'P76 \u00b7 Addition of Numbers',c:'DSA',road:'dsapat:ll:2'},
+{t:'P77 \u00b7 Intersection Detection',c:'DSA',road:'dsapat:ll:3'},
+{t:'P78 \u00b7 Reordering & Partitioning',c:'DSA',road:'dsapat:ll:4'}
 ]},
-{date:"2026-06-29",theme:"Tries, Segment Trees & Bits",tasks:[
-{t:'Trie Implementation & Word Search',c:'DSA',road:'dsa:tries:0'},
-{t:'Segment Tree (Range Query & Update)',c:'DSA',road:'dsa:segtree:0'},
-{t:'Fenwick Tree (Binary Indexed Tree)',c:'DSA',road:'dsa:segtree:1'},
-{t:'Bit Manipulation Basics & XOR',c:'DSA',road:'dsa:bits:0'},
-{t:'Bitmask Techniques & Subset Enumeration',c:'DSA',road:'dsa:bits:1'}
+{date:"2026-06-29",theme:"Array & Matrix",tasks:[
+{t:'P79 \u00b7 In-place Rotation',c:'DSA',road:'dsapat:mat:0'},
+{t:'P80 \u00b7 Spiral Traversal',c:'DSA',road:'dsapat:mat:1'},
+{t:'P81 \u00b7 In-place Marking',c:'DSA',road:'dsapat:mat:2'},
+{t:'P82 \u00b7 Prefix / Suffix Products',c:'DSA',road:'dsapat:mat:3'},
+{t:'P83 \u00b7 Plus One & Digit Arithmetic',c:'DSA',road:'dsapat:mat:4'},
+{t:'P84 \u00b7 Filling In-place From the End',c:'DSA',road:'dsapat:mat:5'},
+{t:'P85 \u00b7 Cyclic Sort',c:'DSA',road:'dsapat:mat:6'}
 ]},
-{date:"2026-06-30",theme:"Number Theory & DSA Review",tasks:[
-{t:'Modular Arithmetic',c:'DSA',road:'dsa:numtheory:0'},
-{t:'Sieve of Eratosthenes & Primes',c:'DSA',road:'dsa:numtheory:1'},
-{t:'GCD, LCM & Combinatorics',c:'DSA',road:'dsa:numtheory:2'},
+{date:"2026-06-30",theme:"Strings, Design & DSA Review",tasks:[
+{t:'P86 \u00b7 Palindrome Check',c:'DSA',road:'dsapat:str:0'},
+{t:'P87 \u00b7 Anagram Check & Grouping',c:'DSA',road:'dsapat:str:1'},
+{t:'P88 \u00b7 Roman Numerals',c:'DSA',road:'dsapat:str:2'},
+{t:'P89 \u00b7 String to Integer & Parsing',c:'DSA',road:'dsapat:str:3'},
+{t:'P90 \u00b7 Manual Simulation on Strings',c:'DSA',road:'dsapat:str:4'},
+{t:'P91 \u00b7 String Matching (KMP & Rabin-Karp)',c:'DSA',road:'dsapat:str:5'},
+{t:'P92 \u00b7 Repeated Substring Pattern',c:'DSA',road:'dsapat:str:6'},
+{t:'P93 \u00b7 Designing Data Structures',c:'DSA',road:'dsapat:des:0'},
+{t:'P94 \u00b7 Tries (Prefix Trees)',c:'DSA',road:'dsapat:des:1'},
 {t:'Sprint: 5 Medium Problems (Mixed DSA)',c:'Practice'}
 ]},
 {date:"2026-07-01",theme:"LLD - OOP & SOLID",tasks:[
@@ -481,6 +510,10 @@ function renderRoadSide(){
 
 function renderRoadTabs(){
   if(!ROADMAP.length)return;
+  // st.navCat/navTab are saved indices - a category or tab removed since the last
+  // visit would leave them pointing past the end, so clamp before indexing.
+  if(roadCat>=ROADMAP.length)roadCat=0;
+  if(roadTab>=ROADMAP[roadCat].tabs.length)roadTab=0;
   const cat=ROADMAP[roadCat],cp=catProg(cat);
   document.getElementById('roadHead').innerHTML=`<h2>${cat.t}</h2><div class="rh-sub">${cp.d}/${cp.t} topics &middot; ${cp.p}%</div>`;
   document.getElementById('roadTabs').innerHTML=cat.tabs.map((tab,ti)=>{

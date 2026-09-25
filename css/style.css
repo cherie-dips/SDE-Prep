@@ -110,6 +110,21 @@ header .hstats strong{color:#eee;font-weight:600}
 .learn-table tr:hover td{background:#111}
 .learn-complexity{display:inline-block;background:#1a1a2a;border:1px solid #2a2a3a;border-radius:3px;padding:2px 8px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;color:#8888cc}
 
+/* ---- Pattern diagrams ----------------------------------------------------
+   Hand-drawn ASCII pictures. Deliberately NOT .learn-code: the renderer runs
+   hlCode() over .learn-code and would re-tokenise a diagram as C++, eating the
+   highlight spans and mis-colouring box-drawing characters. This class is left
+   alone, so the dg-* spans below survive. */
+.learn-diagram{background:#121212;border:1px solid #242424;border-radius:3px;
+  padding:12px 14px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;
+  line-height:1.55;color:#cfcfcf;overflow-x:auto;white-space:pre;margin:8px 0 12px}
+.dg-hl{color:#ddc060;font-weight:600}   /* the move being made */
+.dg-ok{color:#4a9f65;font-weight:600}   /* success / final answer */
+.dg-no{color:#c56b60;font-weight:600}   /* failure / rejected */
+.dg-k {color:#6bb5e0;font-weight:600}   /* labels, pointer names */
+.dg-c {color:#6f6f6f}                   /* side commentary */
+.dg-cap{font-size:12px;color:#888;margin:-6px 0 12px;font-style:italic}
+
 #v-cal{flex-direction:row}
 .cal-left{flex:1;display:flex;flex-direction:column;padding:16px 24px;overflow:hidden}
 
