@@ -269,6 +269,3 @@ header .hstats strong{color:#eee;font-weight:600}
 .rpv-pages{flex:1;min-width:0;overflow:auto;padding:16px;text-align:center}
 .rpv-page{margin:0 auto;padding-bottom:24px;width:fit-content}
 .rpv-page canvas{display:block}
-
-/* App Design now lives in Roadmap -> System Design; the standalone page at
-   appdesign/appdesign_prep.html is still built and can be opened directly. */

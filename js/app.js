@@ -600,12 +600,6 @@ function renderRoadTopics(){
   }).join('');
   const host=document.getElementById('roadTopics');
   host.innerHTML=h;
-  // The App Design sections arrive as plain <pre><code>; run them through the
-  // same highlighter the .learn-code blocks are built with.
-  host.querySelectorAll('.ad-book pre code:not([data-hl])').forEach(el=>{
-    el.dataset.hl='1';
-    el.innerHTML=hlCode(el.textContent);
-  });
   document.querySelectorAll('.learn-code:not(.hl)').forEach(el=>{el.classList.add('hl');el.innerHTML=hlCode(el.textContent)});
 }
 
