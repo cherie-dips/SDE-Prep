@@ -89,7 +89,7 @@ function notesGoSubject(categoryId, subjectId, folderSlug, push) {
   notesActivePath = null; notesFiles = null;
   notesSyncHash(push !== false); renderNotes();
   notesFetchSubjectFiles(categoryId, subjectId).then(() => {
-    notesPickFirstInFolder(); renderNotes();
+    notesEnsureFolderHasFiles(); notesPickFirstInFolder(); renderNotes();
   });
 }
 // push adds a history entry (so Back steps through the notes); replace is used
@@ -101,6 +101,23 @@ function notesSyncHash(push) {
   if (subjectId) h += '/' + subjectId + '/' + folderSlug;
   if (h === (location.hash || '')) return;
   try { push ? history.pushState(null, '', h) : history.replaceState(null, '', h); } catch (e) {}
+}
+
+// Folder types that hold at least one PDF for the loaded subject. Empty ones
+// are left out of the sidebar tree.
+function notesNonEmptyFolders() {
+  return FOLDER_TYPES.filter(n => notesFiles && notesFiles[n] && notesFiles[n].length);
+}
+
+// The default folder (Class Notes) or the one in a deep link may be empty, and
+// its heading is hidden then, so move to the first folder that has notes.
+function notesEnsureFolderHasFiles() {
+  const folders = notesNonEmptyFolders();
+  if (!folders.length || folders.indexOf(SLUG_TO_FOLDER[notesNav.folderSlug]) >= 0) return;
+  notesExpanded.delete(notesNav.folderSlug);
+  notesNav.folderSlug = FOLDER_SLUGS[folders[0]];
+  notesExpanded.add(notesNav.folderSlug);
+  notesSyncHash(false);
 }
 
 function notesPickFirstInFolder() {
@@ -193,7 +210,7 @@ function notesRenderSection() {
   if (notesSidebarOpen) {
     h += '<aside class="notes-section-sidebar notes-section-sidebar-tree">';
     h += '<ul class="notes-tree-root" role="tree" aria-label="Notes folders">';
-    FOLDER_TYPES.forEach(fname => {
+    notesNonEmptyFolders().forEach(fname => {
       const slug = FOLDER_SLUGS[fname];
       const expanded = notesExpanded.has(slug);
       const files = (notesFiles && notesFiles[fname]) || [];
