@@ -1,7 +1,7 @@
 // Notes data + Supabase config.
 //
-// Copied verbatim from the profile site (diptidhawade/src/constants/index.js).
-// Keep the two in step when subjects change.
+// Copied from the profile site (diptidhawade/src/constants/index.js), keeping
+// only the Plaksha category. Keep the subjects in step when they change.
 //
 // The anon key is a publishable key: it is already served in plain text by the
 // profile site's own bundle, and the Notes bucket is read-only to it (upload and
@@ -80,35 +80,6 @@ const notesCategories = [
         name: "Reinforcement Learning",
         folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
       }
-    ],
-  },
-  {
-    id: "software-development",
-    title: "Software Development",
-    subheading: null,
-    image: "/assets/notes/software-dev.png",
-    subjectLabels: ["React.js", "MERN Stack", "JavaScript", "System Design"],
-    subjects: [
-      {
-        id: "react-js",
-        name: "React.js",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-      {
-        id: "mern-stack",
-        name: "MERN Stack",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-      {
-        id: "javascript",
-        name: "JavaScript",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
-      {
-        id: "system-design",
-        name: "System Design",
-        folders: { "Class Notes": [], "Tutorials/Assignments": [], "Exam Practice": [], "Past Papers": [] },
-      },
     ],
   },
 ];

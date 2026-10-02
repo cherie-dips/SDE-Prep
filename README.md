@@ -10,8 +10,7 @@ and the calendar fills in from your start date.
   an **App Design** tab covering the app architecture & data modeling round.
 - **Calendar** — choose a plan length and date range; the full curriculum is re-paced
   across it. Longer plans add review days. Ticking a topic syncs both ways with the roadmap.
-- **Notes** — subject PDFs (Plaksha CSAI, Software Development), served live
-  from Supabase.
+- **Notes** — subject PDFs from Plaksha CSAI courses, served live from Supabase.
 
 > **Note:** the **Roadmap** content — explanations, MCQs and practice sets — is
 > AI-generated, so verify anything you rely on. The **Notes** PDFs are real course
@@ -52,7 +51,7 @@ SDE-Prep/
 │   ├── notes-data.js         List of Notes subjects, and the Supabase address
 │   └── notes.js              Runs the Notes tab and the PDF viewer
 │
-└── assets/notes/             Cover images for the Notes categories
+└── assets/notes/             Cover image for the Notes category
 ```
 
 ## Run it locally

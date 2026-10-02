@@ -74,6 +74,9 @@ function notesFetchSubjectFiles(categoryId, subjectId) {
 
 // ---- navigation ----
 function notesGoList(push) {
+  // With only one category there is nothing to pick, so the Notes tab opens
+  // straight onto that category's course list.
+  if (notesCategories.length === 1) return notesGoCategory(notesCategories[0].id, push);
   notesNav = { categoryId: null, subjectId: null, folderSlug: null };
   notesFiles = null; notesActivePath = null;
   notesSyncHash(push !== false); renderNotes();
@@ -177,7 +180,9 @@ function notesRenderCategory() {
            '<button type="button" onclick="notesGoList()" class="notes-back-btn">&larr; Back to Notes</button></div>';
   }
   let h = '<div class="notes-page notes-category-page page-content">';
-  h += '<button type="button" onclick="notesGoList()" class="notes-back-btn">&larr; Back to Notes</button>';
+  if (notesCategories.length > 1) {
+    h += '<button type="button" onclick="notesGoList()" class="notes-back-btn">&larr; Back to Notes</button>';
+  }
   h += `<h1 class="notes-title">${esc(cat.title)}</h1>`;
   if (cat.subheading) h += `<p class="notes-subheading">${esc(cat.subheading)}</p>`;
   h += '<ul class="notes-subject-list">';
