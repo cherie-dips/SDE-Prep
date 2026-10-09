@@ -378,7 +378,7 @@ function askAiChatHtml(ctx) {
     if (m.role === 'user') return `<div class="askai-msg askai-msg-user"><div class="askai-bubble">${esc(m.text)}</div></div>`;
     let inner;
     if (m.error) inner = `<div class="askai-err">${esc(m.error)}</div>`;
-    else if (!m.text) inner = `<div class="askai-thinking">${askAi.slow ? 'Waking up the AI server… the first answer can take a minute.' : 'Reading the notes…'}</div>`;
+    else if (!m.text) inner = `<div class="askai-thinking">${askAi.slow ? 'Thinking… answers can take up to a minute.' : 'Reading the notes…'}</div>`;
     else inner = `<div class="askai-md" id="askAiMsg${i}">${aiRender(m.text)}</div>`;
     return `<div class="askai-msg askai-msg-ai">${inner}${askAiSourcesHtml(m, i, ctx)}</div>`;
   }).join('');
