@@ -467,6 +467,7 @@ function switchView(v,fromHistory){
   if(ai)ai.classList.toggle('hide',v!=='road'&&v!=='way');
   if(v==='road')renderRoad();
   if(v==='way'&&typeof renderWay==='function')renderWay();
+  if(v==='study'&&typeof studyAiView==='function')studyAiView();
   if(v==='cal'){renderPlanBar();renderCal();renderDP();renderDash()}
   // Notes manages its own deeper hashes; on a history restore it reads them itself.
   if(v==='notes'&&!fromHistory)notesGoList();
@@ -482,6 +483,7 @@ function viewFromHash(){
   if(/^#notes/.test(h))return'notes';
   if(h==='#road')return'road';
   if(h==='#way')return'way';
+  if(h==='#study')return'study';
   // No hash means the calendar; '#cal' stays understood so old links still land right.
   if(h===''||h==='#'||h==='#cal')return'cal';
   return null;
@@ -973,6 +975,7 @@ renderRoad();updTop();
   if(v==='notes'){switchView('notes',true);if(!notesRestoreFromHash())notesGoList(false)}
   else if(v==='road')switchView('road',true);
   else if(v==='way')switchView('way',true);
+  else if(v==='study')switchView('study',true);
   else{
     switchView('cal',true);
     // Strip a legacy '#cal' so the calendar always sits on the bare URL.

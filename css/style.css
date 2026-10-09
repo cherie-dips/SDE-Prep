@@ -222,6 +222,12 @@ header .hstats strong{color:#eee;font-weight:600}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#252525;border-radius:2px}::-webkit-scrollbar-thumb:hover{background:#333}
 @media(max-width:900px){.day-panel{width:320px}.road-side{width:200px}}
 @media(max-width:700px){.day-panel{display:none}.road-side{width:180px}}
+/* Phones: the four tabs scroll inside the header instead of widening the page; the stats hide. */
+@media(max-width:600px){header{gap:10px;padding:0 12px}
+header nav{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+header nav::-webkit-scrollbar{display:none}
+header nav a{padding:7px 10px;white-space:nowrap}
+header .hdr-right{display:none}}
 
 #v-notes{display:none;overflow-y:auto}
 #v-notes.on{display:block}

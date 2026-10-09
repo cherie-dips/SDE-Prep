@@ -248,7 +248,10 @@ function notesRenderSection() {
   } else {
     h += `<p class="notes-empty">${notesLoading ? 'Loading notes…' : (notesFilesError ? 'Could not load notes.' : 'No notes yet.')}</p>`;
   }
-  return h + '</div></div></div>';
+  h += '</div>';
+  // Ask AI panel (js/study-ai.js fills it in after each render).
+  if (active) h += '<aside class="askai" id="askAi" aria-label="Ask AI"></aside>';
+  return h + '</div></div>';
 }
 
 // ---- PDF viewer ----
@@ -260,7 +263,7 @@ function notesRenderSection() {
 
 const PDF_ZOOMS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 let pdfState = { doc: null, url: null, title: '', scale: 1, mode: 'page-width',
-                 page: 1, numPages: 0, token: 0, thumbsOpen: false };
+                 page: 1, numPages: 0, token: 0, thumbsOpen: false, jump: null };
 
 const PI = {
   up:   '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 15.75l7.5-7.5 7.5 7.5"/></svg>',
@@ -289,6 +292,7 @@ function pdfToolbarHtml() {
       <button class="rpv-btn" onclick="pdfZoom(1)" title="Zoom in" aria-label="Zoom in">${PI.zoomIn}</button>
     </div>
     <div class="rpv-tb-group rpv-tb-right">
+      ${typeof askAiButtonHtml === 'function' ? askAiButtonHtml() : ''}
       <button class="rpv-btn" onclick="pdfFullscreen()" title="Full screen" aria-label="Full screen">${PI.expand}</button>
     </div>
   </div>`;
@@ -326,7 +330,14 @@ function pdfOpen(url, title) {
     if (token !== pdfState.token) return;
     pdfState.doc = doc; pdfState.numPages = doc.numPages;
     host.innerHTML = pdfShellHtml();
-    return pdfRenderPages(token).then(() => pdfState.thumbsOpen ? pdfRenderThumbs(token) : null);
+    return pdfRenderPages(token).then(() => {
+      if (token === pdfState.token && pdfState.jump) {
+        const { page, y } = pdfState.jump;
+        pdfState.jump = null;
+        pdfGoTo(page, y);
+      }
+      return pdfState.thumbsOpen ? pdfRenderThumbs(token) : null;
+    });
   }).catch(() => {
     if (token === pdfState.token && host) host.innerHTML = '<p class="notes-empty">Could not load this PDF.</p>';
   });
@@ -398,6 +409,28 @@ function pdfGoPage(n) {
   pdfSyncToolbar(); pdfMarkThumb();
 }
 
+// Scroll to a spot inside a page: y is 0 (top) to 1 (bottom). Used by Ask AI's sources, which say
+// where in the PDF an answer came from; the spot is briefly highlighted.
+function pdfGoTo(page, y) {
+  if (!pdfState.numPages) return;
+  const n = Math.min(Math.max(1, page || 1), pdfState.numPages);
+  const el = document.querySelector('.rpv-page[data-page="' + n + '"]');
+  const pages = document.getElementById('rpvPages');
+  if (!el || !pages) return pdfGoPage(n);
+  const canvas = el.querySelector('canvas');
+  const h = canvas ? canvas.offsetHeight : el.offsetHeight;
+  const at = Math.min(Math.max(y || 0, 0), 1);
+  pages.scrollTop = Math.max(0, el.offsetTop - pages.offsetTop + at * h - 24);
+  pdfState.page = n;
+  pdfSyncToolbar(); pdfMarkThumb();
+  const mark = document.createElement('div');
+  mark.className = 'rpv-spot';
+  mark.style.top = (at * h) + 'px';
+  el.style.position = 'relative';
+  el.appendChild(mark);
+  setTimeout(() => mark.remove(), 1800);
+}
+
 function pdfZoom(dir) {
   const cur = pdfState.scale;
   let next = null;
@@ -459,6 +492,7 @@ function renderNotes() {
     const items = (notesFiles && notesFiles[folderName]) || [];
     const active = items.find(i => i.storagePath === notesActivePath) || items[0] || null;
     if (active) pdfOpen(notesPublicUrl(active.storagePath), active.title);
+    if (typeof askAiMount === 'function') askAiMount();
   }
   else if (notesNav.categoryId) el.innerHTML = notesRenderCategory();
   else el.innerHTML = notesRenderList();
