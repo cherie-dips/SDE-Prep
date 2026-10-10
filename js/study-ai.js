@@ -173,6 +173,7 @@ function aiRender(md) {
 let studyFrame = null;
 let studyFrameLoaded = false;
 let studyPendingAuth = null;   // 'login' | 'register' to open once the frame is ready
+let studyPendingCommand = null; // e.g. {type: 'studyai:open', what: 'settings'} from the header menu
 let studyReturnTo = null;      // where to go back to after signing in from Ask AI
 
 function studyAiOrigin() {
@@ -196,14 +197,26 @@ function studyAiView() {
     studyFrame.addEventListener('load', () => {
       studyFrameLoaded = true;
       host.classList.add('loaded');
-      if (studyPendingAuth) setTimeout(studyAiSendAuth, 400);
+      if (studyPendingAuth || studyPendingCommand) setTimeout(studyAiFlush, 400);
     });
     host.appendChild(studyFrame);
   } else if (studyFrameLoaded) {
     // Back on this tab: let Study AI reload what may have changed (e.g. a deck saved in Ask AI).
     studyAiPost({ type: 'studyai:shown' });
-    if (studyPendingAuth) studyAiSendAuth();
+    studyAiFlush();
   }
+}
+
+function studyAiFlush() {
+  if (studyPendingAuth) studyAiSendAuth();
+  if (studyPendingCommand) { studyAiPost(studyPendingCommand); studyPendingCommand = null; }
+}
+
+// Ask Study AI to do something (open a window), switching to its tab first.
+function studyAiCommand(msg) {
+  studyPendingCommand = msg;
+  if (document.getElementById('v-study').classList.contains('on')) studyAiFlush();
+  else switchView('study');
 }
 
 function studyAiPost(msg) {
@@ -229,6 +242,7 @@ function studyAiOpen() { switchView('study'); }
 window.addEventListener('storage', e => {
   if (e.key !== null && e.key !== NS_SESSION_KEY) return;
   askAiRender();
+  profileRender();
   const onStudyTab = document.getElementById('v-study').classList.contains('on');
   if (!onStudyTab) studyReturnTo = null;  // they moved on; don't pull them back later
   if (aiSession() && studyReturnTo && /^#notes/.test(studyReturnTo)) {
@@ -240,6 +254,82 @@ window.addEventListener('storage', e => {
     toast('Signed in. Ask away!');
   }
 });
+
+// ---- Profile menu (header, right of the stats; shown while signed in) ----
+const ICON_USER = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>';
+let profileOpen = false;
+let profileInfo = null;       // GET /me: name, email, is_admin
+let profileInfoFor = '';      // the session profileInfo belongs to
+
+function profileRender() {
+  const host = document.getElementById('hdrProfile');
+  if (!host) return;
+  const session = aiSession();
+  if (!session) { host.innerHTML = ''; profileOpen = false; profileInfo = null; profileInfoFor = ''; return; }
+  if (profileInfoFor !== session) { profileInfoFor = session; profileInfo = null; profileLoad(session); }
+  let name = '';
+  try { name = localStorage.getItem(NS_NAME_KEY) || ''; } catch (e) {}
+  const info = profileInfo || {};
+  let h = `<button type="button" class="hdr-profile-btn${profileOpen ? ' on' : ''}" onclick="profileToggle(event)" title="Account" aria-label="Account" aria-haspopup="menu" aria-expanded="${profileOpen}">${ICON_USER}</button>`;
+  if (profileOpen) {
+    h += `<div class="hdr-menu" role="menu">
+        <div class="hdr-menu-who"><b>${esc(info.name || name || 'Your account')}</b>${info.email ? `<span>${esc(info.email)}</span>` : ''}</div>
+        <button type="button" role="menuitem" onclick="profileOpenIn('settings')">Account settings</button>
+        <button type="button" role="menuitem" onclick="profileOpenIn('feedback')">Send feedback</button>
+        ${info.is_admin ? `<button type="button" role="menuitem" onclick="profileOpenIn('admin')">Usage &amp; feedback</button>` : ''}
+        <button type="button" role="menuitem" onclick="profileOpenIn('privacy')">Privacy</button>
+        <button type="button" role="menuitem" class="hdr-menu-out" onclick="profileSignOut()">Sign out</button>
+      </div>`;
+  }
+  host.innerHTML = h;
+}
+
+function profileLoad(session) {
+  fetch(STUDY_AI_API + '/me', { headers: { 'X-Session-Id': session } })
+    .then(r => {
+      if (r.status === 401) { aiForgetSession(); return null; }
+      return r.ok ? r.json() : null;
+    })
+    .then(j => {
+      if (j && aiSession() === session) profileInfo = j;
+      profileRender();
+      askAiRender();
+    })
+    .catch(() => {});
+}
+
+function profileToggle(e) {
+  e.stopPropagation();
+  profileOpen = !profileOpen;
+  profileRender();
+}
+
+function profileClose() {
+  if (!profileOpen) return;
+  profileOpen = false;
+  profileRender();
+}
+
+// Account settings, feedback and privacy are Study AI's own windows: open them there.
+function profileOpenIn(what) {
+  profileClose();
+  studyAiCommand({ type: 'studyai:open', what });
+}
+
+function profileSignOut() {
+  const session = aiSession();
+  profileClose();
+  fetch(STUDY_AI_API + '/logout', { method: 'POST', headers: { 'X-Session-Id': session } }).catch(() => {});
+  aiForgetSession();  // Study AI hears this through the storage event and signs out too
+  profileRender();
+  askAiRender();
+  toast('Signed out');
+}
+
+document.addEventListener('click', e => { if (profileOpen && !e.target.closest('#hdrProfile')) profileClose(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') profileClose(); });
+window.addEventListener('blur', profileClose);  // a click inside the Study AI frame
+profileRender();
 
 // ---- Ask AI panel (Notes tab) ----
 const askAi = {

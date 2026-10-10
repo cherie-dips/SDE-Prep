@@ -1,5 +1,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,system-ui,'Segoe UI',sans-serif;background:#0c0c0c;color:#f0f0f0;height:100vh;overflow:hidden;font-size:16px}
+/* flow-root keeps the header's top margin inside the body, so the page is exactly one screen tall and
+   nothing (e.g. a focused field inside the Study AI frame) can scroll it. */
+body{font-family:-apple-system,system-ui,'Segoe UI',sans-serif;background:#0c0c0c;color:#f0f0f0;height:100vh;overflow:hidden;font-size:16px;display:flow-root}
 header{display:flex;align-items:center;gap:32px;padding:0 24px;height:52px;border-bottom:none;margin-top:12px;margin-bottom:14px;flex-shrink:0}
 header .brand{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.3px;white-space:nowrap;text-decoration:none}
 header nav{display:flex;gap:2px}
@@ -227,7 +229,8 @@ header .hstats strong{color:#eee;font-weight:600}
 header nav{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
 header nav::-webkit-scrollbar{display:none}
 header nav a{padding:7px 10px;white-space:nowrap}
-header .hdr-right{display:none}}
+header .hdr-right{gap:0}
+header .hdr-right .ai-note,header .hdr-right .hstats{display:none}}
 
 #v-notes{display:none;overflow-y:auto}
 #v-notes.on{display:block}
