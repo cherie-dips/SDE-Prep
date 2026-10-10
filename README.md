@@ -1,4 +1,4 @@
-# SDE-Prep
+# Interview.ai
 
 **Live: https://cherie-dips.github.io/SDE-Prep/**
 
